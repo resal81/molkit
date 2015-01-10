@@ -42,11 +42,11 @@ ForceField
 ```go
 sys.DeepCopy()  // returns a deep copy; useful when building topologies
 
-// reading files
-molio.ReadPDB(io.Reader)
-molio.ReadPSF(io.Reader)
+// reading files - implement using io.Reader
+molio.ReadPDBFile(fname)
+molio.ReadPSFFile(fname)
 
-molio.ReadPDBGroTop(io.Reader, io.Reader)
+molio.ReadGroTopFile(sys *System, fname string)
 
 // selection
 fnBB := selection.ByAtomName(true, 'CA', 'C', 'N', 'O')

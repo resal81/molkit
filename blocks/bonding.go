@@ -17,7 +17,7 @@ type Bond struct {
 	atom2 *Atom
 }
 
-func NewBond(atom1, atom2 *Bond) *Bond {
+func NewBond(atom1, atom2 *Atom) *Bond {
 	id := atomic.AddInt64(&bondid_counter, 1)
 	return &Bond{
 		id:    id,
