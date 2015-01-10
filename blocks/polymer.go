@@ -14,13 +14,21 @@ type Polymer struct {
 
 	fragments []*Fragment
 	system    *System
+	paramsdb  *ParamsDB
 
 	bonds       []*Bond
-	pairs       []*Bond
-	constraints []*Bond
+	pairs       []*Pair
+	constraints []*Constraint
 	angles      []*Angle
 	dihedrals   []*Dihedral
 	impropers   []*Dihedral
+	exclusions  []*Exclusion
+	rest_pos    []*PositionRestraint
+	rest_dist   []*DistanceRestraint
+	rest_ang    []*AngleRestraint
+	rest_dih    []*DihedralRestraint
+	rest_orient []*OrientationRestraint
+	settle      *Settle
 }
 
 func NewPolymer() *Polymer {
