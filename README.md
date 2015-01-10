@@ -16,14 +16,25 @@ System                          : a multi-chain complex; e.g. a simulation box
 
 - Bond specifies the connection between atoms. A Bond doesn't have direction.
 
-AtomParam
-    GetA()
-    GetEpsilon()
-    ...
-BondParam
-AngleParam
-DihedralParam
-ImproperParam
+FFAtom
+    bonds
+
+FFResidue
+    atoms  
+    linkerAtoms
+
+FFCap
+    atoms
+    linkerAtom
+
+
+ForceField
+    |__ AtomParams
+    |__ BondParams
+    |__ AngleParams
+    |__ DihedralParams
+    |__ ImproperParams
+
 
 
 ```
@@ -38,7 +49,7 @@ molio.ReadPSF(io.Reader)
 molio.ReadPDBGroTop(io.Reader, io.Reader)
 
 // selection
-fnBB := selection.ByAtomName('CA', 'C', 'N', 'O')
+fnBB := selection.ByAtomName(true, 'CA', 'C', 'N', 'O')
 sel  := selection.Select(pdb, fnBB, ...)
 
 // writing files
