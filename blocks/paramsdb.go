@@ -16,14 +16,14 @@ type ParamsDB struct {
 		}
 	}
 
-	atomTypes     map[string]*AtomType            // ANY; normal atom types
-	atomTypes14   map[string]*AtomType            // CHARMM; data for 1-4 interactions
-	nonbondTypes  map[string]map[string]*PairType // GROMACS; nb interactions that don't obey combination rules
-	pairTypess    map[string]map[string]*PairType // GROMACS; data for 1-4 interactions
-	bondTypes     map[string]map[string]*BondType // ANY;
-	angleTypes    map[string]map[string]map[string]*AngleType
-	dihedralTypes map[string]map[string]map[string]map[string]*DihedralType
-	improperTypes map[string]map[string]map[string]map[string]*DihedralType
+	atomTypes     map[string]*ParamsAtomType                 // ANY; normal atom types
+	atomTypes14   map[string]*ParamsAtomType                 // CHARMM; data for 1-4 interactions
+	nonbondTypes  map[string]map[string]*ParamsNonBondedType // GROMACS; nb interactions that don't obey combination rules
+	pairTypess    map[string]map[string]*ParamsPairType      // GROMACS; data for 1-4 interactions
+	bondTypes     map[string]map[string]*ParamsBondType      // ANY;
+	angleTypes    map[string]map[string]map[string]*ParamsAngleType
+	dihedralTypes map[string]map[string]map[string]map[string]*ParamsDihedralType
+	improperTypes map[string]map[string]map[string]map[string]*ParamsDihedralType
 }
 
 func NewParamsDB(dbtype PARAMS_DB_TYPE) *ParamsDB {
@@ -31,7 +31,7 @@ func NewParamsDB(dbtype PARAMS_DB_TYPE) *ParamsDB {
 }
 
 func (p *ParamsDB) GMXAddAtomType(atype string, protons int8, mass, charge, sigma, epsilon float32) {
-	at := AtomType{
+	at := ParamsAtomType{
 		atype:   atype,
 		protons: protons,
 		mass:    mass,
@@ -41,24 +41,4 @@ func (p *ParamsDB) GMXAddAtomType(atype string, protons int8, mass, charge, sigm
 	}
 
 	p.atomTypes[atype] = &at
-}
-
-func (p *ParamsDB) GMXAddNBType(atype1, atyp2 string, fn int8, sigma, epsilon float32) {
-
-}
-
-func (p *ParamsDB) GMXAddPairType(atype1, atyp2 string, fn int8, sigma, epsilon float32) {
-
-}
-
-func (p *ParamsDB) GMXAddBondType(atype1, atyp2 string, fn int8, k_r, r0 float32) {
-
-}
-
-func (p *ParamsDB) GMXAddAngleType(atyp1, atyp2, atype3 string, fn int8, k_theta, theta, r13, k_ub float32) {
-
-}
-
-func (p *ParamsDB) GMXAddDihedralType(atyp1, atyp2, atype3, atype4 string, fn int8, k_phi, phi float32, mult int8) {
-
 }

@@ -16,24 +16,33 @@ System                          : a multi-chain complex; e.g. a simulation box
 
 - Bond specifies the connection between atoms. A Bond doesn't have direction.
 
-FFAtom
-    bonds
 
-FFResidue
-    atoms  
-    linkerAtoms
 
-FFCap
-    atoms
-    linkerAtom
+TopPolymer
+    |__ TopFragment
+    |       |__ TopAtom
+    |__ TopPairs
+    |__ TopExclusions
+    |__ TopSETTLE
+    |__ TopPositionRestraints
 
+TopolDB
+    |__ TopFragment
+            |__ TopAtom
+            |__ InternalCoordinate
+
+ParamsDB
+    |__ ParamAtomTypes
+    |__ ParamBondTypes
+    |__ ParamAngleTypes
+    |__ ParamDihedralTypes
+    |__ ParamConstraintTypes
+    |__ ParamNonBondedTypes
 
 ForceField
-    |__ AtomParams
-    |__ BondParams
-    |__ AngleParams
-    |__ DihedralParams
-    |__ ImproperParams
+    |__ TopolDB
+    |__ ParamsDB
+
 
 
 

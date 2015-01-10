@@ -2,79 +2,22 @@ package blocks
 
 // --------------------------------------------------------
 
-type AtomType struct {
-	atype   string
-	protons int8
-	mass    float32
-	sigma   float32
-	epsilon float32
-	charge  float32
-}
-
-func NewGMXAtomType(atype string, protons int8, mass, charge, sigma, epsilon float32) *AtomType {
-	at := AtomType{
-		atype:   atype,
-		protons: protons,
-		mass:    mass,
-		charge:  charge,
-		sigma:   sigma,
-		epsilon: epsilon,
-	}
-
-	return &at
-}
-
-// --------------------------------------------------------
-
 type NON_BONDED_TYPE int8
+type PAIR_TYPE int8
+type BOND_TYPE int64
+type ANGLE_TYPE int64
+type DIHEDRAL_TYPE int64
+type CONSTRAINT_TYPE int8
 
 const (
 	NB_TYPE1 NON_BONDED_TYPE = 1 << iota
 	NB_TYPE2
 )
 
-type NonBondedType struct {
-	atype1 string
-	atype2 string
-
-	nbtype NON_BONDED_TYPE
-
-	v1 float32
-	v2 float32
-	v3 float32
-}
-
-// --------------------------------------------------------
-
-type PAIR_TYPE int8
-
 const (
 	P_TYPE1 PAIR_TYPE = 1 << iota
 	P_TYPE2
 )
-
-type PairType struct {
-	atype1  string
-	atype2  string
-	ptype   PAIR_TYPE
-	sigma   float32
-	epsilon float32
-}
-
-func NewGMXPairType(atype1, atype2 string, fn int8, sigma, epsilon float32) *PairType {
-	pt := PairType{
-		atype1:  atype1,
-		atype2:  atype2,
-		sigma:   sigma,
-		epsilon: epsilon,
-	}
-
-	return &pt
-}
-
-// --------------------------------------------------------
-
-type BOND_TYPE int64
 
 const (
 	B_TYPE1 BOND_TYPE = 1 << iota
@@ -89,23 +32,6 @@ const (
 	B_TYPE10
 )
 
-type BondType struct {
-	atype1 string
-	atype2 string
-
-	btype BOND_TYPE
-	k_r   float32
-	r0    float32
-}
-
-func NewGMXBondType(atype1, atype2 string, fn int8, k_r, r0 float32) *BondType {
-	return nil
-}
-
-// --------------------------------------------------------
-
-type ANGLE_TYPE int64
-
 const (
 	A_TYPE1 ANGLE_TYPE = 1 << iota // GMX 1
 	A_TYPE2
@@ -118,25 +44,6 @@ const (
 	A_TYPE9
 	A_TYPE10
 )
-
-type AngleType struct {
-	atype1 string
-	atype2 string
-	atype3 string
-
-	k_theta float32
-	theta   float32
-	r13     float32
-	k_ub    float32
-}
-
-func NewGMXAngleType(atype1, atype2, atype3 string, fn int8, k_theta, theta, r13, k_ub float32) *AngleType {
-	return nil
-}
-
-// --------------------------------------------------------
-
-type DIHEDRAL_TYPE int64
 
 const (
 	D_TYPE1 DIHEDRAL_TYPE = 1 << iota // GMX 1
@@ -152,7 +59,104 @@ const (
 	D_TYPE11
 )
 
-type DihedralType struct {
+const (
+	CNT_TYPE1 CONSTRAINT_TYPE = 1 << iota
+	CNT_TYPE2
+)
+
+// --------------------------------------------------------
+
+type ParamsAtomType struct {
+	atype   string
+	protons int8
+	mass    float32
+	sigma   float32
+	epsilon float32
+	charge  float32
+}
+
+func NewGMXParamsAtomType(atype string, protons int8, mass, charge, sigma, epsilon float32) *ParamsAtomType {
+	at := ParamsAtomType{
+		atype:   atype,
+		protons: protons,
+		mass:    mass,
+		charge:  charge,
+		sigma:   sigma,
+		epsilon: epsilon,
+	}
+
+	return &at
+}
+
+// --------------------------------------------------------
+
+type ParamsNonBondedType struct {
+	atype1 string
+	atype2 string
+
+	nbtype NON_BONDED_TYPE
+
+	v1 float32
+	v2 float32
+	v3 float32
+}
+
+// --------------------------------------------------------
+
+type ParamsPairType struct {
+	atype1  string
+	atype2  string
+	ptype   PAIR_TYPE
+	sigma   float32
+	epsilon float32
+}
+
+func NewGMXParamsPairType(atype1, atype2 string, fn int8, sigma, epsilon float32) *ParamsPairType {
+	pt := ParamsPairType{
+		atype1:  atype1,
+		atype2:  atype2,
+		sigma:   sigma,
+		epsilon: epsilon,
+	}
+
+	return &pt
+}
+
+// --------------------------------------------------------
+
+type ParamsBondType struct {
+	atype1 string
+	atype2 string
+
+	btype BOND_TYPE
+	k_r   float32
+	r0    float32
+}
+
+func NewGMXParamsBondType(atype1, atype2 string, fn int8, k_r, r0 float32) *ParamsBondType {
+	return nil
+}
+
+// --------------------------------------------------------
+
+type ParamsAngleType struct {
+	atype1 string
+	atype2 string
+	atype3 string
+
+	k_theta float32
+	theta   float32
+	r13     float32
+	k_ub    float32
+}
+
+func NewGMXParamsAngleType(atype1, atype2, atype3 string, fn int8, k_theta, theta, r13, k_ub float32) *ParamsAngleType {
+	return nil
+}
+
+// --------------------------------------------------------
+
+type ParamsDihedralType struct {
 	atype1 string
 	atype2 string
 	atype3 string
@@ -163,20 +167,13 @@ type DihedralType struct {
 	mult  int8
 }
 
-func NewGMXDihedralType(atype1, atype2, atype3, atype4 string, fn int8, k_phi, phi float32, mult int8) *DihedralType {
+func NewGMXParamsDihedralType(atype1, atype2, atype3, atype4 string, fn int8, k_phi, phi float32, mult int8) *ParamsDihedralType {
 	return nil
 }
 
 // --------------------------------------------------------
 
-type CONSTRAINT_TYPE int8
-
-const (
-	CNT_TYPE1 CONSTRAINT_TYPE = 1 << iota
-	CNT_TYPE2
-)
-
-type ConstraintType struct {
+type ParamsConstraintType struct {
 	atype1 string
 	atype2 string
 
