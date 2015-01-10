@@ -15,23 +15,6 @@ System                          : a multi-chain complex; e.g. a simulation box
 
 
 - Bond specifies the connection between atoms. A Bond doesn't have direction.
-- 
-
-sys.DeepCopy()  // returns a deep copy; useful when building topologies
-
-molio.WritePDB(io.Writer)
-molio.WritePSF(io.Writer)
-
-molio.ReadPDB(io.Reader)
-molio.ReadPSF(io.Reader)
-
-
-ff := forcefield.NewFF(FF_CHARMM)
-ff.ReadFile('...') // based on extension
-ff.ReadFile('...')
-
-
-
 
 AtomParam
     GetA()
@@ -42,30 +25,34 @@ AngleParam
 DihedralParam
 ImproperParam
 
-```
-
-## Example PDB read
 
 ```
-// 
-pdb := ParsePDB(source io.Reader)
 
+```go
+sys.DeepCopy()  // returns a deep copy; useful when building topologies
+
+// reading files
+molio.ReadPDB(io.Reader)
+molio.ReadPSF(io.Reader)
+
+molio.ReadPDBGroTop(io.Reader, io.Reader)
+
+// selection
 fnBB := selection.ByAtomName('CA', 'C', 'N', 'O')
-sel  := selection.Select(pdb, fnBB)
+sel  := selection.Select(pdb, fnBB, ...)
+
+// writing files
+molio.WritePDB(io.Writer)
+molio.WritePSF(io.Writer)
+
+
+// forcefield
+ff := forcefield.NewFF(FF_CHARMM)
+ff.ReadFile('...') // based on extension
+ff.ReadFile('...')
+
+ff.Apply(sys System)
+
 
 ```
 
-
-## Example CHARMM FF read
-
-```
-
-
-
-```
-
-## Example solute insertion using PDB/TOP file
-
-```
-
-```
