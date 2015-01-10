@@ -1,5 +1,7 @@
 package blocks
 
+// --------------------------------------------------------
+
 type AtomType struct {
 	atype   string
 	protons int8
@@ -8,6 +10,17 @@ type AtomType struct {
 	epsilon float32
 	charge  float32
 }
+
+// --------------------------------------------------------
+
+type PairType struct {
+	atyp1   string
+	atyp2   string
+	sigma   float32
+	epsilon float32
+}
+
+// --------------------------------------------------------
 
 type BOND_TYPE int64
 
@@ -20,12 +33,15 @@ const (
 )
 
 type BondType struct {
-	atype1 *AtomType
-	atype2 *AtomType
-	btype  BOND_TYPE
-	k_r    float32
-	r0     float32
+	atype1 string
+	atype2 string
+
+	btype BOND_TYPE
+	k_r   float32
+	r0    float32
 }
+
+// --------------------------------------------------------
 
 type ANGLE_TYPE int64
 
@@ -38,15 +54,17 @@ const (
 )
 
 type AngleType struct {
-	atype1 *AtomType
-	atype2 *AtomType
-	atype3 *AtomType
+	atype1 string
+	atype2 string
+	atype3 string
 
 	k_theta float32
 	theta   float32
 	r13     float32
 	k_ub    float32
 }
+
+// --------------------------------------------------------
 
 type DIHEDRAL_TYPE int64
 
@@ -59,10 +77,10 @@ const (
 )
 
 type DihedralType struct {
-	atype1 *AtomType
-	atype2 *AtomType
-	atype3 *AtomType
-	atype4 *AtomType
+	atype1 string
+	atype2 string
+	atype3 string
+	atype4 string
 
 	k_phi float32
 	phi   float32
