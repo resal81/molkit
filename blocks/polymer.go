@@ -15,10 +15,12 @@ type Polymer struct {
 	fragments []*Fragment
 	system    *System
 
-	bonds     []*Bond
-	angles    []*Angle
-	dihedrals []*Dihedral
-	impropers []*Improper
+	bonds       []*Bond
+	pairs       []*Bond
+	constraints []*Bond
+	angles      []*Angle
+	dihedrals   []*Dihedral
+	impropers   []*Dihedral
 }
 
 func NewPolymer() *Polymer {

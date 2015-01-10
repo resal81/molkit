@@ -12,6 +12,7 @@ type System struct {
 	id int64
 
 	polymers []*Polymer
+	paramsdb *ParamsDB
 }
 
 func NewSystem() *System {
