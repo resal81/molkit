@@ -11,19 +11,15 @@ const (
 type ParamsDB struct {
 	dbtype PARAMS_DB_TYPE
 
-	gmxprops struct {
-		defaults struct {
-		}
-	}
+	gmxdefaults *GMXDefaults
 
-	atomTypes     map[string]*ParamsAtomType                 // ANY; normal atom types
-	atomTypes14   map[string]*ParamsAtomType                 // CHARMM; data for 1-4 interactions
-	nonbondTypes  map[string]map[string]*ParamsNonBondedType // GROMACS; nb interactions that don't obey combination rules
-	pairTypes     map[string]map[string]*ParamsPairType      // GROMACS; data for 1-4 interactions
-	bondTypes     map[string]map[string]*ParamsBondType      // ANY;
-	angleTypes    map[string]map[string]map[string]*ParamsAngleType
-	dihedralTypes map[string]map[string]map[string]map[string]*ParamsDihedralType
-	improperTypes map[string]map[string]map[string]map[string]*ParamsDihedralType
+	atomTypes     []*AtomType            // ANY; normal atom types
+	nonbondTypes  []*ParamsNonBondedType // GROMACS; nb interactions that don't obey combination rules
+	pairTypes     []*ParamsPairType      // GROMACS; data for 1-4 interactions
+	bondTypes     []*ParamsBondType      // ANY;
+	angleTypes    []*ParamsAngleType
+	dihedralTypes []*ParamsDihedralType
+	improperTypes []*ParamsDihedralType
 }
 
 func NewParamsDB(dbtype PARAMS_DB_TYPE) *ParamsDB {
@@ -36,15 +32,6 @@ func (p *ParamsDB) Type() PARAMS_DB_TYPE {
 	return p.dbtype
 }
 
-func (p *ParamsDB) GMXAddAtomType(atype string, protons int8, mass, charge, sigma, epsilon float32) {
-	at := ParamsAtomType{
-		atype:   atype,
-		protons: protons,
-		mass:    mass,
-		charge:  charge,
-		sigma:   sigma,
-		epsilon: epsilon,
-	}
-
-	p.atomTypes[atype] = &at
+func (p *ParamsDB) SetGMXDefaults(gd *GMXDefaults) {
+	p.gmxdefaults = gd
 }

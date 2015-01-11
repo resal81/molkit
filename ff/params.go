@@ -66,26 +66,101 @@ const (
 
 // --------------------------------------------------------
 
-type ParamsAtomType struct {
-	atype   string
-	protons int8
-	mass    float32
-	sigma   float32
-	epsilon float32
-	charge  float32
+type atSetting int32
+
+const (
+	AT_GMX_ATOMTYPE atSetting = 1 << iota
+	AT_CHM_ATOMTYPE
+	AT_PROTONS_SET
+	AT_MASS_SET
+	AT_CHARGE_SET
+	AT_SIGMA_SET
+	AT_SIGMA14_SET
+	AT_EPSILON_SET
+	AT_EPSILON14_SET
+)
+
+type AtomType struct {
+	atype     string
+	protons   int8
+	mass      float32
+	sigma     float32
+	epsilon   float32
+	sigma14   float32
+	epsilon14 float32
+	charge    float32
+
+	setting atSetting
 }
 
-func NewGMXParamsAtomType(atype string, protons int8, mass, charge, sigma, epsilon float32) *ParamsAtomType {
-	at := ParamsAtomType{
+func NewAtomType(atype string, src atSetting) *AtomType {
+	return &AtomType{
 		atype:   atype,
-		protons: protons,
-		mass:    mass,
-		charge:  charge,
-		sigma:   sigma,
-		epsilon: epsilon,
+		setting: src,
 	}
+}
 
-	return &at
+func (a *AtomType) SetProtons(u int8) {
+	a.setting |= AT_PROTONS_SET
+	a.protons = u
+}
+
+func (a *AtomType) Protons() int8 {
+	return a.protons
+}
+
+func (a *AtomType) SetMass(v float32) {
+	a.setting |= AT_MASS_SET
+	a.mass = v
+}
+
+func (a *AtomType) Mass() float32 {
+	return a.mass
+}
+
+func (a *AtomType) SetCharge(v float32) {
+	a.setting |= AT_CHARGE_SET
+	a.charge = v
+}
+
+func (a *AtomType) Charge() float32 {
+	return a.charge
+}
+
+func (a *AtomType) SetSigma(v float32) {
+	a.setting |= AT_SIGMA_SET
+	a.sigma = v
+}
+
+func (a *AtomType) Sigma() float32 {
+	return a.sigma
+}
+
+func (a *AtomType) SetEpsilon(v float32) {
+	a.setting |= AT_EPSILON_SET
+	a.epsilon = v
+}
+
+func (a *AtomType) Epsilon() float32 {
+	return a.epsilon
+}
+
+func (a *AtomType) SetSigma14(v float32) {
+	a.setting |= AT_SIGMA14_SET
+	a.sigma14 = v
+}
+
+func (a *AtomType) Sigma14() float32 {
+	return a.sigma14
+}
+
+func (a *AtomType) SetEpsilon14(v float32) {
+	a.setting |= AT_EPSILON14_SET
+	a.epsilon14 = v
+}
+
+func (a *AtomType) Epsilon14() float32 {
+	return a.epsilon14
 }
 
 // --------------------------------------------------------
@@ -182,5 +257,25 @@ type ParamsConstraintType struct {
 }
 
 // --------------------------------------------------------
+
+type GMXDefaults struct {
+	nbfunc   int8
+	combrule int8
+	genpairs bool
+	fudgeLJ  float32
+	fudgeQQ  float32
+}
+
+func NewGMXDefaults(nbfunc, combrule int8, genpairs bool, fudgeLJ, fudgeQQ float32) *GMXDefaults {
+	gd := GMXDefaults{
+		nbfunc:   nbfunc,
+		combrule: combrule,
+		genpairs: genpairs,
+		fudgeLJ:  fudgeLJ,
+		fudgeQQ:  fudgeQQ,
+	}
+
+	return &gd
+}
 
 //
