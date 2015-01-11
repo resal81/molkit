@@ -1,4 +1,4 @@
-package blocks
+package ff
 
 type PARAMS_DB_TYPE int8
 
@@ -19,7 +19,7 @@ type ParamsDB struct {
 	atomTypes     map[string]*ParamsAtomType                 // ANY; normal atom types
 	atomTypes14   map[string]*ParamsAtomType                 // CHARMM; data for 1-4 interactions
 	nonbondTypes  map[string]map[string]*ParamsNonBondedType // GROMACS; nb interactions that don't obey combination rules
-	pairTypess    map[string]map[string]*ParamsPairType      // GROMACS; data for 1-4 interactions
+	pairTypes     map[string]map[string]*ParamsPairType      // GROMACS; data for 1-4 interactions
 	bondTypes     map[string]map[string]*ParamsBondType      // ANY;
 	angleTypes    map[string]map[string]map[string]*ParamsAngleType
 	dihedralTypes map[string]map[string]map[string]map[string]*ParamsDihedralType
@@ -27,7 +27,13 @@ type ParamsDB struct {
 }
 
 func NewParamsDB(dbtype PARAMS_DB_TYPE) *ParamsDB {
-	return &ParamsDB{dbtype: dbtype}
+	return &ParamsDB{
+		dbtype: dbtype,
+	}
+}
+
+func (p *ParamsDB) Type() PARAMS_DB_TYPE {
+	return p.dbtype
 }
 
 func (p *ParamsDB) GMXAddAtomType(atype string, protons int8, mass, charge, sigma, epsilon float32) {
