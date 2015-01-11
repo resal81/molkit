@@ -2,76 +2,10 @@ package ff
 
 // --------------------------------------------------------
 
-type NON_BONDED_TYPE int8
-type PAIR_TYPE int8
-type BOND_TYPE int64
-type ANGLE_TYPE int64
-type DIHEDRAL_TYPE int64
-type CONSTRAINT_TYPE int8
-
-const (
-	NB_TYPE1 NON_BONDED_TYPE = 1 << iota
-	NB_TYPE2
-)
-
-const (
-	P_TYPE1 PAIR_TYPE = 1 << iota
-	P_TYPE2
-)
-
-const (
-	B_TYPE1 BOND_TYPE = 1 << iota
-	B_TYPE2
-	B_TYPE3
-	B_TYPE4
-	B_TYPE5
-	B_TYPE6
-	B_TYPE7
-	B_TYPE8
-	B_TYPE9
-	B_TYPE10
-)
-
-const (
-	A_TYPE1 ANGLE_TYPE = 1 << iota // GMX 1
-	A_TYPE2
-	A_TYPE3
-	A_TYPE4
-	A_TYPE5
-	A_TYPE6
-	A_TYPE7
-	A_TYPE8
-	A_TYPE9
-	A_TYPE10
-)
-
-const (
-	D_TYPE1 DIHEDRAL_TYPE = 1 << iota // GMX 1
-	D_TYPE2
-	D_TYPE3
-	D_TYPE4
-	D_TYPE5
-	D_TYPE6
-	D_TYPE7
-	D_TYPE8
-	D_TYPE9
-	D_TYPE10
-	D_TYPE11
-)
-
-const (
-	CNT_TYPE1 CONSTRAINT_TYPE = 1 << iota
-	CNT_TYPE2
-)
-
-// --------------------------------------------------------
-
 type atSetting int32
 
 const (
-	AT_GMX_ATOMTYPE atSetting = 1 << iota
-	AT_CHM_ATOMTYPE
-	AT_PROTONS_SET
+	AT_PROTONS_SET atSetting = 1 << iota
 	AT_MASS_SET
 	AT_CHARGE_SET
 	AT_SIGMA_SET
@@ -93,10 +27,9 @@ type AtomType struct {
 	setting atSetting
 }
 
-func NewAtomType(atype string, src atSetting) *AtomType {
+func NewAtomType(atype string) *AtomType {
 	return &AtomType{
-		atype:   atype,
-		setting: src,
+		atype: atype,
 	}
 }
 
@@ -165,56 +98,129 @@ func (a *AtomType) Epsilon14() float32 {
 
 // --------------------------------------------------------
 
-type ParamsNonBondedType struct {
+type nonbondedtypeSetting int32
+
+const (
+	NBT_TYPE_1 nonbondedtypeSetting = 1 << iota
+)
+
+type NonBondedType struct {
 	atype1 string
 	atype2 string
 
-	nbtype NON_BONDED_TYPE
+	nbtype nonbondedtypeSetting
 
-	v1 float32
-	v2 float32
-	v3 float32
-}
-
-// --------------------------------------------------------
-
-type ParamsPairType struct {
-	atype1  string
-	atype2  string
-	ptype   PAIR_TYPE
 	sigma   float32
 	epsilon float32
 }
 
-func NewGMXParamsPairType(atype1, atype2 string, fn int8, sigma, epsilon float32) *ParamsPairType {
-	pt := ParamsPairType{
-		atype1:  atype1,
-		atype2:  atype2,
-		sigma:   sigma,
-		epsilon: epsilon,
+func NewNonBondedType(atype1, atype2 string) *NonBondedType {
+	return &NonBondedType{
+		atype1: atype1,
+		atype2: atype2,
 	}
+}
 
-	return &pt
+func (n *NonBondedType) SetSigma(v float32) {
+	n.sigma = v
+}
+
+func (n *NonBondedType) Sigma() float32 {
+	return n.sigma
+}
+
+func (n *NonBondedType) SetEpsilon(v float32) {
+	n.epsilon = v
+}
+
+func (n *NonBondedType) Epsilon() float32 {
+	return n.epsilon
 }
 
 // --------------------------------------------------------
 
-type ParamsBondType struct {
+type pairtypeSetting int32
+
+const (
+	PT_TYPE_1 pairtypeSetting = 1 << iota
+)
+
+type PairType struct {
+	atype1    string
+	atype2    string
+	sigma14   float32
+	epsilon14 float32
+
+	setting pairtypeSetting
+}
+
+func (p *PairType) NewPairType(atype1, atype2 string) *PairType {
+	return &PairType{
+		atype1: atype1,
+		atype2: atype2,
+	}
+}
+
+func (p *PairType) SetSigma14(v float32) {
+	p.sigma14 = v
+}
+
+func (p *PairType) Sigma14() float32 {
+	return p.sigma14
+}
+
+func (p *PairType) SetEpsilon14(v float32) {
+	p.epsilon14 = v
+}
+
+func (p *PairType) Epsilon14() float32 {
+	return p.epsilon14
+}
+
+// --------------------------------------------------------
+
+type bondtypeSetting int64
+
+const (
+	BT_TYPE_1 bondtypeSetting = 1 << iota // harmonic bond
+)
+
+type BondType struct {
 	atype1 string
 	atype2 string
 
-	btype BOND_TYPE
-	k_r   float32
-	r0    float32
+	kr float32
+	r0 float32
+
+	setting bondtypeSetting
 }
 
-func NewGMXParamsBondType(atype1, atype2 string, fn int8, k_r, r0 float32) *ParamsBondType {
-	return nil
+func NewBondType(atype1, atype2 string) *BondType {
+	return &BondType{
+		atype1: atype1,
+		atype2: atype2,
+	}
+}
+
+func (b *BondType) SetHarmonicConstant(v float32) {
+	b.kr = v
+}
+
+func (b *BondType) HarmonicConstant() float32 {
+	return b.kr
+}
+
+func (b *BondType) SetHarmonicDistance(v float32) {
+	b.r0 = v
+}
+
+func (b *BondType) HarmonicDistance() float32 {
+	return b.r0
 }
 
 // --------------------------------------------------------
 
-type ParamsAngleType struct {
+type AngleType struct {
 	atype1 string
 	atype2 string
 	atype3 string
@@ -225,13 +231,9 @@ type ParamsAngleType struct {
 	k_ub    float32
 }
 
-func NewGMXParamsAngleType(atype1, atype2, atype3 string, fn int8, k_theta, theta, r13, k_ub float32) *ParamsAngleType {
-	return nil
-}
-
 // --------------------------------------------------------
 
-type ParamsDihedralType struct {
+type DihedralType struct {
 	atype1 string
 	atype2 string
 	atype3 string
@@ -242,18 +244,13 @@ type ParamsDihedralType struct {
 	mult  int8
 }
 
-func NewGMXParamsDihedralType(atype1, atype2, atype3, atype4 string, fn int8, k_phi, phi float32, mult int8) *ParamsDihedralType {
-	return nil
-}
-
 // --------------------------------------------------------
 
-type ParamsConstraintType struct {
+type ConstraintType struct {
 	atype1 string
 	atype2 string
 
-	cnttype CONSTRAINT_TYPE
-	b0      float32
+	b0 float32
 }
 
 // --------------------------------------------------------

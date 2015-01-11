@@ -77,15 +77,15 @@ func readtop(reader io.Reader) (*blocks.System, error) {
 	var group topologyGroup
 
 	// var curr_topmol *ff.TopPolymer
-	paramsDB := ff.NewParamsDB(ff.P_DB_GROMACS)
+	forcefield := ff.NewForceField(ff.FF_GROMACS)
 
 	// read file line by line
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, ";") || line == "" {
+		line = cleanLine(line)
+		if line == "" {
 			continue
 		}
 
@@ -149,8 +149,14 @@ func readtop(reader io.Reader) (*blocks.System, error) {
 					log.Printf("error in line: '%s' \n", line)
 					return nil, err
 				}
-				paramsDB.SetGMXDefaults(defaults)
+				forcefield.SetGMXDefaults(defaults)
 			case G_ATOMTYPES:
+				at, err := parseAtomTypes(line)
+				if err != nil {
+					log.Printf("error in line: '%s' \n", line)
+					return nil, err
+				}
+				forcefield.AddAtomType(at)
 
 			}
 
@@ -173,6 +179,17 @@ func readtop(reader io.Reader) (*blocks.System, error) {
 
 	return nil, nil
 
+}
+
+//
+func cleanLine(s string) string {
+	i := strings.Index(s, ";")
+	if i != -1 {
+		s = s[:i]
+	}
+
+	s = strings.TrimSpace(s)
+	return s
 }
 
 // Extract whats inside brackets: [ ... ]
@@ -207,22 +224,30 @@ func parseAtomTypes(s string) (*ff.AtomType, error) {
 	var prot int8
 	var mass, chg, sig, eps, sig14, eps14 float32
 
-	n, err := fmt.Sscanf(s, "%s %d %f %f %s %f %f %f %f", &name, &prot, &mass, &chg, &pt, &sig, &eps, &sig14, &eps14)
-	if err != nil {
-		return nil, err
-	}
-	if n != 7 || n != 9 {
-		return nil, ErrAtomTypes
+	fields := strings.Fields(s)
+	switch len(fields) {
+	case 7:
+		_, err := fmt.Sscanf(s, "%s %d %f %f %s %f %f", &name, &prot, &mass, &chg, &pt, &sig, &eps)
+		if err != nil {
+			return nil, err
+		}
+	case 9:
+		_, err := fmt.Sscanf(s, "%s %d %f %f %s %f %f %f %f", &name, &prot, &mass, &chg, &pt, &sig, &eps, &sig14, &eps14)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, errors.New("the number of fields in the [atomtypes] line is not right")
 	}
 
-	at := ff.NewAtomType(name, ff.AT_GMX_ATOMTYPE)
+	at := ff.NewAtomType(name)
 	at.SetProtons(prot)
 	at.SetMass(mass)
 	at.SetCharge(chg)
 	at.SetSigma(sig)
 	at.SetEpsilon(eps)
 
-	if n == 9 {
+	if len(fields) == 9 {
 		at.SetSigma14(sig14)
 		at.SetEpsilon14(eps14)
 	}
