@@ -205,12 +205,14 @@ func readtop(reader io.Reader) (*blocks.System, *ff.ForceField, error) {
 					return nil, nil, err
 				}
 
-				if dt.Setting()&ff.DHT_TYPE_1 == 1 || dt.Setting()&ff.DHT_TYPE_9 == 1 {
+				if dt.Setting()&ff.DHT_TYPE_1 != 0 || dt.Setting()&ff.DHT_TYPE_9 != 0 {
 					forcefield.AddDihedralType(dt)
 
-				} else if dt.Setting()&ff.DHT_TYPE_2 == 1 {
+				} else if dt.Setting()&ff.DHT_TYPE_2 != 0 {
 					forcefield.AddImproperType(dt)
 
+				} else {
+					return nil, nil, errors.New("dihedral type is not valid")
 				}
 
 			}
@@ -277,7 +279,7 @@ func parseAtomTypes(s string) (*ff.AtomType, error) {
 
 	var name, pt string
 	var prot int8
-	var mass, chg, sig, eps, sig14, eps14 float32
+	var mass, chg, sig, eps, sig14, eps14 float64
 
 	fields := strings.Fields(s)
 	switch len(fields) {
@@ -314,7 +316,7 @@ func parseNonBondedTypes(s string) (*ff.NonBondedType, error) {
 	// ; i	j	func	sigma	epsilon
 	var at1, at2 string
 	var fn int8
-	var sig, eps float32
+	var sig, eps float64
 	fields := strings.Fields(s)
 
 	n, err := fmt.Sscanf(s, "%s %s %d %f %f", &at1, &at2, &fn, &sig, &eps)
@@ -338,7 +340,7 @@ func parsePairTypes(s string) (*ff.PairType, error) {
 	// ; i	j	func	sigma1-4	epsilon1-4
 	var at1, at2 string
 	var fn int8
-	var sig14, eps14 float32
+	var sig14, eps14 float64
 	fields := strings.Fields(s)
 
 	n, err := fmt.Sscanf(s, "%s %s %d %f %f", &at1, &at2, &fn, &sig14, &eps14)
@@ -362,7 +364,7 @@ func parseBondTypes(s string) (*ff.BondType, error) {
 	// ; i	j	func	b0	Kb
 	var at1, at2 string
 	var fn int8
-	var r0, kr float32
+	var r0, kr float64
 	fields := strings.Fields(s)
 
 	n, err := fmt.Sscanf(s, "%s %s %d %f %f", &at1, &at2, &fn, &r0, &kr)
@@ -392,7 +394,7 @@ func parseAngleTypes(s string) (*ff.AngleType, error) {
 
 	var at1, at2, at3 string
 	var tmp int8
-	var thet, kt, r13, kub float32
+	var thet, kt, r13, kub float64
 
 	switch fn {
 	case 1:
@@ -430,7 +432,7 @@ func parseDihedralTypes(s string) (*ff.DihedralType, error) {
 
 	var at1, at2, at3, at4 string
 	var tmp, mult int8
-	var phi, psi, kphi, kpsi float32
+	var phi, psi, kphi, kpsi float64
 
 	switch fn {
 	case 1:
@@ -461,6 +463,8 @@ func parseDihedralTypes(s string) (*ff.DihedralType, error) {
 			return nil, errors.New("could not parse dihedraltype")
 		}
 		dt := ff.NewDihedralType(at1, at2, at3, at4, ff.DHT_TYPE_2)
+		dt.SetPsiConstant(kpsi)
+		dt.SetPsi(psi)
 		return dt, nil
 	default:
 		return nil, errors.New("dihedraltype function type is not 1, 2 or 9")

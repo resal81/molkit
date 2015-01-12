@@ -53,7 +53,7 @@ func (f *ForceField) AddNonBondedType(nb *NonBondedType) {
 	f.nonbondTypes = append(f.nonbondTypes, nb)
 }
 
-func (f *ForceField) NondBondedTypes() []*NonBondedType {
+func (f *ForceField) NonBondedTypes() []*NonBondedType {
 	return f.nonbondTypes
 }
 
@@ -98,12 +98,12 @@ func (f *ForceField) DihedralTypes() []*DihedralType {
 
 //
 func (f *ForceField) AddImproperType(im *DihedralType) {
-	if im.setting&DHT_TYPE_1 == 2 {
+	if im.setting&DHT_TYPE_2 == 0 {
 		panic("cannot add a imporper with a bad type")
 	}
 	f.improperTypes = append(f.improperTypes, im)
 }
 
-func (f *ForceField) ImproperTytpes() []*DihedralType {
+func (f *ForceField) ImproperTypes() []*DihedralType {
 	return f.improperTypes
 }

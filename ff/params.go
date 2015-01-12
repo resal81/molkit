@@ -19,12 +19,12 @@ const (
 type AtomType struct {
 	atype     string
 	protons   int8
-	mass      float32
-	sigma     float32
-	epsilon   float32
-	sigma14   float32
-	epsilon14 float32
-	charge    float32
+	mass      float64
+	sigma     float64
+	epsilon   float64
+	sigma14   float64
+	epsilon14 float64
+	charge    float64
 
 	setting atSetting
 }
@@ -51,7 +51,7 @@ func (a *AtomType) Protons() int8 {
 }
 
 //
-func (a *AtomType) SetMass(v float32) {
+func (a *AtomType) SetMass(v float64) {
 	a.setting |= AT_MASS_SET
 	a.mass = v
 }
@@ -60,12 +60,12 @@ func (a *AtomType) HasMassSet() bool {
 	return a.setting&AT_MASS_SET != 0
 }
 
-func (a *AtomType) Mass() float32 {
+func (a *AtomType) Mass() float64 {
 	return a.mass
 }
 
 //
-func (a *AtomType) SetCharge(v float32) {
+func (a *AtomType) SetCharge(v float64) {
 	a.setting |= AT_CHARGE_SET
 	a.charge = v
 }
@@ -74,12 +74,12 @@ func (a *AtomType) HasChargeSet() bool {
 	return a.setting&AT_CHARGE_SET != 0
 }
 
-func (a *AtomType) Charge() float32 {
+func (a *AtomType) Charge() float64 {
 	return a.charge
 }
 
 //
-func (a *AtomType) SetSigma(v float32) {
+func (a *AtomType) SetSigma(v float64) {
 	a.setting |= AT_SIGMA_SET
 	a.sigma = v
 }
@@ -88,12 +88,12 @@ func (a *AtomType) HasSigmaSet() bool {
 	return a.setting&AT_SIGMA_SET != 0
 }
 
-func (a *AtomType) Sigma() float32 {
+func (a *AtomType) Sigma() float64 {
 	return a.sigma
 }
 
 //
-func (a *AtomType) SetEpsilon(v float32) {
+func (a *AtomType) SetEpsilon(v float64) {
 	a.setting |= AT_EPSILON_SET
 	a.epsilon = v
 }
@@ -102,12 +102,12 @@ func (a *AtomType) HasEpsilonSet() bool {
 	return a.setting&AT_EPSILON_SET != 0
 }
 
-func (a *AtomType) Epsilon() float32 {
+func (a *AtomType) Epsilon() float64 {
 	return a.epsilon
 }
 
 //
-func (a *AtomType) SetSigma14(v float32) {
+func (a *AtomType) SetSigma14(v float64) {
 	a.setting |= AT_SIGMA14_SET
 	a.sigma14 = v
 }
@@ -116,12 +116,12 @@ func (a *AtomType) HasSigma14Set() bool {
 	return a.setting&AT_SIGMA14_SET != 0
 }
 
-func (a *AtomType) Sigma14() float32 {
+func (a *AtomType) Sigma14() float64 {
 	return a.sigma14
 }
 
 //
-func (a *AtomType) SetEpsilon14(v float32) {
+func (a *AtomType) SetEpsilon14(v float64) {
 	a.setting |= AT_EPSILON14_SET
 	a.epsilon14 = v
 }
@@ -130,7 +130,7 @@ func (a *AtomType) HasEpsilon14Set() bool {
 	return a.setting&AT_EPSILON14_SET != 0
 }
 
-func (a *AtomType) Epsilon14() float32 {
+func (a *AtomType) Epsilon14() float64 {
 	return a.epsilon14
 }
 
@@ -153,8 +153,8 @@ type NonBondedType struct {
 
 	nbtype nonbondedtypeSetting
 
-	sigma   float32
-	epsilon float32
+	sigma   float64
+	epsilon float64
 
 	setting nonbondedtypeSetting
 }
@@ -172,7 +172,7 @@ func NewNonBondedType(atype1, atype2 string, nbt nonbondedtypeSetting) *NonBonde
 }
 
 //
-func (n *NonBondedType) SetSigma(v float32) {
+func (n *NonBondedType) SetSigma(v float64) {
 	n.setting |= NBT_SIGMA_SET
 	n.sigma = v
 }
@@ -181,12 +181,12 @@ func (n *NonBondedType) HasSigmaSet() bool {
 	return n.setting&NBT_SIGMA_SET != 0
 }
 
-func (n *NonBondedType) Sigma() float32 {
+func (n *NonBondedType) Sigma() float64 {
 	return n.sigma
 }
 
 //
-func (n *NonBondedType) SetEpsilon(v float32) {
+func (n *NonBondedType) SetEpsilon(v float64) {
 	n.setting |= NBT_EPSILON_SET
 	n.epsilon = v
 }
@@ -195,7 +195,7 @@ func (n *NonBondedType) HasEpsilonSet() bool {
 	return n.setting&NBT_EPSILON_SET != 0
 }
 
-func (n *NonBondedType) Epsilon() float32 {
+func (n *NonBondedType) Epsilon() float64 {
 	return n.epsilon
 }
 
@@ -215,8 +215,8 @@ const (
 type PairType struct {
 	atype1    string
 	atype2    string
-	sigma14   float32
-	epsilon14 float32
+	sigma14   float64
+	epsilon14 float64
 
 	setting pairtypeSetting
 }
@@ -233,7 +233,7 @@ func NewPairType(atype1, atype2 string, pt pairtypeSetting) *PairType {
 }
 
 //
-func (p *PairType) SetSigma14(v float32) {
+func (p *PairType) SetSigma14(v float64) {
 	p.setting |= PT_SIGMA14_SET
 	p.sigma14 = v
 }
@@ -242,12 +242,12 @@ func (p *PairType) HasSigma14Set() bool {
 	return p.setting&PT_SIGMA14_SET != 0
 }
 
-func (p *PairType) Sigma14() float32 {
+func (p *PairType) Sigma14() float64 {
 	return p.sigma14
 }
 
 //
-func (p *PairType) SetEpsilon14(v float32) {
+func (p *PairType) SetEpsilon14(v float64) {
 	p.setting |= PT_EPSILON14_SET
 	p.epsilon14 = v
 }
@@ -256,7 +256,7 @@ func (p *PairType) HasEpsilon14Set() bool {
 	return p.setting&PT_EPSILON14_SET != 0
 }
 
-func (p *PairType) Epsilon14() float32 {
+func (p *PairType) Epsilon14() float64 {
 	return p.epsilon14
 }
 
@@ -277,8 +277,8 @@ type BondType struct {
 	atype1 string
 	atype2 string
 
-	kr float32
-	r0 float32
+	kr float64
+	r0 float64
 
 	setting bondtypeSetting
 }
@@ -296,7 +296,7 @@ func NewBondType(atype1, atype2 string, bt bondtypeSetting) *BondType {
 }
 
 //
-func (b *BondType) SetHarmonicConstant(v float32) {
+func (b *BondType) SetHarmonicConstant(v float64) {
 	b.setting |= BT_HARMONIC_CONSTANT_SET
 	b.kr = v
 }
@@ -305,12 +305,12 @@ func (b *BondType) HasHarmonicConstantSet() bool {
 	return b.setting&BT_HARMONIC_CONSTANT_SET != 0
 }
 
-func (b *BondType) HarmonicConstant() float32 {
+func (b *BondType) HarmonicConstant() float64 {
 	return b.kr
 }
 
 //
-func (b *BondType) SetHarmonicDistance(v float32) {
+func (b *BondType) SetHarmonicDistance(v float64) {
 	b.setting |= BT_HARMONIC_DISTANCE_SET
 	b.r0 = v
 }
@@ -319,7 +319,7 @@ func (b *BondType) HasHarmonicDistanceSet() bool {
 	return b.setting&BT_HARMONIC_DISTANCE_SET != 0
 }
 
-func (b *BondType) HarmonicDistance() float32 {
+func (b *BondType) HarmonicDistance() float64 {
 	return b.r0
 }
 
@@ -343,10 +343,10 @@ type AngleType struct {
 	atype2 string
 	atype3 string
 
-	k_theta float32
-	theta   float32
-	r13     float32
-	k_ub    float32
+	k_theta float64
+	theta   float64
+	r13     float64
+	k_ub    float64
 
 	setting angletypeSetting
 }
@@ -366,7 +366,7 @@ func NewAngleType(atype1, atype2, atype3 string, angtype angletypeSetting) *Angl
 }
 
 //
-func (a *AngleType) SetThetaConstant(v float32) {
+func (a *AngleType) SetThetaConstant(v float64) {
 	a.setting |= ANG_THETA_CONSTANT_SET
 	a.k_theta = v
 }
@@ -375,12 +375,12 @@ func (a *AngleType) HasThetaConstantSet() bool {
 	return a.setting&ANG_THETA_CONSTANT_SET != 0
 }
 
-func (a *AngleType) ThetaConstant() float32 {
+func (a *AngleType) ThetaConstant() float64 {
 	return a.k_theta
 }
 
 //
-func (a *AngleType) SetTheta(v float32) {
+func (a *AngleType) SetTheta(v float64) {
 	a.setting |= ANG_THETA_SET
 	a.theta = v
 }
@@ -389,12 +389,12 @@ func (a *AngleType) HasThetaSet() bool {
 	return a.setting&ANG_THETA_SET != 0
 }
 
-func (a *AngleType) Theta() float32 {
+func (a *AngleType) Theta() float64 {
 	return a.theta
 }
 
 //
-func (a *AngleType) SetUBConstant(v float32) {
+func (a *AngleType) SetUBConstant(v float64) {
 	a.setting |= ANG_UB_CONSTANT_SET
 	a.k_ub = v
 }
@@ -403,12 +403,12 @@ func (a *AngleType) HasUBConstantSet() bool {
 	return a.setting&ANG_UB_CONSTANT_SET != 0
 }
 
-func (a *AngleType) UBConstant() float32 {
+func (a *AngleType) UBConstant() float64 {
 	return a.k_ub
 }
 
 //
-func (a *AngleType) SetR13(v float32) {
+func (a *AngleType) SetR13(v float64) {
 	a.setting |= ANG_R13_SET
 	a.r13 = v
 }
@@ -417,7 +417,7 @@ func (a *AngleType) HasR13Set() bool {
 	return a.setting&ANG_R13_SET != 0
 }
 
-func (a *AngleType) R13() float32 {
+func (a *AngleType) R13() float64 {
 	return a.r13
 }
 
@@ -444,13 +444,13 @@ type DihedralType struct {
 	atype3 string
 	atype4 string
 
-	k_phi float32
-	phi   float32
+	k_phi float64
+	phi   float64
 	mult  int8
 
 	// for improper
-	k_psi float32
-	psi   float32
+	k_psi float64
+	psi   float64
 
 	setting dihedraltypeSetting
 }
@@ -470,7 +470,7 @@ func NewDihedralType(atype1, atype2, atype3, atype4 string, dht dihedraltypeSett
 }
 
 //
-func (d *DihedralType) SetPhiConstant(v float32) {
+func (d *DihedralType) SetPhiConstant(v float64) {
 	d.setting |= DHT_PHI_CONSTANT_SET
 	d.k_phi = v
 }
@@ -479,12 +479,12 @@ func (d *DihedralType) HasPhiConstantSet() bool {
 	return d.setting&DHT_PHI_CONSTANT_SET != 0
 }
 
-func (d *DihedralType) PhiConstant() float32 {
+func (d *DihedralType) PhiConstant() float64 {
 	return d.k_phi
 }
 
 //
-func (d *DihedralType) SetPhi(v float32) {
+func (d *DihedralType) SetPhi(v float64) {
 	d.setting |= DHT_PHI_SET
 	d.phi = v
 }
@@ -493,12 +493,12 @@ func (d *DihedralType) HasPhiSet() bool {
 	return d.setting&DHT_PHI_SET != 0
 }
 
-func (d *DihedralType) Phi() float32 {
+func (d *DihedralType) Phi() float64 {
 	return d.phi
 }
 
 //
-func (d *DihedralType) SetPsiConstant(v float32) {
+func (d *DihedralType) SetPsiConstant(v float64) {
 	d.setting |= DHT_PSI_CONSTANT_SET
 	d.k_psi = v
 }
@@ -507,12 +507,12 @@ func (d *DihedralType) HasPsiConstantSet() bool {
 	return d.setting&DHT_PSI_CONSTANT_SET != 0
 }
 
-func (d *DihedralType) PsiConstant() float32 {
+func (d *DihedralType) PsiConstant() float64 {
 	return d.k_psi
 }
 
 //
-func (d *DihedralType) SetPsi(v float32) {
+func (d *DihedralType) SetPsi(v float64) {
 	d.setting |= DHT_PSI_SET
 	d.psi = v
 }
@@ -521,7 +521,7 @@ func (d *DihedralType) HasPsiSet() bool {
 	return d.setting&DHT_PSI_SET != 0
 }
 
-func (d *DihedralType) Psi() float32 {
+func (d *DihedralType) Psi() float64 {
 	return d.psi
 }
 
@@ -551,7 +551,7 @@ type ConstraintType struct {
 	atype1 string
 	atype2 string
 
-	b0 float32
+	b0 float64
 }
 
 /**********************************************************
