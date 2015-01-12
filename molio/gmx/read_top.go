@@ -85,7 +85,7 @@ func readtop(reader io.Reader) (*ff.TopSystem, *ff.ForceField, error) {
 	var prev_resname string = "_"
 	var prev_resnumb int64 = -1
 
-	forcefield := ff.NewForceField(ff.FF_GROMACS)
+	forcefield := ff.NewForceField(ff.FF_SOURCE_GROMACS)
 
 	// read file line by line
 	scanner := bufio.NewScanner(reader)
@@ -208,10 +208,10 @@ func readtop(reader io.Reader) (*ff.TopSystem, *ff.ForceField, error) {
 					return nil, nil, err
 				}
 
-				if dt.Setting()&ff.DHT_TYPE_1 != 0 || dt.Setting()&ff.DHT_TYPE_9 != 0 {
+				if dt.Kind()&ff.FF_DIHEDRAL_TYPE_1 != 0 || dt.Kind()&ff.FF_DIHEDRAL_TYPE_9 != 0 {
 					forcefield.AddDihedralType(dt)
 
-				} else if dt.Setting()&ff.DHT_TYPE_2 != 0 {
+				} else if dt.Kind()&ff.FF_DIHEDRAL_TYPE_2 != 0 {
 					forcefield.AddImproperType(dt)
 
 				} else {
@@ -364,7 +364,7 @@ func parseNonBondedTypes(s string) (*ff.NonBondedType, error) {
 
 	switch fn {
 	case 1:
-		nbt := ff.NewNonBondedType(at1, at2, ff.NBT_TYPE_1)
+		nbt := ff.NewNonBondedType(at1, at2, ff.FF_NON_BONDED_TYPE_1)
 		nbt.SetSigma(sig)
 		nbt.SetEpsilon(eps)
 		return nbt, nil
@@ -388,7 +388,7 @@ func parsePairTypes(s string) (*ff.PairType, error) {
 
 	switch fn {
 	case 1:
-		pt := ff.NewPairType(at1, at2, ff.PT_TYPE_1)
+		pt := ff.NewPairType(at1, at2, ff.FF_PAIR_TYPE_1)
 		pt.SetSigma14(sig14)
 		pt.SetEpsilon14(eps14)
 		return pt, nil
@@ -412,7 +412,7 @@ func parseBondTypes(s string) (*ff.BondType, error) {
 
 	switch fn {
 	case 1:
-		bt := ff.NewBondType(at1, at2, ff.BT_TYPE_1)
+		bt := ff.NewBondType(at1, at2, ff.FF_BOND_TYPE_1)
 		bt.SetHarmonicConstant(kr)
 		bt.SetHarmonicDistance(r0)
 		return bt, nil
@@ -440,7 +440,7 @@ func parseAngleTypes(s string) (*ff.AngleType, error) {
 		if n != 6 || err != nil {
 			return nil, errors.New("could not parse angletype")
 		}
-		at := ff.NewAngleType(at1, at2, at3, ff.ANG_TYPE_1)
+		at := ff.NewAngleType(at1, at2, at3, ff.FF_ANGLE_TYPE_1)
 		at.SetThetaConstant(kt)
 		at.SetTheta(thet)
 		return at, nil
@@ -449,7 +449,7 @@ func parseAngleTypes(s string) (*ff.AngleType, error) {
 		if n != 8 || err != nil {
 			return nil, errors.New("could not parse angletype")
 		}
-		at := ff.NewAngleType(at1, at2, at3, ff.ANG_TYPE_5)
+		at := ff.NewAngleType(at1, at2, at3, ff.FF_ANGLE_TYPE_5)
 		at.SetThetaConstant(kt)
 		at.SetTheta(thet)
 		at.SetR13(r13)
@@ -478,7 +478,7 @@ func parseDihedralTypes(s string) (*ff.DihedralType, error) {
 		if n != 8 || err != nil {
 			return nil, errors.New("could not parse [dihedraltypes]")
 		}
-		dt := ff.NewDihedralType(at1, at2, at3, at4, ff.DHT_TYPE_1)
+		dt := ff.NewDihedralType(at1, at2, at3, at4, ff.FF_DIHEDRAL_TYPE_1)
 		dt.SetPhi(phi)
 		dt.SetPhiConstant(kphi)
 		dt.SetMult(mult)
@@ -489,7 +489,7 @@ func parseDihedralTypes(s string) (*ff.DihedralType, error) {
 		if n != 8 || err != nil {
 			return nil, errors.New("could not parse dihedraltype")
 		}
-		dt := ff.NewDihedralType(at1, at2, at3, at4, ff.DHT_TYPE_9)
+		dt := ff.NewDihedralType(at1, at2, at3, at4, ff.FF_DIHEDRAL_TYPE_9)
 		dt.SetPhi(phi)
 		dt.SetPhiConstant(kphi)
 		dt.SetMult(mult)
@@ -500,7 +500,7 @@ func parseDihedralTypes(s string) (*ff.DihedralType, error) {
 		if n != 7 || err != nil {
 			return nil, errors.New("could not parse [dihedraltypes]")
 		}
-		dt := ff.NewDihedralType(at1, at2, at3, at4, ff.DHT_TYPE_2)
+		dt := ff.NewDihedralType(at1, at2, at3, at4, ff.FF_DIHEDRAL_TYPE_2)
 		dt.SetPsiConstant(kpsi)
 		dt.SetPsi(psi)
 		return dt, nil
@@ -562,6 +562,29 @@ func parseAtoms(s string) (*ff.TopAtom, *resData, error) {
 	a.SetCGNR(cgnr)
 
 	return a, &resData{resname, resnumb}, nil
+}
+
+func parseBonds(s string, topPol *ff.TopPolymer) (*ff.TopBond, error) {
+	// ; ai    aj  funct   b0  Kb
+
+	fields := strings.Fields(s)
+	if len(fields) != 3 || len(fields) != 5 {
+		return nil, errors.New("number of fields in [bonds] is not 3 or 5")
+	}
+
+	// var ai, aj int64
+	// var fn int8
+	// var b0, kb float64
+
+	switch len(fields) {
+	case 3:
+		// n, err := fmt.Sscanf(s, "%d %d %d", &ai, &aj, &fn)
+	case 5:
+
+	}
+
+	return nil, nil
+
 }
 
 //

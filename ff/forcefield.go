@@ -1,15 +1,26 @@
+/*
+Package ff provides structs useful to read forcefields and topologies.
+*/
 package ff
 
-type FORCEFIELD_TYPE int8
+type ffTypes int64
 
 const (
-	FF_GROMACS FORCEFIELD_TYPE = 1 << iota
-	FF_CHARMM
-	FF_AMBER
+	FF_SOURCE_GROMACS ffTypes = 1 << iota
+	FF_SOURCE_CHARMM
+	FF_SOURCE_AMBER
+	FF_BOND_TYPE_1       // harmonic bond
+	FF_NON_BONDED_TYPE_1 //
+	FF_PAIR_TYPE_1       //
+	FF_ANGLE_TYPE_1      // harmonic
+	FF_ANGLE_TYPE_5      // UB
+	FF_DIHEDRAL_TYPE_1   // proper dihedral
+	FF_DIHEDRAL_TYPE_2   // improper
+	FF_DIHEDRAL_TYPE_9   // proper multiple
 )
 
 type ForceField struct {
-	fftype FORCEFIELD_TYPE
+	kind ffTypes
 
 	gmxdefaults *GMXDefaults
 
@@ -25,14 +36,17 @@ type ForceField struct {
 	fragments []*TopFragment
 }
 
-func NewForceField(fftype FORCEFIELD_TYPE) *ForceField {
+func NewForceField(kind ffTypes) *ForceField {
+	if kind&FF_SOURCE_GROMACS == 0 && kind&FF_SOURCE_CHARMM == 0 && kind&FF_SOURCE_AMBER == 0 {
+		panic("unsupported ff type")
+	}
 	return &ForceField{
-		fftype: fftype,
+		kind: kind,
 	}
 }
 
-func (f *ForceField) Type() FORCEFIELD_TYPE {
-	return f.fftype
+func (f *ForceField) Kind() ffTypes {
+	return f.kind
 }
 
 func (f *ForceField) SetGMXDefaults(gd *GMXDefaults) {
@@ -86,7 +100,7 @@ func (f *ForceField) AngleTypes() []*AngleType {
 
 //
 func (f *ForceField) AddDihedralType(dt *DihedralType) {
-	if dt.setting&DHT_TYPE_1 == 0 && dt.setting&DHT_TYPE_9 == 0 {
+	if dt.kind&FF_DIHEDRAL_TYPE_1 == 0 && dt.kind&FF_DIHEDRAL_TYPE_9 == 0 {
 		panic("cannot add a dihedral with a bad type")
 	}
 	f.dihedralTypes = append(f.dihedralTypes, dt)
@@ -98,7 +112,7 @@ func (f *ForceField) DihedralTypes() []*DihedralType {
 
 //
 func (f *ForceField) AddImproperType(im *DihedralType) {
-	if im.setting&DHT_TYPE_2 == 0 {
+	if im.kind&FF_DIHEDRAL_TYPE_2 == 0 {
 		panic("cannot add a imporper with a bad type")
 	}
 	f.improperTypes = append(f.improperTypes, im)

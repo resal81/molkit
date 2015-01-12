@@ -7,13 +7,13 @@ package ff
 type topAtomSetting int32
 
 const (
-	TOP_ATOM_NAME_SET topAtomSetting = 1 << iota
-	TOP_ATOM_TYPE_SET
-	TOP_ATOM_SERIAL_SET
-	TOP_ATOM_CHARGE_SET
-	TOP_ATOM_MASS_SET
-	TOP_ATOM_FRAGMENT_SET
-	TOP_ATOM_CGNR_SET
+	t_at_sett_NAME_SET topAtomSetting = 1 << iota
+	t_at_sett_TYPE_SET
+	t_at_sett_SERIAL_SET
+	t_at_sett_CHARGE_SET
+	t_at_sett_MASS_SET
+	t_at_sett_FRAGMENT_SET
+	t_at_sett_CGNR_SET
 )
 
 type TopAtom struct {
@@ -25,6 +25,8 @@ type TopAtom struct {
 	cgnr     int64
 	fragment *TopFragment
 	setting  topAtomSetting
+
+	posrest *TopPositionRestraint
 }
 
 func NewTopAtom() *TopAtom {
@@ -33,12 +35,12 @@ func NewTopAtom() *TopAtom {
 
 //
 func (a *TopAtom) SetName(name string) {
-	a.setting |= TOP_ATOM_NAME_SET
+	a.setting |= t_at_sett_NAME_SET
 	a.name = name
 }
 
 func (a *TopAtom) HasNameSet() bool {
-	return a.setting&TOP_ATOM_NAME_SET != 0
+	return a.setting&t_at_sett_NAME_SET != 0
 }
 
 func (a *TopAtom) Name() string {
@@ -47,12 +49,12 @@ func (a *TopAtom) Name() string {
 
 //
 func (a *TopAtom) SetAtomType(atype string) {
-	a.setting |= TOP_ATOM_TYPE_SET
+	a.setting |= t_at_sett_TYPE_SET
 	a.atype = atype
 }
 
 func (a *TopAtom) HasAtomTypeSet() bool {
-	return a.setting&TOP_ATOM_TYPE_SET != 0
+	return a.setting&t_at_sett_TYPE_SET != 0
 }
 
 func (a *TopAtom) AtomType() string {
@@ -61,12 +63,12 @@ func (a *TopAtom) AtomType() string {
 
 //
 func (a *TopAtom) SetSerial(ser int64) {
-	a.setting |= TOP_ATOM_SERIAL_SET
+	a.setting |= t_at_sett_SERIAL_SET
 	a.serial = ser
 }
 
 func (a *TopAtom) HasSerialSet() bool {
-	return a.setting&TOP_ATOM_SERIAL_SET != 0
+	return a.setting&t_at_sett_SERIAL_SET != 0
 }
 
 func (a *TopAtom) Serial() int64 {
@@ -75,12 +77,12 @@ func (a *TopAtom) Serial() int64 {
 
 //
 func (a *TopAtom) SetCGNR(cgnr int64) {
-	a.setting |= TOP_ATOM_CGNR_SET
+	a.setting |= t_at_sett_CGNR_SET
 	a.cgnr = cgnr
 }
 
 func (a *TopAtom) HasCGNRSet() bool {
-	return a.setting&TOP_ATOM_CGNR_SET != 0
+	return a.setting&t_at_sett_CGNR_SET != 0
 }
 
 func (a *TopAtom) CGNR() int64 {
@@ -89,12 +91,12 @@ func (a *TopAtom) CGNR() int64 {
 
 //
 func (a *TopAtom) SetMass(m float64) {
-	a.setting |= TOP_ATOM_MASS_SET
+	a.setting |= t_at_sett_MASS_SET
 	a.mass = m
 }
 
 func (a *TopAtom) HasMassSet() bool {
-	return a.setting&TOP_ATOM_MASS_SET != 0
+	return a.setting&t_at_sett_MASS_SET != 0
 }
 
 func (a *TopAtom) Mass() float64 {
@@ -103,12 +105,12 @@ func (a *TopAtom) Mass() float64 {
 
 //
 func (a *TopAtom) SetCharge(ch float64) {
-	a.setting |= TOP_ATOM_CHARGE_SET
+	a.setting |= t_at_sett_CHARGE_SET
 	a.charge = ch
 }
 
 func (a *TopAtom) HasChargeSet() bool {
-	return a.setting&TOP_ATOM_CHARGE_SET != 0
+	return a.setting&t_at_sett_CHARGE_SET != 0
 }
 
 func (a *TopAtom) Charge() float64 {
@@ -117,12 +119,12 @@ func (a *TopAtom) Charge() float64 {
 
 //
 func (a *TopAtom) setTopFragment(frag *TopFragment) {
-	a.setting |= TOP_ATOM_FRAGMENT_SET
+	a.setting |= t_at_sett_FRAGMENT_SET
 	a.fragment = frag
 }
 
 func (a *TopAtom) HasFragmentSet() bool {
-	return a.setting&TOP_ATOM_FRAGMENT_SET != 0
+	return a.setting&t_at_sett_FRAGMENT_SET != 0
 }
 
 func (a *TopAtom) Fragment() *TopFragment {
@@ -136,9 +138,9 @@ func (a *TopAtom) Fragment() *TopFragment {
 type topFragmentSetting int32
 
 const (
-	TOP_FRAGMENT_NAME_SET topFragmentSetting = 1 << iota
-	TOP_FRAGMENT_SERIAL_SET
-	TOP_FRAGMENT_POLYMER_SET
+	t_frag_sett_NAME_SET topFragmentSetting = 1 << iota
+	t_frag_sett_SERIAL_SET
+	t_frag_sett_POLYMER_SET
 )
 
 type TopFragment struct {
@@ -155,12 +157,12 @@ func NewTopFragment() *TopFragment {
 
 //
 func (f *TopFragment) SetName(name string) {
-	f.setting |= TOP_FRAGMENT_NAME_SET
+	f.setting |= t_frag_sett_NAME_SET
 	f.name = name
 }
 
 func (f *TopFragment) HasNameSet() bool {
-	return f.setting&TOP_FRAGMENT_NAME_SET != 0
+	return f.setting&t_frag_sett_NAME_SET != 0
 }
 
 func (f *TopFragment) Name() string {
@@ -169,12 +171,12 @@ func (f *TopFragment) Name() string {
 
 //
 func (f *TopFragment) SetSerial(ser int64) {
-	f.setting |= TOP_FRAGMENT_SERIAL_SET
+	f.setting |= t_frag_sett_SERIAL_SET
 	f.serial = ser
 }
 
 func (f *TopFragment) HasSerialSet() bool {
-	return f.setting&TOP_FRAGMENT_SERIAL_SET != 0
+	return f.setting&t_frag_sett_SERIAL_SET != 0
 }
 
 func (f *TopFragment) Serial() int64 {
@@ -183,12 +185,12 @@ func (f *TopFragment) Serial() int64 {
 
 //
 func (f *TopFragment) setTopPolymer(pol *TopPolymer) {
-	f.setting |= TOP_FRAGMENT_POLYMER_SET
+	f.setting |= t_frag_sett_POLYMER_SET
 	f.polymer = pol
 }
 
 func (f *TopFragment) HasTopPolymerSet() bool {
-	return f.setting&TOP_FRAGMENT_POLYMER_SET != 0
+	return f.setting&t_frag_sett_POLYMER_SET != 0
 }
 
 func (f *TopFragment) TopPolymer() *TopPolymer {
@@ -212,25 +214,20 @@ func (f *TopFragment) TopAtoms() []*TopAtom {
 type topPolymerSetting int32
 
 const (
-	TOP_POLYMER_NAME_SET topPolymerSetting = 1 << iota
+	t_pol_sett_NAME_SET topPolymerSetting = 1 << iota
 )
 
 type TopPolymer struct {
-	atoms       []*TopAtom
-	atomsMap    map[int64]*TopAtom
-	fragments   []*TopFragment
-	bonds       []*TopBond
-	angles      []*TopAngle
-	dihedrals   []*TopDihedral
-	impropers   []*TopDihedral
-	pairs       []*TopPair
-	rest_pos    []*TopPositionRestraint
-	rest_dist   []*TopDistanceRestraint
-	rest_ang    []*TopAngleRestraint
-	rest_dih    []*TopDihedralRestraint
-	rest_orient []*TopOrientationRestraint
-	exclusions  []*TopExclusion
-	settle      *TopSettle
+	atoms      []*TopAtom
+	atomsMap   map[int64]*TopAtom
+	fragments  []*TopFragment
+	bonds      []*TopBond
+	angles     []*TopAngle
+	dihedrals  []*TopDihedral
+	impropers  []*TopDihedral
+	pairs      []*TopPair
+	exclusions []*TopExclusion
+	settle     *TopSettle
 
 	name    string
 	nrexcl  int8
@@ -249,12 +246,12 @@ func (p *TopPolymer) SetName(name string) {
 	if name == "" {
 		panic("polymer name cannot be empty")
 	}
-	p.setting |= TOP_POLYMER_NAME_SET
+	p.setting |= t_pol_sett_NAME_SET
 	p.name = name
 }
 
 func (p *TopPolymer) HasNameSet() bool {
-	return p.setting&TOP_POLYMER_NAME_SET != 0
+	return p.setting&t_pol_sett_NAME_SET != 0
 }
 
 func (p *TopPolymer) Name() string {
@@ -313,6 +310,7 @@ func NewTopSystem() *TopSystem {
 	}
 }
 
+//
 func (s *TopSystem) RegisterTopPolymer(p *TopPolymer) {
 	if !p.HasNameSet() {
 		panic("polymer name must be set")
@@ -324,12 +322,17 @@ func (s *TopSystem) RegisterTopPolymer(p *TopPolymer) {
 	s.polymersMap[p.Name()] = p
 }
 
-func (s *TopSystem) AddTopPolymer(p *TopPolymer) {
-	s.polymers = append(s.polymers, p)
-}
-
 func (s *TopSystem) RegisteredTopPolymers() map[string]*TopPolymer {
 	return s.polymersMap
+}
+
+func (s *TopSystem) TopPolymerByName(name string) *TopPolymer {
+	return s.polymersMap[name]
+}
+
+//
+func (s *TopSystem) AddTopPolymer(p *TopPolymer) {
+	s.polymers = append(s.polymers, p)
 }
 
 func (s *TopSystem) TopPolymers() []*TopPolymer {
@@ -339,17 +342,58 @@ func (s *TopSystem) TopPolymers() []*TopPolymer {
 /**********************************************************
 * TopBond
 **********************************************************/
+type topBondSetting int32
+
+const (
+	t_bnd_sett_CUSTOM_BONDTYPE_SET topBondSetting = 1 << iota
+	t_bnd_sett_RESTRAINT_SET
+)
 
 type TopBond struct {
-	atom1, atom2 *TopAtom
-	bondType     *BondType
+	atom1 *TopAtom
+	atom2 *TopAtom
+	kind  ffTypes
+
+	customBondType *BondType
+	bondrest       *TopDistanceRestraint
+	setting        topBondSetting
 }
 
-func NewTopBond(atom1, atom2 *TopAtom) *TopBond {
+//
+func NewTopBond(atom1, atom2 *TopAtom, kind ffTypes) *TopBond {
+	if kind&FF_BOND_TYPE_1 == 0 {
+		panic("bond type is not supported")
+	}
+
 	return &TopBond{
 		atom1: atom1,
 		atom2: atom2,
+		kind:  kind,
 	}
+
+}
+
+//
+func (b *TopBond) TopAtom1() *TopAtom {
+	return b.atom1
+}
+
+func (b *TopBond) TopAtom2() *TopAtom {
+	return b.atom2
+}
+
+//
+func (b *TopBond) SetCustomBondType(bt *BondType) {
+	b.setting |= t_bnd_sett_CUSTOM_BONDTYPE_SET
+	b.customBondType = bt
+}
+
+func (b *TopBond) HasCustomBondTypeSet() bool {
+	return b.setting&t_bnd_sett_CUSTOM_BONDTYPE_SET != 0
+}
+
+func (b *TopBond) CustomBondType() *BondType {
+	return b.customBondType
 }
 
 /**********************************************************
@@ -357,15 +401,31 @@ func NewTopBond(atom1, atom2 *TopAtom) *TopBond {
 **********************************************************/
 
 type TopPair struct {
-	atom1, atom2 *TopAtom
-	pairType     *PairType
+	atom1 *TopAtom
+	atom2 *TopAtom
+	kind  ffTypes
+
+	customPairType *PairType
 }
 
-func NewTopPair(atom1, atom2 *TopAtom) *TopPair {
+func NewTopPair(atom1, atom2 *TopAtom, kind ffTypes) *TopPair {
+	if kind&FF_PAIR_TYPE_1 == 0 {
+		panic("pairtype is not supported")
+	}
 	return &TopPair{
 		atom1: atom1,
 		atom2: atom2,
+		kind:  kind,
 	}
+}
+
+//
+func (p *TopPair) TopAtom1() *TopAtom {
+	return p.atom1
+}
+
+func (p *TopPair) TopAtom2() *TopAtom {
+	return p.atom2
 }
 
 /**********************************************************
@@ -373,8 +433,41 @@ func NewTopPair(atom1, atom2 *TopAtom) *TopPair {
 **********************************************************/
 
 type TopAngle struct {
-	atom1, atom2, atom3 *TopAtom
-	angleType           *AngleType
+	atom1 *TopAtom
+	atom2 *TopAtom
+	atom3 *TopAtom
+	kind  ffTypes
+
+	customAngleType *AngleType
+	angleRest       *TopAngleRestraint
+}
+
+//
+func NewTopAngle(atom1, atom2, atom3 *TopAtom, kind ffTypes) *TopAngle {
+	if kind&FF_ANGLE_TYPE_1 == 0 && kind&FF_ANGLE_TYPE_5 == 0 {
+		panic("angletype is not supported")
+	}
+
+	return &TopAngle{
+		atom1: atom1,
+		atom2: atom2,
+		atom3: atom3,
+		kind:  kind,
+	}
+
+}
+
+//
+func (a *TopAngle) TopAtom1() *TopAtom {
+	return a.atom1
+}
+
+func (a *TopAngle) TopAtom2() *TopAtom {
+	return a.atom2
+}
+
+func (a *TopAngle) TopAtom3() *TopAtom {
+	return a.atom3
 }
 
 /**********************************************************
@@ -382,8 +475,30 @@ type TopAngle struct {
 **********************************************************/
 
 type TopDihedral struct {
-	atom1, atom2, atom3, atom4 *TopAtom
-	dihedralType               *DihedralType
+	atom1 *TopAtom
+	atom2 *TopAtom
+	atom3 *TopAtom
+	atom4 *TopAtom
+	kind  ffTypes
+
+	customDihedralType *DihedralType
+}
+
+//
+func (d *TopDihedral) TopAtom1() *TopAtom {
+	return d.atom1
+}
+
+func (d *TopDihedral) TopAtom2() *TopAtom {
+	return d.atom2
+}
+
+func (d *TopDihedral) TopAtom3() *TopAtom {
+	return d.atom3
+}
+
+func (d *TopDihedral) TopAtom4() *TopAtom {
+	return d.atom4
 }
 
 /**********************************************************
