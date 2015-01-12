@@ -40,9 +40,7 @@ func ReadTOPString(s string) (*blocks.System, *ff.ForceField, error) {
 
 func readtop(reader io.Reader) (*blocks.System, *ff.ForceField, error) {
 
-	// settings
-
-	// main levels
+	// the three main levels
 	const (
 		L_PARAMS topologyLevel = 1 << iota
 		L_MOLTYPES
@@ -95,6 +93,7 @@ func readtop(reader io.Reader) (*blocks.System, *ff.ForceField, error) {
 			continue
 		}
 
+		// if encounters a "[ ... ]", find the group
 		if strings.HasPrefix(line, "[") {
 			line = getGroup(line)
 
