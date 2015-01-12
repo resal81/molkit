@@ -118,9 +118,98 @@ func TestCase1(t *testing.T) {
 
 }
 
-// func TestReadTop(t *testing.T) {
-// 	_, _, err := ReadTOPFile("../../testdata/tmp.top")
-// 	if err != nil {
-// 		t.Errorf("could not read top file: %s", err)
-// 	}
-// }
+var testCase2_string = `
+[ moleculetype ]
+; name  nrexcl
+LIG1         3
+
+[ atoms ]
+; nr    type    resnr   residu  atom    cgnr    charge  mass
+     1       CRL1      1     LIG1     C3      1      0.140    12.0110   ; qtot  0.140
+     2        OHL      1     LIG1     O3      2     -0.660    15.9994   ; qtot -0.520
+     3        HOL      1     LIG1    H3'      3      0.430     1.0080   ; qtot -0.090
+     4       HGA1      1     LIG1     H3      4      0.090     1.0080   ; qtot -0.000
+     5       CRL2      1     CHL1     C4      5     -0.180    12.0110   ; qtot -0.180
+     6       HGA2      1     CHL1    H4A      6      0.090     1.0080   ; qtot -0.090
+     7       HGA2      1     CHL1    H4B      7      0.090     1.0080   ; qtot -0.000
+     8       CEL1      1     CHL1     C5      8      0.000    12.0110   ; qtot -0.000
+    
+[ bonds ]
+; ai    aj  funct   b0  Kb
+    1     2     1
+    1     4     1
+    2     3     1
+
+[ pairs ]
+; ai    aj  funct   c6  c12
+    3     4     1 
+    1     4     1 
+    
+[ angles ] 
+; ai    aj  ak  funct   th0 cth S0  Kub
+    2     1     3     5
+    2     1     6     5
+   
+[ dihedrals ]
+; ai    aj  ak  al  funct   phi0    cp  mult
+    2     1     6     7     9
+    5     1     8     3     9
+
+[ dihedrals ]
+; ai    aj  ak  al  funct   q0  cq
+   5    6    1    4     2
+
+[ position_restraints ]
+   8     1      0.0      0.0  1000.0
+
+[ dihedral_restraints ]
+   5    1    8    3     1    120.0      2.5  1000.0
+    
+[ moleculetype ]
+; name  nrexcl
+TIP3         2
+
+[ atoms ]
+; nr    type    resnr   residu  atom    cgnr    charge  mass
+     1         OT      1     TIP3    OH2      1     -0.834    15.9994   ; qtot -0.834
+     2         HT      1     TIP3     H1      2      0.417     1.0080   ; qtot -0.417
+     3         HT      1     TIP3     H2      3      0.417     1.0080   ; qtot  0.000
+
+[ settles ]
+; i j   funct   length
+1   1    9.572000e-02    1.513900e-01
+
+[ exclusions ]
+1 2 3
+2 1 3
+3 1 2
+
+[ system ]
+; Name
+Title
+
+[ molecules ]
+; Compound  #mols
+LIG1              3
+TIP3            100
+`
+
+func TestCase2(t *testing.T) {
+	top, _, err := ReadTOPString(testCase2_string)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	rp := top.RegisteredTopPolymers()
+	if len(rp) != 2 {
+		t.Errorf("shoud have registered 2 polymers, but has %d", len(rp))
+	}
+}
+
+func TestReadTop(t *testing.T) {
+	_, _, err := ReadTOPFile("../../testdata/tmp.top")
+	if err != nil {
+		t.Errorf("could not read top file: %s", err)
+	}
+
+}

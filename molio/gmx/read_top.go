@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/resal81/molkit/blocks"
 	"github.com/resal81/molkit/ff"
 )
 
@@ -22,7 +21,7 @@ var (
 type topologyLevel int8
 type topologyGroup int64
 
-func ReadTOPFile(fname string) (*blocks.System, *ff.ForceField, error) {
+func ReadTOPFile(fname string) (*ff.TopSystem, *ff.ForceField, error) {
 	file, err := os.Open(fname)
 	if err != nil {
 		return nil, nil, err
@@ -33,12 +32,12 @@ func ReadTOPFile(fname string) (*blocks.System, *ff.ForceField, error) {
 
 }
 
-func ReadTOPString(s string) (*blocks.System, *ff.ForceField, error) {
+func ReadTOPString(s string) (*ff.TopSystem, *ff.ForceField, error) {
 	reader := strings.NewReader(s)
 	return readtop(reader)
 }
 
-func readtop(reader io.Reader) (*blocks.System, *ff.ForceField, error) {
+func readtop(reader io.Reader) (*ff.TopSystem, *ff.ForceField, error) {
 
 	// the three main levels
 	const (
@@ -80,7 +79,12 @@ func readtop(reader io.Reader) (*blocks.System, *ff.ForceField, error) {
 	var level topologyLevel
 	var group topologyGroup
 
-	// var curr_topmol *ff.TopPolymer
+	var curr_topmol *ff.TopPolymer
+	var curr_topres *ff.TopFragment
+	topsys := ff.NewTopSystem()
+	var prev_resname string = "_"
+	var prev_resnumb int64 = -1
+
 	forcefield := ff.NewForceField(ff.FF_GROMACS)
 
 	// read file line by line
@@ -220,7 +224,41 @@ func readtop(reader io.Reader) (*blocks.System, *ff.ForceField, error) {
 
 		if level == L_MOLTYPES {
 			switch group {
+
+			case G_MOLECULETYPE:
+				pol, err := parseMoleculeTypes(line)
+				if err != nil {
+					log.Printf("error in line: '%s' \n", line)
+					return nil, nil, err
+				}
+				curr_topmol = pol
+				topsys.RegisterTopPolymer(curr_topmol)
+
 			case G_ATOMS:
+				at, rd, err := parseAtoms(line)
+				if err != nil {
+					log.Printf("error in line: '%s' \n", line)
+					return nil, nil, err
+				}
+
+				if rd.name != prev_resname || rd.serial != prev_resnumb {
+					curr_topres = ff.NewTopFragment()
+					curr_topres.SetName(rd.name)
+					curr_topres.SetSerial(rd.serial)
+
+					curr_topmol.AddTopFragment(curr_topres)
+
+					prev_resname = rd.name
+					prev_resnumb = rd.serial
+				}
+
+				curr_topres.AddTopAtom(at)
+				curr_topmol.AddTopAtom(at)
+
+			case G_BONDS:
+			case G_PAIRS:
+			case G_ANGLES:
+			case G_DIHEDRALS:
 			}
 		}
 
@@ -228,12 +266,13 @@ func readtop(reader io.Reader) (*blocks.System, *ff.ForceField, error) {
 			switch group {
 			case G_SYSTEM:
 				continue
+			case G_MOLECULES:
 			}
 		}
 
 	}
 
-	return nil, forcefield, nil
+	return topsys, forcefield, nil
 
 }
 
@@ -437,7 +476,7 @@ func parseDihedralTypes(s string) (*ff.DihedralType, error) {
 	case 1:
 		n, err := fmt.Sscanf(s, "%s %s %s %s %d %f %f %d", &at1, &at2, &at3, &at4, &tmp, &phi, &kphi, &mult)
 		if n != 8 || err != nil {
-			return nil, errors.New("could not parse dihedraltype")
+			return nil, errors.New("could not parse [dihedraltypes]")
 		}
 		dt := ff.NewDihedralType(at1, at2, at3, at4, ff.DHT_TYPE_1)
 		dt.SetPhi(phi)
@@ -459,15 +498,70 @@ func parseDihedralTypes(s string) (*ff.DihedralType, error) {
 	case 2:
 		n, err := fmt.Sscanf(s, "%s %s %s %s %d %f %f", &at1, &at2, &at3, &at4, &tmp, &psi, &kpsi)
 		if n != 7 || err != nil {
-			return nil, errors.New("could not parse dihedraltype")
+			return nil, errors.New("could not parse [dihedraltypes]")
 		}
 		dt := ff.NewDihedralType(at1, at2, at3, at4, ff.DHT_TYPE_2)
 		dt.SetPsiConstant(kpsi)
 		dt.SetPsi(psi)
 		return dt, nil
 	default:
-		return nil, errors.New("dihedraltype function type is not 1, 2 or 9")
+		return nil, errors.New("[dihedraltype] function type is not 1, 2 or 9")
 	}
+}
+
+func parseMoleculeTypes(s string) (*ff.TopPolymer, error) {
+	// ; name	nrexcl
+
+	fields := strings.Fields(s)
+	if len(fields) != 2 {
+		return nil, errors.New("number of fields in [moleculetype] is not 2")
+	}
+
+	name := fields[0]
+	nrexcl, err := strconv.ParseInt(fields[1], 10, 8)
+	if err != nil {
+		return nil, err
+	}
+
+	p := ff.NewTopPolymer()
+	p.SetName(name)
+	p.SetNrExcl(int8(nrexcl))
+
+	return p, nil
+
+}
+
+type resData struct {
+	name   string
+	serial int64
+}
+
+func parseAtoms(s string) (*ff.TopAtom, *resData, error) {
+	// ; nr	type	resnr	residu	atom	cgnr	charge	mass
+
+	fields := strings.Fields(s)
+	if len(fields) != 8 {
+		return nil, nil, errors.New("number of fields in [atoms] in not 8")
+	}
+
+	var name, atype, resname string
+	var chg, mass float64
+	var ser, cgnr, resnumb int64
+
+	n, err := fmt.Sscanf(s, "%d %s %d %s %s %d %f %f", &ser, &atype, &resnumb, &resname, &name, &cgnr, &chg, &mass)
+	if n != 8 || err != nil {
+		return nil, nil, errors.New("could not parse [atoms] line")
+	}
+
+	a := ff.NewTopAtom()
+	a.SetName(name)
+	a.SetSerial(ser)
+	a.SetAtomType(atype)
+	a.SetCharge(chg)
+	a.SetMass(mass)
+	a.SetCGNR(cgnr)
+
+	return a, &resData{resname, resnumb}, nil
 }
 
 //

@@ -13,6 +13,7 @@ const (
 	TOP_ATOM_CHARGE_SET
 	TOP_ATOM_MASS_SET
 	TOP_ATOM_FRAGMENT_SET
+	TOP_ATOM_CGNR_SET
 )
 
 type TopAtom struct {
@@ -21,6 +22,7 @@ type TopAtom struct {
 	serial   int64
 	charge   float64
 	mass     float64
+	cgnr     int64
 	fragment *TopFragment
 	setting  topAtomSetting
 }
@@ -69,6 +71,20 @@ func (a *TopAtom) HasSerialSet() bool {
 
 func (a *TopAtom) Serial() int64 {
 	return a.serial
+}
+
+//
+func (a *TopAtom) SetCGNR(cgnr int64) {
+	a.setting |= TOP_ATOM_CGNR_SET
+	a.cgnr = cgnr
+}
+
+func (a *TopAtom) HasCGNRSet() bool {
+	return a.setting&TOP_ATOM_CGNR_SET != 0
+}
+
+func (a *TopAtom) CGNR() int64 {
+	return a.cgnr
 }
 
 //
@@ -133,6 +149,10 @@ type TopFragment struct {
 	setting topFragmentSetting
 }
 
+func NewTopFragment() *TopFragment {
+	return &TopFragment{}
+}
+
 //
 func (f *TopFragment) SetName(name string) {
 	f.setting |= TOP_FRAGMENT_NAME_SET
@@ -191,6 +211,10 @@ func (f *TopFragment) TopAtoms() []*TopAtom {
 
 type topPolymerSetting int32
 
+const (
+	TOP_POLYMER_NAME_SET topPolymerSetting = 1 << iota
+)
+
 type TopPolymer struct {
 	atoms       []*TopAtom
 	atomsMap    map[int64]*TopAtom
@@ -208,21 +232,55 @@ type TopPolymer struct {
 	exclusions  []*TopExclusion
 	settle      *TopSettle
 
+	name    string
+	nrexcl  int8
 	setting topPolymerSetting
 }
 
 //
 func NewTopPolymer() *TopPolymer {
-	return &TopPolymer{}
+	return &TopPolymer{
+		atomsMap: map[int64]*TopAtom{},
+	}
 }
 
 //
+func (p *TopPolymer) SetName(name string) {
+	if name == "" {
+		panic("polymer name cannot be empty")
+	}
+	p.setting |= TOP_POLYMER_NAME_SET
+	p.name = name
+}
 
+func (p *TopPolymer) HasNameSet() bool {
+	return p.setting&TOP_POLYMER_NAME_SET != 0
+}
+
+func (p *TopPolymer) Name() string {
+	return p.name
+}
+
+//
+func (p *TopPolymer) SetNrExcl(nrexcl int8) {
+	p.nrexcl = nrexcl
+}
+
+func (p *TopPolymer) NrExcl() int8 {
+	return p.nrexcl
+}
+
+//
 func (p *TopPolymer) AddTopFragment(f *TopFragment) {
 	p.fragments = append(p.fragments, f)
 	f.setTopPolymer(p)
 }
 
+func (p *TopPolymer) Fragments() []*TopFragment {
+	return p.fragments
+}
+
+//
 func (p *TopPolymer) AddTopAtom(a *TopAtom) {
 	if !a.HasSerialSet() {
 		panic("atom doesn't have serial set")
@@ -236,20 +294,46 @@ func (p *TopPolymer) AddTopAtom(a *TopAtom) {
 	p.atoms = append(p.atoms, a)
 }
 
+func (p *TopPolymer) Atoms() []*TopAtom {
+	return p.atoms
+}
+
 /**********************************************************
 * TopSystem
 **********************************************************/
 
 type TopSystem struct {
-	polymers []*TopPolymer
+	polymersMap map[string]*TopPolymer // unique polymers the build the system
+	polymers    []*TopPolymer          // all polymers
 }
 
 func NewTopSystem() *TopSystem {
-	return &TopSystem{}
+	return &TopSystem{
+		polymersMap: map[string]*TopPolymer{},
+	}
+}
+
+func (s *TopSystem) RegisterTopPolymer(p *TopPolymer) {
+	if !p.HasNameSet() {
+		panic("polymer name must be set")
+	}
+
+	if _, found := s.polymersMap[p.Name()]; found {
+		panic("a polymer with the same name has been already registered")
+	}
+	s.polymersMap[p.Name()] = p
 }
 
 func (s *TopSystem) AddTopPolymer(p *TopPolymer) {
 	s.polymers = append(s.polymers, p)
+}
+
+func (s *TopSystem) RegisteredTopPolymers() map[string]*TopPolymer {
+	return s.polymersMap
+}
+
+func (s *TopSystem) TopPolymers() []*TopPolymer {
+	return s.polymers
 }
 
 /**********************************************************
@@ -261,6 +345,13 @@ type TopBond struct {
 	bondType     *BondType
 }
 
+func NewTopBond(atom1, atom2 *TopAtom) *TopBond {
+	return &TopBond{
+		atom1: atom1,
+		atom2: atom2,
+	}
+}
+
 /**********************************************************
 * TopPair
 **********************************************************/
@@ -268,6 +359,13 @@ type TopBond struct {
 type TopPair struct {
 	atom1, atom2 *TopAtom
 	pairType     *PairType
+}
+
+func NewTopPair(atom1, atom2 *TopAtom) *TopPair {
+	return &TopPair{
+		atom1: atom1,
+		atom2: atom2,
+	}
 }
 
 /**********************************************************
