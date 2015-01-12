@@ -4,6 +4,17 @@ package ff
 * TopAtom
 **********************************************************/
 
+type topAtomSetting int32
+
+const (
+	TOP_ATOM_NAME_SET topAtomSetting = 1 << iota
+	TOP_ATOM_TYPE_SET
+	TOP_ATOM_SERIAL_SET
+	TOP_ATOM_CHARGE_SET
+	TOP_ATOM_MASS_SET
+	TOP_ATOM_FRAGMENT_SET
+)
+
 type TopAtom struct {
 	name     string
 	atype    string
@@ -11,6 +22,7 @@ type TopAtom struct {
 	charge   float64
 	mass     float64
 	fragment *TopFragment
+	setting  topAtomSetting
 }
 
 func NewTopAtom() *TopAtom {
@@ -19,7 +31,12 @@ func NewTopAtom() *TopAtom {
 
 //
 func (a *TopAtom) SetName(name string) {
+	a.setting |= TOP_ATOM_NAME_SET
 	a.name = name
+}
+
+func (a *TopAtom) HasNameSet() bool {
+	return a.setting&TOP_ATOM_NAME_SET != 0
 }
 
 func (a *TopAtom) Name() string {
@@ -28,7 +45,12 @@ func (a *TopAtom) Name() string {
 
 //
 func (a *TopAtom) SetAtomType(atype string) {
+	a.setting |= TOP_ATOM_TYPE_SET
 	a.atype = atype
+}
+
+func (a *TopAtom) HasAtomTypeSet() bool {
+	return a.setting&TOP_ATOM_TYPE_SET != 0
 }
 
 func (a *TopAtom) AtomType() string {
@@ -37,7 +59,12 @@ func (a *TopAtom) AtomType() string {
 
 //
 func (a *TopAtom) SetSerial(ser int64) {
+	a.setting |= TOP_ATOM_SERIAL_SET
 	a.serial = ser
+}
+
+func (a *TopAtom) HasSerialSet() bool {
+	return a.setting&TOP_ATOM_SERIAL_SET != 0
 }
 
 func (a *TopAtom) Serial() int64 {
@@ -46,7 +73,12 @@ func (a *TopAtom) Serial() int64 {
 
 //
 func (a *TopAtom) SetMass(m float64) {
+	a.setting |= TOP_ATOM_MASS_SET
 	a.mass = m
+}
+
+func (a *TopAtom) HasMassSet() bool {
+	return a.setting&TOP_ATOM_MASS_SET != 0
 }
 
 func (a *TopAtom) Mass() float64 {
@@ -55,7 +87,12 @@ func (a *TopAtom) Mass() float64 {
 
 //
 func (a *TopAtom) SetCharge(ch float64) {
+	a.setting |= TOP_ATOM_CHARGE_SET
 	a.charge = ch
+}
+
+func (a *TopAtom) HasChargeSet() bool {
+	return a.setting&TOP_ATOM_CHARGE_SET != 0
 }
 
 func (a *TopAtom) Charge() float64 {
@@ -63,8 +100,13 @@ func (a *TopAtom) Charge() float64 {
 }
 
 //
-func (a *TopAtom) SetTopFragment(frag *TopFragment) {
+func (a *TopAtom) setTopFragment(frag *TopFragment) {
+	a.setting |= TOP_ATOM_FRAGMENT_SET
 	a.fragment = frag
+}
+
+func (a *TopAtom) HasFragmentSet() bool {
+	return a.setting&TOP_ATOM_FRAGMENT_SET != 0
 }
 
 func (a *TopAtom) Fragment() *TopFragment {
@@ -75,18 +117,83 @@ func (a *TopAtom) Fragment() *TopFragment {
 * TopFragment
 **********************************************************/
 
+type topFragmentSetting int32
+
+const (
+	TOP_FRAGMENT_NAME_SET topFragmentSetting = 1 << iota
+	TOP_FRAGMENT_SERIAL_SET
+	TOP_FRAGMENT_POLYMER_SET
+)
+
 type TopFragment struct {
-	serial int64
-	name   string
-	atoms  []*TopAtom
+	serial  int64
+	name    string
+	atoms   []*TopAtom
+	polymer *TopPolymer
+	setting topFragmentSetting
+}
+
+//
+func (f *TopFragment) SetName(name string) {
+	f.setting |= TOP_FRAGMENT_NAME_SET
+	f.name = name
+}
+
+func (f *TopFragment) HasNameSet() bool {
+	return f.setting&TOP_FRAGMENT_NAME_SET != 0
+}
+
+func (f *TopFragment) Name() string {
+	return f.name
+}
+
+//
+func (f *TopFragment) SetSerial(ser int64) {
+	f.setting |= TOP_FRAGMENT_SERIAL_SET
+	f.serial = ser
+}
+
+func (f *TopFragment) HasSerialSet() bool {
+	return f.setting&TOP_FRAGMENT_SERIAL_SET != 0
+}
+
+func (f *TopFragment) Serial() int64 {
+	return f.serial
+}
+
+//
+func (f *TopFragment) setTopPolymer(pol *TopPolymer) {
+	f.setting |= TOP_FRAGMENT_POLYMER_SET
+	f.polymer = pol
+}
+
+func (f *TopFragment) HasTopPolymerSet() bool {
+	return f.setting&TOP_FRAGMENT_POLYMER_SET != 0
+}
+
+func (f *TopFragment) TopPolymer() *TopPolymer {
+	return f.polymer
+}
+
+//
+func (f *TopFragment) AddTopAtom(a *TopAtom) {
+	f.atoms = append(f.atoms, a)
+	a.setTopFragment(f)
+}
+
+func (f *TopFragment) TopAtoms() []*TopAtom {
+	return f.atoms
 }
 
 /**********************************************************
 * TopPolymer
 **********************************************************/
 
+type topPolymerSetting int32
+
 type TopPolymer struct {
 	atoms       []*TopAtom
+	atomsMap    map[int64]*TopAtom
 	fragments   []*TopFragment
 	bonds       []*TopBond
 	angles      []*TopAngle
@@ -100,6 +207,33 @@ type TopPolymer struct {
 	rest_orient []*TopOrientationRestraint
 	exclusions  []*TopExclusion
 	settle      *TopSettle
+
+	setting topPolymerSetting
+}
+
+//
+func NewTopPolymer() *TopPolymer {
+	return &TopPolymer{}
+}
+
+//
+
+func (p *TopPolymer) AddTopFragment(f *TopFragment) {
+	p.fragments = append(p.fragments, f)
+	f.setTopPolymer(p)
+}
+
+func (p *TopPolymer) AddTopAtom(a *TopAtom) {
+	if !a.HasSerialSet() {
+		panic("atom doesn't have serial set")
+	}
+
+	if _, ok := p.atomsMap[a.Serial()]; ok {
+		panic("atom with the same serial exist in the map")
+	}
+
+	p.atomsMap[a.Serial()] = a
+	p.atoms = append(p.atoms, a)
 }
 
 /**********************************************************
@@ -108,6 +242,14 @@ type TopPolymer struct {
 
 type TopSystem struct {
 	polymers []*TopPolymer
+}
+
+func NewTopSystem() *TopSystem {
+	return &TopSystem{}
+}
+
+func (s *TopSystem) AddTopPolymer(p *TopPolymer) {
+	s.polymers = append(s.polymers, p)
 }
 
 /**********************************************************
