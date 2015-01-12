@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/resal81/molkit/blocks"
@@ -21,10 +22,10 @@ var (
 type topologyLevel int8
 type topologyGroup int64
 
-func ReadTOPFile(fname string) (*blocks.System, error) {
+func ReadTOPFile(fname string) (*blocks.System, *ff.ForceField, error) {
 	file, err := os.Open(fname)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer file.Close()
 
@@ -32,7 +33,12 @@ func ReadTOPFile(fname string) (*blocks.System, error) {
 
 }
 
-func readtop(reader io.Reader) (*blocks.System, error) {
+func ReadTOPString(s string) (*blocks.System, *ff.ForceField, error) {
+	reader := strings.NewReader(s)
+	return readtop(reader)
+}
+
+func readtop(reader io.Reader) (*blocks.System, *ff.ForceField, error) {
 
 	// settings
 
@@ -135,7 +141,7 @@ func readtop(reader io.Reader) (*blocks.System, error) {
 			case "molecules":
 				group = G_MOLECULES
 			default:
-				return nil, fmt.Errorf("unknown group in the top file: %s", line)
+				return nil, nil, fmt.Errorf("unknown group in the top file: %s", line)
 			}
 
 			continue
@@ -143,20 +149,69 @@ func readtop(reader io.Reader) (*blocks.System, error) {
 
 		if level == L_PARAMS {
 			switch group {
+
 			case G_DEFAULTS:
 				defaults, err := parseDefaults(line)
 				if err != nil {
 					log.Printf("error in line: '%s' \n", line)
-					return nil, err
+					return nil, nil, err
 				}
 				forcefield.SetGMXDefaults(defaults)
+
 			case G_ATOMTYPES:
 				at, err := parseAtomTypes(line)
 				if err != nil {
 					log.Printf("error in line: '%s' \n", line)
-					return nil, err
+					return nil, nil, err
 				}
 				forcefield.AddAtomType(at)
+
+			case G_NONBONDPARAMS:
+				nb, err := parseNonBondedTypes(line)
+				if err != nil {
+					log.Printf("error in line: '%s' \n", line)
+					return nil, nil, err
+				}
+				forcefield.AddNonBondedType(nb)
+
+			case G_PAIRTYPES:
+				pt, err := parsePairTypes(line)
+				if err != nil {
+					log.Printf("error in line: '%s' \n", line)
+					return nil, nil, err
+				}
+				forcefield.AddPairType(pt)
+
+			case G_BONDTYPES:
+				bt, err := parseBondTypes(line)
+				if err != nil {
+					log.Printf("error in line: '%s' \n", line)
+					return nil, nil, err
+				}
+				forcefield.AddBondType(bt)
+
+			case G_ANGLETYPES:
+				ag, err := parseAngleTypes(line)
+				if err != nil {
+					log.Printf("error in line: '%s' \n", line)
+					return nil, nil, err
+				}
+				forcefield.AddAngleType(ag)
+
+			case G_DIHEDRALTYPES:
+				dt, err := parseDihedralTypes(line)
+				if err != nil {
+					log.Printf("error in line: '%s' \n", line)
+					return nil, nil, err
+				}
+
+				if dt.Setting()&ff.DHT_TYPE_1 == 1 || dt.Setting()&ff.DHT_TYPE_9 == 1 {
+					forcefield.AddDihedralType(dt)
+
+				} else if dt.Setting()&ff.DHT_TYPE_2 == 1 {
+					forcefield.AddImproperType(dt)
+
+				}
 
 			}
 
@@ -177,7 +232,7 @@ func readtop(reader io.Reader) (*blocks.System, error) {
 
 	}
 
-	return nil, nil
+	return nil, forcefield, nil
 
 }
 
@@ -254,3 +309,162 @@ func parseAtomTypes(s string) (*ff.AtomType, error) {
 
 	return at, nil
 }
+
+func parseNonBondedTypes(s string) (*ff.NonBondedType, error) {
+	// ; i	j	func	sigma	epsilon
+	var at1, at2 string
+	var fn int8
+	var sig, eps float32
+	fields := strings.Fields(s)
+
+	n, err := fmt.Sscanf(s, "%s %s %d %f %f", &at1, &at2, &fn, &sig, &eps)
+	if len(fields) != 5 || n != 5 || err != nil {
+		return nil, errors.New("error parsing [nonbonded-params] line")
+	}
+
+	switch fn {
+	case 1:
+		nbt := ff.NewNonBondedType(at1, at2, ff.NBT_TYPE_1)
+		nbt.SetSigma(sig)
+		nbt.SetEpsilon(eps)
+		return nbt, nil
+	default:
+		return nil, errors.New("nonbonded function type is not 1")
+	}
+
+}
+
+func parsePairTypes(s string) (*ff.PairType, error) {
+	// ; i	j	func	sigma1-4	epsilon1-4
+	var at1, at2 string
+	var fn int8
+	var sig14, eps14 float32
+	fields := strings.Fields(s)
+
+	n, err := fmt.Sscanf(s, "%s %s %d %f %f", &at1, &at2, &fn, &sig14, &eps14)
+	if len(fields) != 5 || n != 5 || err != nil {
+		return nil, errors.New("error parsing [pairtypes] line")
+	}
+
+	switch fn {
+	case 1:
+		pt := ff.NewPairType(at1, at2, ff.PT_TYPE_1)
+		pt.SetSigma14(sig14)
+		pt.SetEpsilon14(eps14)
+		return pt, nil
+	default:
+		return nil, errors.New("pairtype function type is not 1")
+	}
+
+}
+
+func parseBondTypes(s string) (*ff.BondType, error) {
+	// ; i	j	func	b0	Kb
+	var at1, at2 string
+	var fn int8
+	var r0, kr float32
+	fields := strings.Fields(s)
+
+	n, err := fmt.Sscanf(s, "%s %s %d %f %f", &at1, &at2, &fn, &r0, &kr)
+	if len(fields) != 5 || n != 5 || err != nil {
+		return nil, errors.New("error parsing [bondtypes] line")
+	}
+
+	switch fn {
+	case 1:
+		bt := ff.NewBondType(at1, at2, ff.BT_TYPE_1)
+		bt.SetHarmonicConstant(kr)
+		bt.SetHarmonicDistance(r0)
+		return bt, nil
+	default:
+		return nil, errors.New("bondtype function type is not 1")
+	}
+	return nil, nil
+}
+
+func parseAngleTypes(s string) (*ff.AngleType, error) {
+	//; i	j	k	func	th0	cth	S0	Kub
+	fields := strings.Fields(s)
+	fn, err := strconv.ParseInt(fields[3], 10, 8)
+	if err != nil {
+		return nil, errors.New("could not determine function type")
+	}
+
+	var at1, at2, at3 string
+	var tmp int8
+	var thet, kt, r13, kub float32
+
+	switch fn {
+	case 1:
+		n, err := fmt.Sscanf(s, "%s %s %s %d %f %f", &at1, &at2, &at3, &tmp, &thet, &kt)
+		if n != 6 || err != nil {
+			return nil, errors.New("could not parse angletype")
+		}
+		at := ff.NewAngleType(at1, at2, at3, ff.ANG_TYPE_1)
+		at.SetThetaConstant(kt)
+		at.SetTheta(thet)
+		return at, nil
+	case 5:
+		n, err := fmt.Sscanf(s, "%s %s %s %d %f %f %f %f", &at1, &at2, &at3, &tmp, &thet, &kt, &r13, &kub)
+		if n != 8 || err != nil {
+			return nil, errors.New("could not parse angletype")
+		}
+		at := ff.NewAngleType(at1, at2, at3, ff.ANG_TYPE_5)
+		at.SetThetaConstant(kt)
+		at.SetTheta(thet)
+		at.SetR13(r13)
+		at.SetUBConstant(kub)
+		return at, nil
+	default:
+		return nil, errors.New("angletype function type is not 1 or 5")
+	}
+}
+
+func parseDihedralTypes(s string) (*ff.DihedralType, error) {
+	// ; i	j	k	l	func	phi0	cp	mult
+	fields := strings.Fields(s)
+	fn, err := strconv.ParseInt(fields[4], 10, 8)
+	if err != nil {
+		return nil, errors.New("could not determine function type")
+	}
+
+	var at1, at2, at3, at4 string
+	var tmp, mult int8
+	var phi, psi, kphi, kpsi float32
+
+	switch fn {
+	case 1:
+		n, err := fmt.Sscanf(s, "%s %s %s %s %d %f %f %d", &at1, &at2, &at3, &at4, &tmp, &phi, &kphi, &mult)
+		if n != 8 || err != nil {
+			return nil, errors.New("could not parse dihedraltype")
+		}
+		dt := ff.NewDihedralType(at1, at2, at3, at4, ff.DHT_TYPE_1)
+		dt.SetPhi(phi)
+		dt.SetPhiConstant(kphi)
+		dt.SetMult(mult)
+		return dt, nil
+
+	case 9:
+		n, err := fmt.Sscanf(s, "%s %s %s %s %d %f %f %d", &at1, &at2, &at3, &at4, &tmp, &phi, &kphi, &mult)
+		if n != 8 || err != nil {
+			return nil, errors.New("could not parse dihedraltype")
+		}
+		dt := ff.NewDihedralType(at1, at2, at3, at4, ff.DHT_TYPE_9)
+		dt.SetPhi(phi)
+		dt.SetPhiConstant(kphi)
+		dt.SetMult(mult)
+		return dt, nil
+
+	case 2:
+		n, err := fmt.Sscanf(s, "%s %s %s %s %d %f %f", &at1, &at2, &at3, &at4, &tmp, &psi, &kpsi)
+		if n != 7 || err != nil {
+			return nil, errors.New("could not parse dihedraltype")
+		}
+		dt := ff.NewDihedralType(at1, at2, at3, at4, ff.DHT_TYPE_2)
+		return dt, nil
+	default:
+		return nil, errors.New("dihedraltype function type is not 1, 2 or 9")
+	}
+}
+
+//
