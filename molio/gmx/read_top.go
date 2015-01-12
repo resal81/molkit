@@ -21,6 +21,10 @@ var (
 type topologyLevel int8
 type topologyGroup int64
 
+/**********************************************************
+* ReadTOPFile
+**********************************************************/
+
 func ReadTOPFile(fname string) (*ff.TopSystem, *ff.ForceField, error) {
 	file, err := os.Open(fname)
 	if err != nil {
@@ -32,10 +36,18 @@ func ReadTOPFile(fname string) (*ff.TopSystem, *ff.ForceField, error) {
 
 }
 
+/**********************************************************
+* ReadTOPString
+**********************************************************/
+
 func ReadTOPString(s string) (*ff.TopSystem, *ff.ForceField, error) {
 	reader := strings.NewReader(s)
 	return readtop(reader)
 }
+
+/**********************************************************
+* readtop
+**********************************************************/
 
 func readtop(reader io.Reader) (*ff.TopSystem, *ff.ForceField, error) {
 
@@ -276,7 +288,7 @@ func readtop(reader io.Reader) (*ff.TopSystem, *ff.ForceField, error) {
 
 }
 
-//
+// removes comments plus leading and tailing spaces
 func cleanLine(s string) string {
 	i := strings.Index(s, ";")
 	if i != -1 {
@@ -287,7 +299,7 @@ func cleanLine(s string) string {
 	return s
 }
 
-// Extract whats inside brackets: [ ... ]
+// Extract the group inside brackets: [ ... ]
 func getGroup(s string) string {
 	s = strings.TrimLeft(s, "[")
 	s = strings.TrimRight(s, "]")
@@ -295,6 +307,7 @@ func getGroup(s string) string {
 	return s
 }
 
+// parses [defaults]
 func parseDefaults(s string) (*ff.GMXDefaults, error) {
 	// ; nbfunc	comb-rule	gen-pairs	fudgeLJ	fudgeQQ
 
@@ -312,6 +325,7 @@ func parseDefaults(s string) (*ff.GMXDefaults, error) {
 
 }
 
+// parses [atomstypes]
 func parseAtomTypes(s string) (*ff.AtomType, error) {
 	// ; name	at.num	mass	charge	ptype	sigma	epsilon	;	sigma_14	epsilon_14
 
@@ -350,6 +364,41 @@ func parseAtomTypes(s string) (*ff.AtomType, error) {
 	return at, nil
 }
 
+type resData struct {
+	name   string
+	serial int64
+}
+
+// parses [atoms]
+func parseAtoms(s string) (*ff.TopAtom, *resData, error) {
+	// ; nr	type	resnr	residu	atom	cgnr	charge	mass
+
+	fields := strings.Fields(s)
+	if len(fields) != 8 {
+		return nil, nil, errors.New("number of fields in [atoms] in not 8")
+	}
+
+	var name, atype, resname string
+	var chg, mass float64
+	var ser, cgnr, resnumb int64
+
+	n, err := fmt.Sscanf(s, "%d %s %d %s %s %d %f %f", &ser, &atype, &resnumb, &resname, &name, &cgnr, &chg, &mass)
+	if n != 8 || err != nil {
+		return nil, nil, errors.New("could not parse [atoms] line")
+	}
+
+	a := ff.NewTopAtom()
+	a.SetName(name)
+	a.SetSerial(ser)
+	a.SetAtomType(atype)
+	a.SetCharge(chg)
+	a.SetMass(mass)
+	a.SetCGNR(cgnr)
+
+	return a, &resData{resname, resnumb}, nil
+}
+
+// parses [nonbonded-params]
 func parseNonBondedTypes(s string) (*ff.NonBondedType, error) {
 	// ; i	j	func	sigma	epsilon
 	var at1, at2 string
@@ -374,6 +423,7 @@ func parseNonBondedTypes(s string) (*ff.NonBondedType, error) {
 
 }
 
+// parses [pairtypes]
 func parsePairTypes(s string) (*ff.PairType, error) {
 	// ; i	j	func	sigma1-4	epsilon1-4
 	var at1, at2 string
@@ -398,6 +448,14 @@ func parsePairTypes(s string) (*ff.PairType, error) {
 
 }
 
+// parses [pairs]
+func parsePairs(s string, topPol *ff.TopPolymer) (*ff.TopPair, error) {
+	// ; ai    aj  funct   c6  c12
+
+	return nil, nil
+}
+
+// parses [bondtypes]
 func parseBondTypes(s string) (*ff.BondType, error) {
 	// ; i	j	func	b0	Kb
 	var at1, at2 string
@@ -422,6 +480,65 @@ func parseBondTypes(s string) (*ff.BondType, error) {
 	return nil, nil
 }
 
+// parses [bonds]
+func parseBonds(s string, topPol *ff.TopPolymer) (*ff.TopBond, error) {
+	// ; ai    aj  funct   b0  Kb
+
+	// check if we have the right number of fields (3 or 5)
+	fields := strings.Fields(s)
+	if len(fields) != 3 || len(fields) != 5 {
+		return nil, errors.New("number of fields in [bonds] is not 3 or 5")
+	}
+
+	// parse the fields
+	// if there are 5 fields, the fields[3] and fields[4] are b0 and kb
+
+	var ai, aj int64
+	var fn int8
+	var b0, kb float64
+
+	switch len(fields) {
+	case 3:
+		n, err := fmt.Sscanf(s, "%d %d %d", &ai, &aj, &fn)
+		if n != 3 || err != nil {
+			return nil, errors.New("problem parsing [bonds] line with 3 fields")
+		}
+
+	case 5:
+		n, err := fmt.Sscanf(s, "%d %d %d %f %f", &ai, &aj, &fn, &b0, &kb)
+		if n != 5 || err != nil {
+			return nil, errors.New("problem parsing [bonds] line with 5 fields")
+		}
+	}
+
+	// find the *AtomType
+	a1 := topPol.AtomBySerial(ai)
+	a2 := topPol.AtomBySerial(aj)
+
+	if a1 == nil || a2 == nil {
+		return nil, errors.New("could not find either ai or aj")
+	}
+
+	// check if we have a supported function type
+	if fn != 1 {
+		return nil, errors.New("[bonds] fn must be 1")
+	}
+
+	// create bond
+	b := ff.NewTopBond(a1, a2, ff.FF_BOND_TYPE_1)
+
+	// if we have custom parameters, create a corresponding *BondType
+	if len(fields) == 5 {
+		bt := ff.NewBondType(a1.AtomType(), a2.AtomType(), ff.FF_BOND_TYPE_1)
+		b.SetCustomBondType(bt)
+	}
+
+	// we're good
+	return b, nil
+
+}
+
+// parses [angletypes]
 func parseAngleTypes(s string) (*ff.AngleType, error) {
 	//; i	j	k	func	th0	cth	S0	Kub
 	fields := strings.Fields(s)
@@ -460,9 +577,20 @@ func parseAngleTypes(s string) (*ff.AngleType, error) {
 	}
 }
 
+// parses [angles]
+func parseAngles(s string, topPol *ff.TopPolymer) (*ff.TopAngle, error) {
+	// ; ai    aj  ak  funct   th0 cth S0  Kub
+
+	return nil, nil
+}
+
+// parses [dihedraltypes]
 func parseDihedralTypes(s string) (*ff.DihedralType, error) {
 	// ; i	j	k	l	func	phi0	cp	mult
+
 	fields := strings.Fields(s)
+
+	// find the function type
 	fn, err := strconv.ParseInt(fields[4], 10, 8)
 	if err != nil {
 		return nil, errors.New("could not determine function type")
@@ -473,23 +601,19 @@ func parseDihedralTypes(s string) (*ff.DihedralType, error) {
 	var phi, psi, kphi, kpsi float64
 
 	switch fn {
-	case 1:
+	case 1, 9:
 		n, err := fmt.Sscanf(s, "%s %s %s %s %d %f %f %d", &at1, &at2, &at3, &at4, &tmp, &phi, &kphi, &mult)
 		if n != 8 || err != nil {
 			return nil, errors.New("could not parse [dihedraltypes]")
 		}
-		dt := ff.NewDihedralType(at1, at2, at3, at4, ff.FF_DIHEDRAL_TYPE_1)
-		dt.SetPhi(phi)
-		dt.SetPhiConstant(kphi)
-		dt.SetMult(mult)
-		return dt, nil
 
-	case 9:
-		n, err := fmt.Sscanf(s, "%s %s %s %s %d %f %f %d", &at1, &at2, &at3, &at4, &tmp, &phi, &kphi, &mult)
-		if n != 8 || err != nil {
-			return nil, errors.New("could not parse dihedraltype")
+		var dt *ff.DihedralType
+		if fn == 1 {
+			dt = ff.NewDihedralType(at1, at2, at3, at4, ff.FF_DIHEDRAL_TYPE_1)
+		} else if fn == 9 {
+			dt = ff.NewDihedralType(at1, at2, at3, at4, ff.FF_DIHEDRAL_TYPE_9)
 		}
-		dt := ff.NewDihedralType(at1, at2, at3, at4, ff.FF_DIHEDRAL_TYPE_9)
+
 		dt.SetPhi(phi)
 		dt.SetPhiConstant(kphi)
 		dt.SetMult(mult)
@@ -509,6 +633,15 @@ func parseDihedralTypes(s string) (*ff.DihedralType, error) {
 	}
 }
 
+// parses [dihedrals]
+func parseDihedral(s string, topPol *ff.TopPolymer) (*ff.TopDihedral, error) {
+	// ; ai    aj  ak  al  funct   phi0    cp  mult
+	// ; ai    aj  ak  al  funct   q0  cq
+
+	return nil, nil
+}
+
+// parses [moleculetypes]
 func parseMoleculeTypes(s string) (*ff.TopPolymer, error) {
 	// ; name	nrexcl
 
@@ -528,62 +661,6 @@ func parseMoleculeTypes(s string) (*ff.TopPolymer, error) {
 	p.SetNrExcl(int8(nrexcl))
 
 	return p, nil
-
-}
-
-type resData struct {
-	name   string
-	serial int64
-}
-
-func parseAtoms(s string) (*ff.TopAtom, *resData, error) {
-	// ; nr	type	resnr	residu	atom	cgnr	charge	mass
-
-	fields := strings.Fields(s)
-	if len(fields) != 8 {
-		return nil, nil, errors.New("number of fields in [atoms] in not 8")
-	}
-
-	var name, atype, resname string
-	var chg, mass float64
-	var ser, cgnr, resnumb int64
-
-	n, err := fmt.Sscanf(s, "%d %s %d %s %s %d %f %f", &ser, &atype, &resnumb, &resname, &name, &cgnr, &chg, &mass)
-	if n != 8 || err != nil {
-		return nil, nil, errors.New("could not parse [atoms] line")
-	}
-
-	a := ff.NewTopAtom()
-	a.SetName(name)
-	a.SetSerial(ser)
-	a.SetAtomType(atype)
-	a.SetCharge(chg)
-	a.SetMass(mass)
-	a.SetCGNR(cgnr)
-
-	return a, &resData{resname, resnumb}, nil
-}
-
-func parseBonds(s string, topPol *ff.TopPolymer) (*ff.TopBond, error) {
-	// ; ai    aj  funct   b0  Kb
-
-	fields := strings.Fields(s)
-	if len(fields) != 3 || len(fields) != 5 {
-		return nil, errors.New("number of fields in [bonds] is not 3 or 5")
-	}
-
-	// var ai, aj int64
-	// var fn int8
-	// var b0, kb float64
-
-	switch len(fields) {
-	case 3:
-		// n, err := fmt.Sscanf(s, "%d %d %d", &ai, &aj, &fn)
-	case 5:
-
-	}
-
-	return nil, nil
 
 }
 

@@ -295,6 +295,13 @@ func (p *TopPolymer) Atoms() []*TopAtom {
 	return p.atoms
 }
 
+// Returns *TopAtom or nil.
+func (p *TopPolymer) AtomBySerial(i int64) *TopAtom {
+	return p.atomsMap[i]
+}
+
+//
+
 /**********************************************************
 * TopSystem
 **********************************************************/
@@ -345,7 +352,7 @@ func (s *TopSystem) TopPolymers() []*TopPolymer {
 type topBondSetting int32
 
 const (
-	t_bnd_sett_CUSTOM_BONDTYPE_SET topBondSetting = 1 << iota
+	t_bnd_sett_CUSTOM_BOND_TYPE_SET topBondSetting = 1 << iota
 	t_bnd_sett_RESTRAINT_SET
 )
 
@@ -384,12 +391,12 @@ func (b *TopBond) TopAtom2() *TopAtom {
 
 //
 func (b *TopBond) SetCustomBondType(bt *BondType) {
-	b.setting |= t_bnd_sett_CUSTOM_BONDTYPE_SET
+	b.setting |= t_bnd_sett_CUSTOM_BOND_TYPE_SET
 	b.customBondType = bt
 }
 
 func (b *TopBond) HasCustomBondTypeSet() bool {
-	return b.setting&t_bnd_sett_CUSTOM_BONDTYPE_SET != 0
+	return b.setting&t_bnd_sett_CUSTOM_BOND_TYPE_SET != 0
 }
 
 func (b *TopBond) CustomBondType() *BondType {
@@ -400,12 +407,19 @@ func (b *TopBond) CustomBondType() *BondType {
 * TopPair
 **********************************************************/
 
+type topPairSetting int32
+
+const (
+	t_pair_sett_CUSTOM_PAIR_TYPE_SET topPairSetting = 1 << iota
+)
+
 type TopPair struct {
 	atom1 *TopAtom
 	atom2 *TopAtom
 	kind  ffTypes
 
 	customPairType *PairType
+	setting        topPairSetting
 }
 
 func NewTopPair(atom1, atom2 *TopAtom, kind ffTypes) *TopPair {
@@ -428,9 +442,29 @@ func (p *TopPair) TopAtom2() *TopAtom {
 	return p.atom2
 }
 
+//
+func (p *TopPair) SetCustomPairType(pt *PairType) {
+	p.setting |= t_pair_sett_CUSTOM_PAIR_TYPE_SET
+	p.customPairType = pt
+}
+
+func (p *TopPair) HasCustomPairTypeSet() bool {
+	return p.setting&t_pair_sett_CUSTOM_PAIR_TYPE_SET != 0
+}
+
+func (p *TopPair) CustomPairType() *PairType {
+	return p.customPairType
+}
+
 /**********************************************************
 * TopAngle
 **********************************************************/
+
+type topAngleSetting int32
+
+const (
+	t_ang_sett_CUSTOM_ANGLE_TYPE_SET topAngleSetting = 1 << iota
+)
 
 type TopAngle struct {
 	atom1 *TopAtom
@@ -440,6 +474,7 @@ type TopAngle struct {
 
 	customAngleType *AngleType
 	angleRest       *TopAngleRestraint
+	setting         topAngleSetting
 }
 
 //
@@ -470,9 +505,29 @@ func (a *TopAngle) TopAtom3() *TopAtom {
 	return a.atom3
 }
 
+//
+func (a *TopAngle) SetCustomAngleType(at *AngleType) {
+	a.setting |= t_ang_sett_CUSTOM_ANGLE_TYPE_SET
+	a.customAngleType = at
+}
+
+func (a *TopAngle) HasCustomAngleTypeSet() bool {
+	return a.setting&t_ang_sett_CUSTOM_ANGLE_TYPE_SET != 0
+}
+
+func (a *TopAngle) CustomAngleType() *AngleType {
+	return a.customAngleType
+}
+
 /**********************************************************
 * TopDihedral
 **********************************************************/
+
+type topDihedralSetting int32
+
+const (
+	t_dih_sett_CUSTOM_DIHEDRAL_TYPE_SET topDihedralSetting = 1 << iota
+)
 
 type TopDihedral struct {
 	atom1 *TopAtom
@@ -482,6 +537,7 @@ type TopDihedral struct {
 	kind  ffTypes
 
 	customDihedralType *DihedralType
+	setting            topDihedralSetting
 }
 
 //
@@ -499,6 +555,20 @@ func (d *TopDihedral) TopAtom3() *TopAtom {
 
 func (d *TopDihedral) TopAtom4() *TopAtom {
 	return d.atom4
+}
+
+//
+func (d *TopDihedral) SetCustomDihedralType(dt *DihedralType) {
+	d.setting |= t_dih_sett_CUSTOM_DIHEDRAL_TYPE_SET
+	d.customDihedralType = dt
+}
+
+func (d *TopDihedral) HasCustomDihedralTypeSet() bool {
+	return d.setting&t_dih_sett_CUSTOM_DIHEDRAL_TYPE_SET != 0
+}
+
+func (d *TopDihedral) CustomDihedralType() *DihedralType {
+	return d.customDihedralType
 }
 
 /**********************************************************
