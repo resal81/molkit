@@ -322,13 +322,56 @@ func getGroup(s string) string {
 }
 
 //
-
 func genError(group string, errType int32) error {
 	if msg, ok := errMessages[errType]; ok {
 		return fmt.Errorf(msg, group)
 	} else {
 		return fmt.Errorf("'%s' : unknown error", group)
 	}
+}
+
+//
+func checkLine(s string, exp_lens []int, exp_fns []int8, fn_index int) (nfields int, out_fn int8, err error) {
+	fields := strings.Fields(s)
+
+	// check length
+	len_ok := false
+	for _, l := range exp_lens {
+		if len(fields) == l {
+			nfields = l
+			len_ok = true
+			break
+		}
+	}
+
+	if !len_ok {
+		return 0, 0, errors.New("bad length")
+	}
+
+	// check fn
+	if fn_index > len(fields)-1 {
+		return 0, 0, errors.New("bad index")
+	}
+	curr_fn, e := strconv.ParseInt(fields[fn_index], 10, 8)
+	if e != nil {
+		return 0, 0, errors.New("could not extract fn")
+	}
+
+	fn_ok := false
+	for _, f := range exp_fns {
+		if int8(curr_fn) == f {
+			out_fn = f
+			fn_ok = true
+			break
+		}
+	}
+
+	if !fn_ok {
+		return 0, 0, errors.New("bad fn")
+	}
+
+	return nfields, out_fn, nil
+
 }
 
 // parses [defaults]
@@ -477,18 +520,18 @@ func parsePairs(s string, topPol *ff.TopPolymer) (*ff.TopPair, error) {
 	// ; ai    aj  funct   c6  c12
 
 	// check the number of fields
-	fields := strings.Fields(s)
-	if len(fields) != 3 || len(fields) != 5 {
-		return nil, genError("[pairs]", errBadNumbFields)
+	nfields, fn, err := checkLine(s, []int{3, 5}, []int8{1}, 2)
+	if err != nil {
+		return nil, genError("[pairs]", errCouldNotBeParsed)
 	}
 
 	var ai, aj int64
-	var fn int8
+	var tmp int8
 	var sig14, eps14 float64
 
-	switch len(fields) {
+	switch nfields {
 	case 3:
-		n, err := fmt.Sscanf(s, "%d %d %d", &ai, &aj, &fn)
+		n, err := fmt.Sscanf(s, "%d %d %d", &ai, &aj, &tmp)
 		if n != 3 || err != nil {
 			return nil, genError("[pairs]", errCouldNotBeParsed)
 		}
@@ -508,22 +551,23 @@ func parsePairs(s string, topPol *ff.TopPolymer) (*ff.TopPair, error) {
 		return nil, genError("[pairs]", errCouldNotFindTopAtom)
 	}
 
-	// check if we have a supported function type
-	if fn != 1 {
+	if fn == 1 {
+		// create pair
+		p := ff.NewTopPair(a1, a2, ff.FF_PAIR_TYPE_1)
+
+		// if we have custom parameters, create a corresponding *PairType
+		if nfields == 5 {
+			pt := ff.NewPairType(a1.AtomType(), a2.AtomType(), ff.FF_PAIR_TYPE_1)
+			p.SetCustomPairType(pt)
+		}
+
+		return p, nil
+
+	} else {
+
 		return nil, genError("[pairs]", errBadFunctionType)
 	}
 
-	// create pair
-	p := ff.NewTopPair(a1, a2, ff.FF_PAIR_TYPE_1)
-
-	// if we have custom parameters, create a corresponding *PairType
-	if len(fields) == 5 {
-		pt := ff.NewPairType(a1.AtomType(), a2.AtomType(), ff.FF_PAIR_TYPE_1)
-		p.SetCustomPairType(pt)
-	}
-
-	// we're good
-	return p, nil
 }
 
 // parses [bondtypes]
@@ -555,27 +599,27 @@ func parseBondTypes(s string) (*ff.BondType, error) {
 func parseBonds(s string, topPol *ff.TopPolymer) (*ff.TopBond, error) {
 	// ; ai    aj  funct   b0  Kb
 
-	// check if we have the right number of fields (3 or 5)
-	fields := strings.Fields(s)
-	if len(fields) != 3 || len(fields) != 5 {
-		return nil, genError("[bonds]", errBadNumbFields)
+	// check the number of fields
+	nfields, fn, err := checkLine(s, []int{3, 5}, []int8{1}, 2)
+	if err != nil {
+		return nil, genError("[pairs]", errCouldNotBeParsed)
 	}
 
 	// parse the fields
 	// if there are 5 fields, the fields[3] and fields[4] are b0 and kb
 	var ai, aj int64
-	var fn int8
+	var tmp int8
 	var b0, kb float64
 
-	switch len(fields) {
+	switch nfields {
 	case 3:
-		n, err := fmt.Sscanf(s, "%d %d %d", &ai, &aj, &fn)
+		n, err := fmt.Sscanf(s, "%d %d %d", &ai, &aj, &tmp)
 		if n != 3 || err != nil {
 			return nil, genError("[bonds]", errCouldNotBeParsed)
 		}
 
 	case 5:
-		n, err := fmt.Sscanf(s, "%d %d %d %f %f", &ai, &aj, &fn, &b0, &kb)
+		n, err := fmt.Sscanf(s, "%d %d %d %f %f", &ai, &aj, &tmp, &b0, &kb)
 		if n != 5 || err != nil {
 			return nil, genError("[bonds]", errCouldNotBeParsed)
 		}
@@ -589,37 +633,38 @@ func parseBonds(s string, topPol *ff.TopPolymer) (*ff.TopBond, error) {
 		return nil, genError("[bonds]", errCouldNotFindTopAtom)
 	}
 
-	// check if we have a supported function type
-	if fn != 1 {
+	if fn == 1 {
+		// create bond
+		b := ff.NewTopBond(a1, a2, ff.FF_BOND_TYPE_1)
+
+		// if we have custom parameters, create a corresponding *BondType
+		if nfields == 5 {
+			bt := ff.NewBondType(a1.AtomType(), a2.AtomType(), ff.FF_BOND_TYPE_1)
+			b.SetCustomBondType(bt)
+		}
+
+		return b, nil
+
+	} else {
 		return nil, genError("[bonds]", errBadFunctionType)
 	}
-
-	// create bond
-	b := ff.NewTopBond(a1, a2, ff.FF_BOND_TYPE_1)
-
-	// if we have custom parameters, create a corresponding *BondType
-	if len(fields) == 5 {
-		bt := ff.NewBondType(a1.AtomType(), a2.AtomType(), ff.FF_BOND_TYPE_1)
-		b.SetCustomBondType(bt)
-	}
-
-	// we're good
-	return b, nil
 
 }
 
 // parses [angletypes]
 func parseAngleTypes(s string) (*ff.AngleType, error) {
 	//; i	j	k	func	th0	cth	S0	Kub
-	fields := strings.Fields(s)
-	fn, err := strconv.ParseInt(fields[3], 10, 8)
+
+	_, fn, err := checkLine(s, []int{6, 8}, []int8{1, 5}, 3)
 	if err != nil {
-		return nil, genError("[angletypes]", errBadFunctionType)
+		return nil, genError("[angletypes]", errCouldNotBeParsed)
 	}
 
 	var at1, at2, at3 string
 	var tmp int8
 	var thet, kt, r13, kub float64
+
+	var at *ff.AngleType
 
 	switch fn {
 	case 1:
@@ -627,34 +672,35 @@ func parseAngleTypes(s string) (*ff.AngleType, error) {
 		if n != 6 || err != nil {
 			return nil, genError("[angletypes]", errCouldNotBeParsed)
 		}
-		at := ff.NewAngleType(at1, at2, at3, ff.FF_ANGLE_TYPE_1)
-		at.SetThetaConstant(kt)
-		at.SetTheta(thet)
-		return at, nil
+		at = ff.NewAngleType(at1, at2, at3, ff.FF_ANGLE_TYPE_1)
+
 	case 5:
 		n, err := fmt.Sscanf(s, "%s %s %s %d %f %f %f %f", &at1, &at2, &at3, &tmp, &thet, &kt, &r13, &kub)
 		if n != 8 || err != nil {
 			return nil, genError("[angletypes]", errCouldNotBeParsed)
 		}
-		at := ff.NewAngleType(at1, at2, at3, ff.FF_ANGLE_TYPE_5)
-		at.SetThetaConstant(kt)
-		at.SetTheta(thet)
+		at = ff.NewAngleType(at1, at2, at3, ff.FF_ANGLE_TYPE_5)
+	}
+
+	at.SetThetaConstant(kt)
+	at.SetTheta(thet)
+
+	if fn == 5 {
 		at.SetR13(r13)
 		at.SetUBConstant(kub)
-		return at, nil
-	default:
-		return nil, genError("[angletypes]", errBadFunctionType)
 	}
+
+	return at, nil
+
 }
 
 // parses [angles]
 func parseAngles(s string, topPol *ff.TopPolymer) (*ff.TopAngle, error) {
 	// ; ai    aj  ak  funct   th0 cth S0  Kub
 
-	fields := strings.Fields(s)
-	fn, err := strconv.ParseInt(fields[3], 10, 8)
+	nfields, fn, err := checkLine(s, []int{4, 6, 8}, []int8{1, 5}, 3)
 	if err != nil {
-		return nil, genError("[angles]", errBadFunctionType)
+		return nil, genError("[angles]", errCouldNotBeParsed)
 	}
 
 	var ai, aj, ak int64
@@ -663,37 +709,37 @@ func parseAngles(s string, topPol *ff.TopPolymer) (*ff.TopAngle, error) {
 
 	switch fn {
 	case 1:
-		if len(fields) == 4 {
+		if nfields == 4 {
 			n, err := fmt.Sscanf(s, "%d %d %d %d", &ai, &aj, &ak, &tmp)
 			if n != 4 || err != nil {
-				return nil, genError("[angletypes]", errCouldNotBeParsed)
+				return nil, genError("[angles]", errCouldNotBeParsed)
 			}
 
-		} else if len(fields) == 6 {
+		} else if nfields == 6 {
 			n, err := fmt.Sscanf(s, "%d %d %d %d %f %f", &ai, &aj, &ak, &tmp, &thet, &kt)
 			if n != 6 || err != nil {
-				return nil, genError("[angletypes]", errCouldNotBeParsed)
+				return nil, genError("[angles]", errCouldNotBeParsed)
 			}
 
 		} else {
-			return nil, genError("[angletypes]", errBadNumbFields)
+			return nil, genError("[angles]", errBadNumbFields)
 		}
 
 	case 5:
-		if len(fields) == 4 {
+		if nfields == 4 {
 			n, err := fmt.Sscanf(s, "%d %d %d %d", &ai, &aj, &ak, &tmp)
 			if n != 4 || err != nil {
-				return nil, genError("[angletypes]", errCouldNotBeParsed)
+				return nil, genError("[angles]", errCouldNotBeParsed)
 			}
 
-		} else if len(fields) == 8 {
+		} else if nfields == 8 {
 			n, err := fmt.Sscanf(s, "%d %d %d %d %f %f %f %f", &ai, &aj, &ak, &tmp, &thet, &kt, &r13, &kub)
 			if n != 8 || err != nil {
-				return nil, genError("[angletypes]", errCouldNotBeParsed)
+				return nil, genError("[angles]", errCouldNotBeParsed)
 			}
 
 		} else {
-			return nil, genError("[angletypes]", errBadNumbFields)
+			return nil, genError("[angles]", errBadNumbFields)
 		}
 
 	}
@@ -710,9 +756,7 @@ func parseAngles(s string, topPol *ff.TopPolymer) (*ff.TopAngle, error) {
 	switch fn {
 	case 1:
 		tg = ff.NewTopAngle(a1, a2, a3, ff.FF_ANGLE_TYPE_1)
-		switch len(fields) {
-		case 4:
-
+		switch nfields {
 		case 6:
 			at := ff.NewAngleType(a1.AtomType(), a2.AtomType(), a3.AtomType(), ff.FF_ANGLE_TYPE_1)
 			at.SetThetaConstant(kt)
@@ -722,8 +766,7 @@ func parseAngles(s string, topPol *ff.TopPolymer) (*ff.TopAngle, error) {
 		}
 	case 5:
 		tg = ff.NewTopAngle(a1, a2, a3, ff.FF_ANGLE_TYPE_5)
-		switch len(fields) {
-		case 4:
+		switch nfields {
 		case 8:
 			at := ff.NewAngleType(a1.AtomType(), a2.AtomType(), a3.AtomType(), ff.FF_ANGLE_TYPE_5)
 			at.SetThetaConstant(kt)
@@ -742,12 +785,10 @@ func parseAngles(s string, topPol *ff.TopPolymer) (*ff.TopAngle, error) {
 func parseDihedralTypes(s string) (*ff.DihedralType, error) {
 	// ; i	j	k	l	func	phi0	cp	mult
 
-	fields := strings.Fields(s)
-
 	// find the function type
-	fn, err := strconv.ParseInt(fields[4], 10, 8)
+	_, fn, err := checkLine(s, []int{7, 8}, []int8{1, 2, 9}, 4)
 	if err != nil {
-		return nil, genError("[dihedraltypes]", errBadFunctionType)
+		return nil, genError("[dihedraltypes]", errCouldNotBeParsed)
 	}
 
 	var at1, at2, at3, at4 string
@@ -782,9 +823,9 @@ func parseDihedralTypes(s string) (*ff.DihedralType, error) {
 		dt.SetPsiConstant(kpsi)
 		dt.SetPsi(psi)
 		return dt, nil
-	default:
-		return nil, genError("[dihedraltypes]", errBadFunctionType)
 	}
+
+	return nil, genError("[dihedraltypes]", errCouldNotBeParsed)
 }
 
 // parses [dihedrals]
@@ -792,7 +833,88 @@ func parseDihedral(s string, topPol *ff.TopPolymer) (*ff.TopDihedral, error) {
 	// ; ai    aj  ak  al  funct   phi0    cp  mult
 	// ; ai    aj  ak  al  funct   q0  cq
 
-	return nil, nil
+	// find the function type
+	nfields, fn, err := checkLine(s, []int{5, 7, 8}, []int8{1, 2, 9}, 4)
+	if err != nil {
+		return nil, genError("[dihedrals]", errCouldNotBeParsed)
+	}
+
+	var ai, aj, ak, am int64
+	var tmp, mult int8
+	var phi, psi, kphi, kpsi float64
+
+	switch fn {
+	case 1, 9:
+		if nfields == 5 {
+			n, err := fmt.Sscanf(s, "%d %d %d %d %d", &ai, &aj, &ak, &am, &tmp)
+			if n != 5 || err != nil {
+				return nil, genError("[dihedrals]", errCouldNotBeParsed)
+			}
+		} else if nfields == 8 {
+			n, err := fmt.Sscanf(s, "%d %d %d %d %d %f %f %d", &ai, &aj, &ak, &am, &tmp, &phi, &kphi, &mult)
+			if n != 8 || err != nil {
+				return nil, genError("[dihedrals]", errCouldNotBeParsed)
+			}
+		}
+
+	case 2:
+		if nfields == 5 {
+			n, err := fmt.Sscanf(s, "%d %d %d %d %d", &ai, &aj, &ak, &am, &tmp)
+			if n != 5 || err != nil {
+				return nil, genError("[dihedrals]", errCouldNotBeParsed)
+			}
+		} else if nfields == 7 {
+			n, err := fmt.Sscanf(s, "%d %d %d %d %d %f %f %d", &ai, &aj, &ak, &am, &tmp, &psi, &kpsi)
+			if n != 7 || err != nil {
+				return nil, genError("[dihedrals]", errCouldNotBeParsed)
+			}
+		}
+	}
+
+	a1 := topPol.AtomBySerial(ai)
+	a2 := topPol.AtomBySerial(aj)
+	a3 := topPol.AtomBySerial(ak)
+	a4 := topPol.AtomBySerial(am)
+
+	if a1 == nil || a2 == nil || a3 == nil || a4 == nil {
+		return nil, genError("[dihedrals]", errCouldNotFindTopAtom)
+	}
+
+	var dh *ff.TopDihedral
+
+	switch fn {
+	case 1:
+		dh = ff.NewTopDihedral(a1, a2, a3, a4, ff.FF_DIHEDRAL_TYPE_1)
+		if nfields == 8 {
+			dt := ff.NewDihedralType(a1.AtomType(), a2.AtomType(), a3.AtomType(), a4.AtomType(), ff.FF_DIHEDRAL_TYPE_1)
+			dt.SetPhiConstant(kphi)
+			dt.SetPhi(phi)
+			dt.SetMult(mult)
+
+			dh.SetCustomDihedralType(dt)
+		}
+	case 9:
+		dh = ff.NewTopDihedral(a1, a2, a3, a4, ff.FF_DIHEDRAL_TYPE_9)
+		if nfields == 8 {
+			dt := ff.NewDihedralType(a1.AtomType(), a2.AtomType(), a3.AtomType(), a4.AtomType(), ff.FF_DIHEDRAL_TYPE_9)
+			dt.SetPhiConstant(kphi)
+			dt.SetPhi(phi)
+			dt.SetMult(mult)
+
+			dh.SetCustomDihedralType(dt)
+		}
+	case 2:
+		dh = ff.NewTopDihedral(a1, a2, a3, a4, ff.FF_DIHEDRAL_TYPE_2)
+		if nfields == 7 {
+			dt := ff.NewDihedralType(a1.AtomType(), a2.AtomType(), a3.AtomType(), a4.AtomType(), ff.FF_DIHEDRAL_TYPE_2)
+			dt.SetPsiConstant(kpsi)
+			dt.SetPsi(psi)
+
+			dh.SetCustomDihedralType(dt)
+		}
+	}
+
+	return dh, nil
 }
 
 // parses [moleculetypes]

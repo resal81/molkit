@@ -541,6 +541,21 @@ type TopDihedral struct {
 }
 
 //
+func NewTopDihedral(atom1, atom2, atom3, atom4 *TopAtom, kind ffTypes) *TopDihedral {
+	if kind&FF_DIHEDRAL_TYPE_1 == 0 && kind&FF_DIHEDRAL_TYPE_2 == 0 && kind&FF_DIHEDRAL_TYPE_9 == 0 {
+		panic("unsupported dihedral type")
+	}
+
+	return &TopDihedral{
+		atom1: atom1,
+		atom2: atom2,
+		atom3: atom3,
+		atom4: atom4,
+		kind:  kind,
+	}
+}
+
+//
 func (d *TopDihedral) TopAtom1() *TopAtom {
 	return d.atom1
 }
