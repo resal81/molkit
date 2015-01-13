@@ -111,7 +111,7 @@ func readtop(reader io.Reader) (*ff.TopSystem, *ff.ForceField, error) {
 	var prev_resname string = "_"
 	var prev_resnumb int64 = -1
 
-	forcefield := ff.NewForceField(ff.FF_SOURCE_GROMACS)
+	forcefield := ff.NewForceField(ff.FF_GROMACS)
 
 	// read file line by line
 	scanner := bufio.NewScanner(reader)
@@ -454,7 +454,7 @@ func parseAtomTypes(s string) (*ff.AtomType, error) {
 		return nil, genError("[atomtypes]", errBadNumbFields)
 	}
 
-	at := ff.NewAtomType(name)
+	at := ff.NewAtomType(name, ff.FF_GROMACS)
 	at.SetProtons(prot)
 	at.SetMass(mass)
 	at.SetCharge(chg)
@@ -518,7 +518,7 @@ func parseNonBondedTypes(s string) (*ff.NonBondedType, error) {
 
 	switch fn {
 	case 1:
-		nbt := ff.NewNonBondedType(at1, at2, ff.FF_NON_BONDED_TYPE_1)
+		nbt := ff.NewNonBondedType(at1, at2, ff.FF_NON_BONDED_TYPE_1, ff.FF_GROMACS)
 		nbt.SetSigma(sig)
 		nbt.SetEpsilon(eps)
 		return nbt, nil
@@ -543,7 +543,7 @@ func parsePairTypes(s string) (*ff.PairType, error) {
 
 	switch fn {
 	case 1:
-		pt := ff.NewPairType(at1, at2, ff.FF_PAIR_TYPE_1)
+		pt := ff.NewPairType(at1, at2, ff.FF_PAIR_TYPE_1, ff.FF_GROMACS)
 		pt.SetSigma14(sig14)
 		pt.SetEpsilon14(eps14)
 		return pt, nil
@@ -595,7 +595,7 @@ func parsePairs(s string, topPol *ff.TopPolymer) (*ff.TopPair, error) {
 
 		// if we have custom parameters, create a corresponding *PairType
 		if nfields == 5 {
-			pt := ff.NewPairType(a1.AtomType(), a2.AtomType(), ff.FF_PAIR_TYPE_1)
+			pt := ff.NewPairType(a1.AtomType(), a2.AtomType(), ff.FF_PAIR_TYPE_1, ff.FF_GROMACS)
 			p.SetCustomPairType(pt)
 		}
 
@@ -623,7 +623,7 @@ func parseBondTypes(s string) (*ff.BondType, error) {
 
 	switch fn {
 	case 1:
-		bt := ff.NewBondType(at1, at2, ff.FF_BOND_TYPE_1)
+		bt := ff.NewBondType(at1, at2, ff.FF_BOND_TYPE_1, ff.FF_GROMACS)
 		bt.SetHarmonicConstant(kr)
 		bt.SetHarmonicDistance(r0)
 		return bt, nil
@@ -677,7 +677,7 @@ func parseBonds(s string, topPol *ff.TopPolymer) (*ff.TopBond, error) {
 
 		// if we have custom parameters, create a corresponding *BondType
 		if nfields == 5 {
-			bt := ff.NewBondType(a1.AtomType(), a2.AtomType(), ff.FF_BOND_TYPE_1)
+			bt := ff.NewBondType(a1.AtomType(), a2.AtomType(), ff.FF_BOND_TYPE_1, ff.FF_GROMACS)
 			b.SetCustomBondType(bt)
 		}
 
@@ -710,14 +710,14 @@ func parseAngleTypes(s string) (*ff.AngleType, error) {
 		if n != 6 || err != nil {
 			return nil, genError("[angletypes]", errCouldNotBeParsed)
 		}
-		at = ff.NewAngleType(at1, at2, at3, ff.FF_ANGLE_TYPE_1)
+		at = ff.NewAngleType(at1, at2, at3, ff.FF_ANGLE_TYPE_1, ff.FF_GROMACS)
 
 	case 5:
 		n, err := fmt.Sscanf(s, "%s %s %s %d %f %f %f %f", &at1, &at2, &at3, &tmp, &thet, &kt, &r13, &kub)
 		if n != 8 || err != nil {
 			return nil, genError("[angletypes]", errCouldNotBeParsed)
 		}
-		at = ff.NewAngleType(at1, at2, at3, ff.FF_ANGLE_TYPE_5)
+		at = ff.NewAngleType(at1, at2, at3, ff.FF_ANGLE_TYPE_5, ff.FF_GROMACS)
 	}
 
 	at.SetThetaConstant(kt)
@@ -796,7 +796,7 @@ func parseAngles(s string, topPol *ff.TopPolymer) (*ff.TopAngle, error) {
 		tg = ff.NewTopAngle(a1, a2, a3, ff.FF_ANGLE_TYPE_1)
 		switch nfields {
 		case 6:
-			at := ff.NewAngleType(a1.AtomType(), a2.AtomType(), a3.AtomType(), ff.FF_ANGLE_TYPE_1)
+			at := ff.NewAngleType(a1.AtomType(), a2.AtomType(), a3.AtomType(), ff.FF_ANGLE_TYPE_1, ff.FF_GROMACS)
 			at.SetThetaConstant(kt)
 			at.SetTheta(thet)
 
@@ -806,7 +806,7 @@ func parseAngles(s string, topPol *ff.TopPolymer) (*ff.TopAngle, error) {
 		tg = ff.NewTopAngle(a1, a2, a3, ff.FF_ANGLE_TYPE_5)
 		switch nfields {
 		case 8:
-			at := ff.NewAngleType(a1.AtomType(), a2.AtomType(), a3.AtomType(), ff.FF_ANGLE_TYPE_5)
+			at := ff.NewAngleType(a1.AtomType(), a2.AtomType(), a3.AtomType(), ff.FF_ANGLE_TYPE_5, ff.FF_GROMACS)
 			at.SetThetaConstant(kt)
 			at.SetTheta(thet)
 			at.SetUBConstant(kub)
@@ -842,9 +842,9 @@ func parseDihedralTypes(s string) (*ff.DihedralType, error) {
 
 		var dt *ff.DihedralType
 		if fn == 1 {
-			dt = ff.NewDihedralType(at1, at2, at3, at4, ff.FF_DIHEDRAL_TYPE_1)
+			dt = ff.NewDihedralType(at1, at2, at3, at4, ff.FF_DIHEDRAL_TYPE_1, ff.FF_GROMACS)
 		} else if fn == 9 {
-			dt = ff.NewDihedralType(at1, at2, at3, at4, ff.FF_DIHEDRAL_TYPE_9)
+			dt = ff.NewDihedralType(at1, at2, at3, at4, ff.FF_DIHEDRAL_TYPE_9, ff.FF_GROMACS)
 		}
 
 		dt.SetPhi(phi)
@@ -857,7 +857,7 @@ func parseDihedralTypes(s string) (*ff.DihedralType, error) {
 		if n != 7 || err != nil {
 			return nil, genError("[dihedraltypes]", errCouldNotBeParsed)
 		}
-		dt := ff.NewDihedralType(at1, at2, at3, at4, ff.FF_DIHEDRAL_TYPE_2)
+		dt := ff.NewDihedralType(at1, at2, at3, at4, ff.FF_DIHEDRAL_TYPE_2, ff.FF_GROMACS)
 		dt.SetPsiConstant(kpsi)
 		dt.SetPsi(psi)
 		return dt, nil
@@ -924,7 +924,7 @@ func parseDihedral(s string, topPol *ff.TopPolymer) (*ff.TopDihedral, error) {
 	case 1:
 		dh = ff.NewTopDihedral(a1, a2, a3, a4, ff.FF_DIHEDRAL_TYPE_1)
 		if nfields == 8 {
-			dt := ff.NewDihedralType(a1.AtomType(), a2.AtomType(), a3.AtomType(), a4.AtomType(), ff.FF_DIHEDRAL_TYPE_1)
+			dt := ff.NewDihedralType(a1.AtomType(), a2.AtomType(), a3.AtomType(), a4.AtomType(), ff.FF_DIHEDRAL_TYPE_1, ff.FF_GROMACS)
 			dt.SetPhiConstant(kphi)
 			dt.SetPhi(phi)
 			dt.SetMult(mult)
@@ -934,7 +934,7 @@ func parseDihedral(s string, topPol *ff.TopPolymer) (*ff.TopDihedral, error) {
 	case 9:
 		dh = ff.NewTopDihedral(a1, a2, a3, a4, ff.FF_DIHEDRAL_TYPE_9)
 		if nfields == 8 {
-			dt := ff.NewDihedralType(a1.AtomType(), a2.AtomType(), a3.AtomType(), a4.AtomType(), ff.FF_DIHEDRAL_TYPE_9)
+			dt := ff.NewDihedralType(a1.AtomType(), a2.AtomType(), a3.AtomType(), a4.AtomType(), ff.FF_DIHEDRAL_TYPE_9, ff.FF_GROMACS)
 			dt.SetPhiConstant(kphi)
 			dt.SetPhi(phi)
 			dt.SetMult(mult)
@@ -944,7 +944,7 @@ func parseDihedral(s string, topPol *ff.TopPolymer) (*ff.TopDihedral, error) {
 	case 2:
 		dh = ff.NewTopDihedral(a1, a2, a3, a4, ff.FF_DIHEDRAL_TYPE_2)
 		if nfields == 7 {
-			dt := ff.NewDihedralType(a1.AtomType(), a2.AtomType(), a3.AtomType(), a4.AtomType(), ff.FF_DIHEDRAL_TYPE_2)
+			dt := ff.NewDihedralType(a1.AtomType(), a2.AtomType(), a3.AtomType(), a4.AtomType(), ff.FF_DIHEDRAL_TYPE_2, ff.FF_GROMACS)
 			dt.SetPsiConstant(kpsi)
 			dt.SetPsi(psi)
 

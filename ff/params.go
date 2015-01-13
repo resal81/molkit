@@ -27,12 +27,14 @@ type AtomType struct {
 	charge    float64
 
 	setting atSetting
+	ffType  ffTypes
 }
 
 // Constructor
-func NewAtomType(atype string) *AtomType {
+func NewAtomType(atype string, ffType ffTypes) *AtomType {
 	return &AtomType{
-		atype: atype,
+		atype:  atype,
+		ffType: ffType,
 	}
 }
 
@@ -88,8 +90,8 @@ func (a *AtomType) HasSigmaSet() bool {
 	return a.setting&at_sett_SIGMA_SET != 0
 }
 
-func (a *AtomType) Sigma() float64 {
-	return a.sigma
+func (a *AtomType) Sigma(to ffTypes) float64 {
+	return convertSigma(a.sigma, a.ffType, to)
 }
 
 //
@@ -102,8 +104,8 @@ func (a *AtomType) HasEpsilonSet() bool {
 	return a.setting&at_sett_EPSILON_SET != 0
 }
 
-func (a *AtomType) Epsilon() float64 {
-	return a.epsilon
+func (a *AtomType) Epsilon(to ffTypes) float64 {
+	return convertEpsilon(a.epsilon, a.ffType, to)
 }
 
 //
@@ -116,8 +118,8 @@ func (a *AtomType) HasSigma14Set() bool {
 	return a.setting&at_sett_SIGMA14_SET != 0
 }
 
-func (a *AtomType) Sigma14() float64 {
-	return a.sigma14
+func (a *AtomType) Sigma14(to ffTypes) float64 {
+	return convertSigma(a.sigma14, a.ffType, to)
 }
 
 //
@@ -130,8 +132,8 @@ func (a *AtomType) HasEpsilon14Set() bool {
 	return a.setting&at_sett_EPSILON14_SET != 0
 }
 
-func (a *AtomType) Epsilon14() float64 {
-	return a.epsilon14
+func (a *AtomType) Epsilon14(to ffTypes) float64 {
+	return convertEpsilon(a.epsilon14, a.ffType, to)
 }
 
 /**********************************************************
@@ -155,10 +157,11 @@ type NonBondedType struct {
 	epsilon float64
 
 	setting nonbondedtypeSetting
-	kind    ffTypes
+	kind    prTypes
+	ffType  ffTypes
 }
 
-func NewNonBondedType(atype1, atype2 string, nbt ffTypes) *NonBondedType {
+func NewNonBondedType(atype1, atype2 string, nbt prTypes, ffType ffTypes) *NonBondedType {
 
 	if nbt&FF_NON_BONDED_TYPE_1 == 0 {
 		panic("unsupported nonbonded-param")
@@ -167,6 +170,7 @@ func NewNonBondedType(atype1, atype2 string, nbt ffTypes) *NonBondedType {
 		atype1: atype1,
 		atype2: atype2,
 		kind:   nbt,
+		ffType: ffType,
 	}
 }
 
@@ -189,8 +193,8 @@ func (n *NonBondedType) HasSigmaSet() bool {
 	return n.setting&nbt_sett_SIGMA_SET != 0
 }
 
-func (n *NonBondedType) Sigma() float64 {
-	return n.sigma
+func (n *NonBondedType) Sigma(to ffTypes) float64 {
+	return convertSigma(n.sigma, n.ffType, to)
 }
 
 //
@@ -203,8 +207,8 @@ func (n *NonBondedType) HasEpsilonSet() bool {
 	return n.setting&nbt_sett_EPSILON_SET != 0
 }
 
-func (n *NonBondedType) Epsilon() float64 {
-	return n.epsilon
+func (n *NonBondedType) Epsilon(to ffTypes) float64 {
+	return convertEpsilon(n.epsilon, n.ffType, to)
 }
 
 /**********************************************************
@@ -225,10 +229,11 @@ type PairType struct {
 	epsilon14 float64
 
 	setting pairtypeSetting
-	kind    ffTypes
+	kind    prTypes
+	ffType  ffTypes
 }
 
-func NewPairType(atype1, atype2 string, pt ffTypes) *PairType {
+func NewPairType(atype1, atype2 string, pt prTypes, ffType ffTypes) *PairType {
 	if pt&FF_PAIR_TYPE_1 == 0 {
 		panic("unsupported pairtype")
 	}
@@ -237,6 +242,7 @@ func NewPairType(atype1, atype2 string, pt ffTypes) *PairType {
 		atype1: atype1,
 		atype2: atype2,
 		kind:   pt,
+		ffType: ffType,
 	}
 }
 
@@ -259,8 +265,8 @@ func (p *PairType) HasSigma14Set() bool {
 	return p.setting&pt_sett_SIGMA14_SET != 0
 }
 
-func (p *PairType) Sigma14() float64 {
-	return p.sigma14
+func (p *PairType) Sigma14(to ffTypes) float64 {
+	return convertSigma(p.sigma14, p.ffType, to)
 }
 
 //
@@ -273,8 +279,8 @@ func (p *PairType) HasEpsilon14Set() bool {
 	return p.setting&pt_sett_EPSILON14_SET != 0
 }
 
-func (p *PairType) Epsilon14() float64 {
-	return p.epsilon14
+func (p *PairType) Epsilon14(to ffTypes) float64 {
+	return convertEpsilon(p.epsilon14, p.ffType, to)
 }
 
 /**********************************************************
@@ -296,10 +302,11 @@ type BondType struct {
 	r0 float64
 
 	setting bondtypeSetting
-	kind    ffTypes
+	kind    prTypes
+	ffType  ffTypes
 }
 
-func NewBondType(atype1, atype2 string, bt ffTypes) *BondType {
+func NewBondType(atype1, atype2 string, bt prTypes, ffType ffTypes) *BondType {
 	if bt&FF_BOND_TYPE_1 == 0 {
 		panic("unsupported bondtype")
 	}
@@ -308,6 +315,7 @@ func NewBondType(atype1, atype2 string, bt ffTypes) *BondType {
 		atype1: atype1,
 		atype2: atype2,
 		kind:   bt,
+		ffType: ffType,
 	}
 }
 
@@ -330,8 +338,8 @@ func (b *BondType) HasHarmonicConstantSet() bool {
 	return b.setting&bt_sett_HARMONIC_CONSTANT_SET != 0
 }
 
-func (b *BondType) HarmonicConstant() float64 {
-	return b.kr
+func (b *BondType) HarmonicConstant(to ffTypes) float64 {
+	return convertHarmonicConstant(b.kr, b.ffType, to)
 }
 
 //
@@ -344,8 +352,8 @@ func (b *BondType) HasHarmonicDistanceSet() bool {
 	return b.setting&bt_sett_HARMONIC_DISTANCE_SET != 0
 }
 
-func (b *BondType) HarmonicDistance() float64 {
-	return b.r0
+func (b *BondType) HarmonicDistance(to ffTypes) float64 {
+	return convertHarmonicDistance(b.r0, b.ffType, to)
 }
 
 /**********************************************************
@@ -372,10 +380,11 @@ type AngleType struct {
 	k_ub    float64
 
 	setting angletypeSetting
-	kind    ffTypes
+	kind    prTypes
+	ffType  ffTypes
 }
 
-func NewAngleType(atype1, atype2, atype3 string, angtype ffTypes) *AngleType {
+func NewAngleType(atype1, atype2, atype3 string, angtype prTypes, ffType ffTypes) *AngleType {
 
 	if angtype&FF_ANGLE_TYPE_1 == 0 && angtype&FF_ANGLE_TYPE_5 == 0 {
 		panic("unsupported angle type")
@@ -386,6 +395,7 @@ func NewAngleType(atype1, atype2, atype3 string, angtype ffTypes) *AngleType {
 		atype2: atype2,
 		atype3: atype3,
 		kind:   angtype,
+		ffType: ffType,
 	}
 }
 
@@ -412,8 +422,8 @@ func (a *AngleType) HasThetaConstantSet() bool {
 	return a.setting&ang_sett_THETA_CONSTANT_SET != 0
 }
 
-func (a *AngleType) ThetaConstant() float64 {
-	return a.k_theta
+func (a *AngleType) ThetaConstant(to ffTypes) float64 {
+	return convertThetaConstant(a.k_theta, a.ffType, to)
 }
 
 //
@@ -426,8 +436,8 @@ func (a *AngleType) HasThetaSet() bool {
 	return a.setting&ang_sett_THETA_SET != 0
 }
 
-func (a *AngleType) Theta() float64 {
-	return a.theta
+func (a *AngleType) Theta(to ffTypes) float64 {
+	return convertTheta(a.theta, a.ffType, to)
 }
 
 //
@@ -440,8 +450,8 @@ func (a *AngleType) HasUBConstantSet() bool {
 	return a.setting&ang_sett_UB_CONSTANT_SET != 0
 }
 
-func (a *AngleType) UBConstant() float64 {
-	return a.k_ub
+func (a *AngleType) UBConstant(to ffTypes) float64 {
+	return convertUBConstant(a.k_ub, a.ffType, to)
 }
 
 //
@@ -454,8 +464,8 @@ func (a *AngleType) HasR13Set() bool {
 	return a.setting&ang_sett_R13_SET != 0
 }
 
-func (a *AngleType) R13() float64 {
-	return a.r13
+func (a *AngleType) R13(to ffTypes) float64 {
+	return convertR13(a.r13, a.ffType, to)
 }
 
 /**********************************************************
@@ -487,10 +497,11 @@ type DihedralType struct {
 	psi   float64
 
 	setting dihedraltypeSetting
-	kind    ffTypes
+	kind    prTypes
+	ffType  ffTypes
 }
 
-func NewDihedralType(atype1, atype2, atype3, atype4 string, dht ffTypes) *DihedralType {
+func NewDihedralType(atype1, atype2, atype3, atype4 string, dht prTypes, ffType ffTypes) *DihedralType {
 	if dht&FF_DIHEDRAL_TYPE_1 == 0 && dht&FF_DIHEDRAL_TYPE_2 == 0 && dht&FF_DIHEDRAL_TYPE_9 == 0 {
 		panic("unsupported dihedraltype")
 	}
@@ -501,11 +512,12 @@ func NewDihedralType(atype1, atype2, atype3, atype4 string, dht ffTypes) *Dihedr
 		atype3: atype3,
 		atype4: atype4,
 		kind:   dht,
+		ffType: ffType,
 	}
 }
 
 //
-func (d *DihedralType) Kind() ffTypes {
+func (d *DihedralType) Kind() prTypes {
 	return d.kind
 }
 
@@ -536,8 +548,8 @@ func (d *DihedralType) HasPhiConstantSet() bool {
 	return d.setting&dih_sett_PHI_CONSTANT_SET != 0
 }
 
-func (d *DihedralType) PhiConstant() float64 {
-	return d.k_phi
+func (d *DihedralType) PhiConstant(to ffTypes) float64 {
+	return convertPhiConstant(d.k_phi, d.ffType, to)
 }
 
 //
@@ -550,8 +562,8 @@ func (d *DihedralType) HasPhiSet() bool {
 	return d.setting&dih_sett_PHI_SET != 0
 }
 
-func (d *DihedralType) Phi() float64 {
-	return d.phi
+func (d *DihedralType) Phi(to ffTypes) float64 {
+	return convertPhi(d.phi, d.ffType, to)
 }
 
 //
@@ -564,8 +576,8 @@ func (d *DihedralType) HasPsiConstantSet() bool {
 	return d.setting&dih_sett_PSI_CONSTANT_SET != 0
 }
 
-func (d *DihedralType) PsiConstant() float64 {
-	return d.k_psi
+func (d *DihedralType) PsiConstant(to ffTypes) float64 {
+	return convertPsiConstant(d.k_psi, d.ffType, to)
 }
 
 //
@@ -578,8 +590,8 @@ func (d *DihedralType) HasPsiSet() bool {
 	return d.setting&dih_sett_PSI_SET != 0
 }
 
-func (d *DihedralType) Psi() float64 {
-	return d.psi
+func (d *DihedralType) Psi(to ffTypes) float64 {
+	return convertPsi(d.psi, d.ffType, to)
 }
 
 //
@@ -592,8 +604,8 @@ func (d *DihedralType) HasMultiSet() bool {
 	return d.setting&dih_sett_MULT_SET != 0
 }
 
-func (d *DihedralType) Mult() int8 {
-	return d.mult
+func (d *DihedralType) Mult(to ffTypes) int8 {
+	return convertMutl(d.mult, d.ffType, to)
 }
 
 func (d *DihedralType) Setting() dihedraltypeSetting {

@@ -404,7 +404,7 @@ const (
 type TopBond struct {
 	atom1 *TopAtom
 	atom2 *TopAtom
-	kind  ffTypes
+	kind  prTypes
 
 	customBondType *BondType
 	bondrest       *TopDistanceRestraint
@@ -412,7 +412,7 @@ type TopBond struct {
 }
 
 //
-func NewTopBond(atom1, atom2 *TopAtom, kind ffTypes) *TopBond {
+func NewTopBond(atom1, atom2 *TopAtom, kind prTypes) *TopBond {
 	if kind&FF_BOND_TYPE_1 == 0 {
 		panic("bond type is not supported")
 	}
@@ -461,13 +461,13 @@ const (
 type TopPair struct {
 	atom1 *TopAtom
 	atom2 *TopAtom
-	kind  ffTypes
+	kind  prTypes
 
 	customPairType *PairType
 	setting        topPairSetting
 }
 
-func NewTopPair(atom1, atom2 *TopAtom, kind ffTypes) *TopPair {
+func NewTopPair(atom1, atom2 *TopAtom, kind prTypes) *TopPair {
 	if kind&FF_PAIR_TYPE_1 == 0 {
 		panic("pairtype is not supported")
 	}
@@ -515,7 +515,7 @@ type TopAngle struct {
 	atom1 *TopAtom
 	atom2 *TopAtom
 	atom3 *TopAtom
-	kind  ffTypes
+	kind  prTypes
 
 	customAngleType *AngleType
 	angleRest       *TopAngleRestraint
@@ -523,7 +523,7 @@ type TopAngle struct {
 }
 
 //
-func NewTopAngle(atom1, atom2, atom3 *TopAtom, kind ffTypes) *TopAngle {
+func NewTopAngle(atom1, atom2, atom3 *TopAtom, kind prTypes) *TopAngle {
 	if kind&FF_ANGLE_TYPE_1 == 0 && kind&FF_ANGLE_TYPE_5 == 0 {
 		panic("angletype is not supported")
 	}
@@ -579,14 +579,14 @@ type TopDihedral struct {
 	atom2 *TopAtom
 	atom3 *TopAtom
 	atom4 *TopAtom
-	kind  ffTypes
+	kind  prTypes
 
 	customDihedralType *DihedralType
 	setting            topDihedralSetting
 }
 
 //
-func NewTopDihedral(atom1, atom2, atom3, atom4 *TopAtom, kind ffTypes) *TopDihedral {
+func NewTopDihedral(atom1, atom2, atom3, atom4 *TopAtom, kind prTypes) *TopDihedral {
 	if kind&FF_DIHEDRAL_TYPE_1 == 0 && kind&FF_DIHEDRAL_TYPE_2 == 0 && kind&FF_DIHEDRAL_TYPE_9 == 0 {
 		panic("unsupported dihedral type")
 	}
@@ -632,7 +632,7 @@ func (d *TopDihedral) CustomDihedralType() *DihedralType {
 }
 
 //
-func (d *TopDihedral) Kind() ffTypes {
+func (d *TopDihedral) Kind() prTypes {
 	return d.kind
 }
 

@@ -6,17 +6,22 @@ package ff
 type ffTypes int64
 
 const (
-	FF_SOURCE_GROMACS ffTypes = 1 << iota
-	FF_SOURCE_CHARMM
-	FF_SOURCE_AMBER
-	FF_BOND_TYPE_1       // harmonic bond
-	FF_NON_BONDED_TYPE_1 //
-	FF_PAIR_TYPE_1       //
-	FF_ANGLE_TYPE_1      // harmonic
-	FF_ANGLE_TYPE_5      // UB
-	FF_DIHEDRAL_TYPE_1   // proper dihedral
-	FF_DIHEDRAL_TYPE_2   // improper
-	FF_DIHEDRAL_TYPE_9   // proper multiple
+	FF_GROMACS ffTypes = 1 << iota
+	FF_CHARMM
+	FF_AMBER
+)
+
+type prTypes int64
+
+const (
+	FF_BOND_TYPE_1       prTypes = 1 << iota // harmonic bond
+	FF_NON_BONDED_TYPE_1                     //
+	FF_PAIR_TYPE_1                           //
+	FF_ANGLE_TYPE_1                          // harmonic
+	FF_ANGLE_TYPE_5                          // UB
+	FF_DIHEDRAL_TYPE_1                       // proper dihedral
+	FF_DIHEDRAL_TYPE_2                       // improper
+	FF_DIHEDRAL_TYPE_9                       // proper multiple
 )
 
 /**********************************************************
@@ -89,9 +94,6 @@ type ForceField struct {
 }
 
 func NewForceField(kind ffTypes) *ForceField {
-	if kind&FF_SOURCE_GROMACS == 0 && kind&FF_SOURCE_CHARMM == 0 && kind&FF_SOURCE_AMBER == 0 {
-		panic("unsupported ff type")
-	}
 	return &ForceField{
 		kind: kind,
 	}

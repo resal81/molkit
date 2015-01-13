@@ -1,6 +1,7 @@
 package gmx
 
 import (
+	frc "github.com/resal81/molkit/ff"
 	"testing"
 )
 
@@ -17,6 +18,12 @@ func compareF64(t *testing.T, v1, v2 float64, header string) {
 }
 
 func compareInt8(t *testing.T, v1, v2 int8, header string) {
+	if v1 != v2 {
+		t.Errorf("%s : %d != %d", header, v1, v2)
+	}
+}
+
+func compareString(t *testing.T, v1, v2, header string) {
 	if v1 != v2 {
 		t.Errorf("%s : %d != %d", header, v1, v2)
 	}
@@ -54,8 +61,8 @@ func TestAtomTypes(t *testing.T) {
 	} else {
 		ats := ff.AtomTypes()
 		checkLength(t, len(ats), 2, "AtomTypes()")
-		compareF64(t, ats[0].Sigma(), 3.72395664183e-01, "Sigma()")
-		compareF64(t, ats[1].Epsilon(), 1.506240e-01, "Epsilon()")
+		compareF64(t, ats[0].Sigma(frc.FF_GROMACS), 3.72395664183e-01, "Sigma()")
+		compareF64(t, ats[1].Epsilon(frc.FF_GROMACS), 1.506240e-01, "Epsilon()")
 	}
 }
 
@@ -73,8 +80,8 @@ func TestPairTypes(t *testing.T) {
 	} else {
 		pts := ff.PairTypes()
 		checkLength(t, len(pts), 2, "PairTypes()")
-		compareF64(t, pts[0].Sigma14(), 3.55468588538e-01, "Sigma14()")
-		compareF64(t, pts[1].Epsilon14(), 1.09105371453e-01, "Epsilon14()")
+		compareF64(t, pts[0].Sigma14(frc.FF_GROMACS), 3.55468588538e-01, "Sigma14()")
+		compareF64(t, pts[1].Epsilon14(frc.FF_GROMACS), 1.09105371453e-01, "Epsilon14()")
 	}
 }
 
@@ -92,8 +99,8 @@ func TestNonBondedTypes(t *testing.T) {
 	} else {
 		nbs := ff.NonBondedTypes()
 		checkLength(t, len(nbs), 2, "NondBondedTypes()")
-		compareF64(t, nbs[0].Sigma(), 3.57250385974e-01, "Sigma()")
-		compareF64(t, nbs[1].Epsilon(), 1.22591200000e-01, "Epsilon()")
+		compareF64(t, nbs[0].Sigma(frc.FF_GROMACS), 3.57250385974e-01, "Sigma()")
+		compareF64(t, nbs[1].Epsilon(frc.FF_GROMACS), 1.22591200000e-01, "Epsilon()")
 
 	}
 }
@@ -112,8 +119,8 @@ func TestBondTypes(t *testing.T) {
 	} else {
 		bts := ff.BondTypes()
 		checkLength(t, len(bts), 2, "BondTypes()")
-		compareF64(t, bts[0].HarmonicConstant(), 3.681920e+05, "HarmonicConstant()")
-		compareF64(t, bts[1].HarmonicDistance(), 1.502000e-01, "HarmonicDistance()")
+		compareF64(t, bts[0].HarmonicConstant(frc.FF_GROMACS), 3.681920e+05, "HarmonicConstant()")
+		compareF64(t, bts[1].HarmonicDistance(frc.FF_GROMACS), 1.502000e-01, "HarmonicDistance()")
 	}
 }
 
@@ -131,10 +138,10 @@ func TestAngleTypes(t *testing.T) {
 	} else {
 		ags := ff.AngleTypes()
 		checkLength(t, len(ags), 2, "AngleTypes()")
-		compareF64(t, ags[0].ThetaConstant(), 4.0166400e+02, "ThetaConstant()")
-		compareF64(t, ags[0].Theta(), 1.2350000e+02, "Theta()")
-		compareF64(t, ags[1].UBConstant(), 0.0000002e+00, "UBConstant()")
-		compareF64(t, ags[1].R13(), 0.0000001e+00, "R13()")
+		compareF64(t, ags[0].ThetaConstant(frc.FF_GROMACS), 4.0166400e+02, "ThetaConstant()")
+		compareF64(t, ags[0].Theta(frc.FF_GROMACS), 1.2350000e+02, "Theta()")
+		compareF64(t, ags[1].UBConstant(frc.FF_GROMACS), 0.0000002e+00, "UBConstant()")
+		compareF64(t, ags[1].R13(frc.FF_GROMACS), 0.0000001e+00, "R13()")
 
 	}
 }
@@ -157,40 +164,92 @@ func TestDihedralTypes(t *testing.T) {
 	} else {
 		dhs := ff.DihedralTypes()
 		checkLength(t, len(dhs), 2, "DihedralTypes()")
-		compareF64(t, dhs[0].PhiConstant(), 2.092000e+00, "PhiConstant()")
-		compareF64(t, dhs[1].Phi(), 1.800000e+02, "Phi()")
-		compareInt8(t, dhs[1].Mult(), 3, "Mult()")
+		compareF64(t, dhs[0].PhiConstant(frc.FF_GROMACS), 2.092000e+00, "PhiConstant()")
+		compareF64(t, dhs[1].Phi(frc.FF_GROMACS), 1.800000e+02, "Phi()")
+		compareInt8(t, dhs[1].Mult(frc.FF_GROMACS), 3, "Mult()")
 
 		// impropertypes
 		ims := ff.ImproperTypes()
 		checkLength(t, len(ims), 1, "ImproperTypes()")
-		compareF64(t, ims[0].PsiConstant(), 8.368000e+02, "PsiConstant()")
-		compareF64(t, ims[0].Psi(), 0.000001e+00, "Psi()")
+		compareF64(t, ims[0].PsiConstant(frc.FF_GROMACS), 8.368000e+02, "PsiConstant()")
+		compareF64(t, ims[0].Psi(frc.FF_GROMACS), 0.000001e+00, "Psi()")
 	}
 }
 
-func TestCase1Top(t *testing.T) {
-	top, _, err := ReadTOPString(testCase1_string)
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
+func TestTopPolymer(t *testing.T) {
+	s := `
+    [ moleculetype ]
+    ; name  nrexcl
+    LIG1         3
 
-	rp := top.RegisteredTopPolymers()
-	if len(rp) != 2 {
-		t.Errorf("shoud have registered 2 polymers, but has %d", len(rp))
-	}
+    [ moleculetype ]
+    ; name  nrexcl
+    LIG2         3
+    `
 
-	pol1 := top.TopPolymerByName("LIG1")
-	if pol1 == nil {
-		t.Errorf("polymer LIG1 is nil")
-	}
+	if top, _, err := ReadTOPString(s); err != nil {
+		t.Fatalf("could not parse the string")
+	} else {
+		pols := top.RegisteredTopPolymers()
+		checkLength(t, len(pols), 2, "RegisteredTopPolymers()")
+		compareString(t, pols["LIG1"].Name(), "LIG1", "Name()")
 
-	checkLength(t, len(pol1.TopAtoms()), 8, "LIG1 TopAtoms()")
-	checkLength(t, len(pol1.TopBonds()), 3, "LIG1 TopBonds()")
-	checkLength(t, len(pol1.TopPairs()), 2, "LIG1 TopPairs()")
-	checkLength(t, len(pol1.TopAngles()), 2, "LIG1 TopAngles()")
-	checkLength(t, len(pol1.TopDihedrals()), 2, "LIG1 TopDihedrals()")
-	checkLength(t, len(pol1.TopImpropers()), 1, "LIG1 TopImpropers()")
+	}
+}
+
+func TestTopAtoms(t *testing.T) {
+	if top, _, err := ReadTOPString(topString1); err != nil {
+		t.Fatalf("could not parse the string")
+	} else {
+		pol := top.TopPolymerByName("LIG1")
+		checkLength(t, len(pol.TopAtoms()), 8, "TopAtoms()")
+
+	}
+}
+
+func TestTopPairs(t *testing.T) {
+	if top, _, err := ReadTOPString(topString1); err != nil {
+		t.Fatalf("could not parse the string")
+	} else {
+		pol := top.TopPolymerByName("LIG1")
+		checkLength(t, len(pol.TopPairs()), 2, "LIG1 TopPairs()")
+	}
+}
+
+func TestTopBonds(t *testing.T) {
+	if top, _, err := ReadTOPString(topString1); err != nil {
+		t.Fatalf("could not parse the string")
+	} else {
+		pol := top.TopPolymerByName("LIG1")
+		checkLength(t, len(pol.TopBonds()), 3, "LIG1 TopBonds()")
+	}
+}
+
+func TestTopAngles(t *testing.T) {
+	if top, _, err := ReadTOPString(topString1); err != nil {
+		t.Fatalf("could not parse the string")
+	} else {
+		pol := top.TopPolymerByName("LIG1")
+		checkLength(t, len(pol.TopAngles()), 2, "LIG1 TopAngles()")
+	}
+}
+
+func TestTopDihedrals(t *testing.T) {
+	if top, _, err := ReadTOPString(topString1); err != nil {
+		t.Fatalf("could not parse the string")
+	} else {
+		pol := top.TopPolymerByName("LIG1")
+		checkLength(t, len(pol.TopDihedrals()), 2, "LIG1 TopDihedrals()")
+	}
+}
+
+func TestTopImpropers(t *testing.T) {
+	if top, _, err := ReadTOPString(topString1); err != nil {
+		t.Fatalf("could not parse the string")
+	} else {
+		pol := top.TopPolymerByName("LIG1")
+		checkLength(t, len(pol.TopImpropers()), 1, "LIG1 TopImpropers()")
+	}
 }
 
 func TestReadTop(t *testing.T) {
@@ -201,14 +260,14 @@ func TestReadTop(t *testing.T) {
 
 }
 
-var testCase1_string string = `
+var topString1 string = `
 
 [ moleculetype ]
 ; name  nrexcl
 LIG1         3
 
 [ atoms ]
-; nr    type    resnr   residu  atom    cgnr    charge  mass
+    ; nr    type    resnr   residu  atom    cgnr    charge  mass
      1       CRL1      1     LIG1     C3      1      0.140    12.0110   ; qtot  0.140
      2        OHL      1     LIG1     O3      2     -0.660    15.9994   ; qtot -0.520
      3        HOL      1     LIG1    H3'      3      0.430     1.0080   ; qtot -0.090
@@ -217,7 +276,7 @@ LIG1         3
      6       HGA2      1     CHL1    H4A      6      0.090     1.0080   ; qtot -0.090
      7       HGA2      1     CHL1    H4B      7      0.090     1.0080   ; qtot -0.000
      8       CEL1      1     CHL1     C5      8      0.000    12.0110   ; qtot -0.000
-    
+
 [ bonds ]
 ; ai    aj  funct   b0  Kb
     1     2     1
