@@ -824,6 +824,98 @@ func (t *TopSettle) TopAtom() *TopAtom {
 }
 
 /**********************************************************
+* TopCMap
+**********************************************************/
+
+type TopCMap struct {
+	atom1 *TopAtom
+	atom2 *TopAtom
+	atom3 *TopAtom
+	atom4 *TopAtom
+	atom5 *TopAtom
+	atom6 *TopAtom
+	atom7 *TopAtom
+	atom8 *TopAtom
+}
+
+//
+func NewTopCMap() *TopCMap {
+	return &TopCMap{}
+}
+
+//
+func (c *TopCMap) SetAtom1(a *TopAtom) {
+	c.atom1 = a
+}
+
+func (c *TopCMap) Atom1() *TopAtom {
+	return c.atom1
+}
+
+//
+func (c *TopCMap) SetAtom2(a *TopAtom) {
+	c.atom2 = a
+}
+
+func (c *TopCMap) Atom2() *TopAtom {
+	return c.atom2
+}
+
+//
+func (c *TopCMap) SetAtom3(a *TopAtom) {
+	c.atom3 = a
+}
+
+func (c *TopCMap) Atom3() *TopAtom {
+	return c.atom3
+}
+
+//
+func (c *TopCMap) SetAtom4(a *TopAtom) {
+	c.atom4 = a
+}
+
+func (c *TopCMap) Atom4() *TopAtom {
+	return c.atom4
+}
+
+//
+func (c *TopCMap) SetAtom5(a *TopAtom) {
+	c.atom5 = a
+}
+
+func (c *TopCMap) Atom5() *TopAtom {
+	return c.atom5
+}
+
+//
+func (c *TopCMap) SetAtom6(a *TopAtom) {
+	c.atom6 = a
+}
+
+func (c *TopCMap) Atom6() *TopAtom {
+	return c.atom6
+}
+
+//
+func (c *TopCMap) SetAtom7(a *TopAtom) {
+	c.atom7 = a
+}
+
+func (c *TopCMap) Atom7() *TopAtom {
+	return c.atom7
+}
+
+//
+func (c *TopCMap) SetAtom8(a *TopAtom) {
+	c.atom8 = a
+}
+
+func (c *TopCMap) Atom8() *TopAtom {
+	return c.atom8
+}
+
+/**********************************************************
 * TopPositionRestraint
 **********************************************************/
 

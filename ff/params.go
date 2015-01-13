@@ -39,6 +39,11 @@ func NewAtomType(atype string, ffType ffTypes) *AtomType {
 }
 
 //
+func (a *AtomType) AtomType() string {
+	return a.atype
+}
+
+//
 func (a *AtomType) SetProtons(u int8) {
 	a.setting |= at_sett_PROTONS_SET
 	a.protons = u
@@ -692,7 +697,14 @@ type CMapType struct {
 	nx     int
 	ny     int
 	values []float64
-	atypes []string
+	atype1 string
+	atype2 string
+	atype3 string
+	atype4 string
+	atype5 string
+	atype6 string
+	atype7 string
+	atype8 string
 	ffType ffTypes
 }
 
@@ -705,16 +717,26 @@ func NewCMapType(nx, ny int, ffType ffTypes) *CMapType {
 }
 
 //
-func (c *CMapType) SetAtomTypes(atypes ...string) {
-	if len(atypes) != 5 || len(atypes) != 8 {
-		panic("cmap number of atypes must be 5 or 8")
+func (c *CMapType) SetAtomTypes(atypes []string) {
+	// CHARMM format has 8 atoms, GROMACS has 5
+	if len(atypes) == 5 && c.ffType&FF_GROMACS != 0 {
+		c.SetAtomType1(atypes[0])
+		c.SetAtomType2(atypes[1])
+		c.SetAtomType3(atypes[2])
+		c.SetAtomType4(atypes[3])
+		c.SetAtomType8(atypes[4])
+	} else if len(atypes) == 8 && c.ffType&FF_CHARMM != 0 {
+		c.SetAtomType1(atypes[0])
+		c.SetAtomType2(atypes[1])
+		c.SetAtomType3(atypes[2])
+		c.SetAtomType4(atypes[3])
+		c.SetAtomType5(atypes[4])
+		c.SetAtomType6(atypes[5])
+		c.SetAtomType7(atypes[6])
+		c.SetAtomType8(atypes[7])
+	} else {
+		panic("cmap -> bad combination of ff and # of atomtypes")
 	}
-
-	c.atypes = atypes
-}
-
-func (c *CMapType) AtomTypes() []string {
-	return c.atypes
 }
 
 //
@@ -727,3 +749,74 @@ func (c *CMapType) Values() []float64 {
 }
 
 //
+func (c *CMapType) SetAtomType1(t string) {
+	c.atype1 = t
+}
+
+func (c *CMapType) AtomType1() string {
+	return c.atype1
+}
+
+//
+func (c *CMapType) SetAtomType2(t string) {
+	c.atype2 = t
+}
+
+func (c *CMapType) AtomType2() string {
+	return c.atype2
+}
+
+//
+func (c *CMapType) SetAtomType3(t string) {
+	c.atype3 = t
+}
+
+func (c *CMapType) AtomType3() string {
+	return c.atype3
+}
+
+//
+func (c *CMapType) SetAtomType4(t string) {
+	c.atype4 = t
+}
+
+func (c *CMapType) AtomType4() string {
+	return c.atype4
+}
+
+//
+func (c *CMapType) SetAtomType5(t string) {
+	c.atype5 = t
+}
+
+func (c *CMapType) AtomType5() string {
+	return c.atype5
+}
+
+//
+func (c *CMapType) SetAtomType6(t string) {
+	c.atype6 = t
+}
+
+func (c *CMapType) AtomType6() string {
+	return c.atype6
+}
+
+//
+//
+func (c *CMapType) SetAtomType7(t string) {
+	c.atype7 = t
+}
+
+func (c *CMapType) AtomType7() string {
+	return c.atype7
+}
+
+//
+func (c *CMapType) SetAtomType8(t string) {
+	c.atype8 = t
+}
+
+func (c *CMapType) AtomType8() string {
+	return c.atype8
+}

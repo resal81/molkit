@@ -14,6 +14,7 @@ func TestPRMRead(t *testing.T) {
 		"../../testdata/chm_prm/par_all36_lipid.prm",
 		"../../testdata/chm_prm/par_all36_carb.prm",
 		"../../testdata/chm_prm/par_all36_cgenff.prm",
+		"../../testdata/chm_prm/wat_ion.prm",
 	}
 	_, err := ReadPRMFiles(fnames...)
 	if err != nil {

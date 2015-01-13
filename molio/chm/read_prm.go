@@ -104,7 +104,7 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 		case "NBFI":
 			lvl = L_NBFIX
 			continue
-		case "cutn":
+		case "CUTN":
 			lvl = L_IGNORE
 			continue
 		case "HBON":
@@ -114,7 +114,7 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 
 		switch lvl {
 		case L_ATOMS:
-			name, mass, err := parseAtomType(line)
+			name, mass, err := parseAtomsLine(line)
 			if err != nil {
 				log.Printf("error in line: %s", line)
 				return err
@@ -170,7 +170,27 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 					cmap_header = ""
 				}
 			}
+
+		case L_NONBONDED:
+			at, err := parseNonBonded(line)
+			if err != nil {
+				log.Printf("error in line: %s", line)
+				return err
+			}
+			if m, ok := massDB[at.AtomType()]; ok {
+				at.SetMass(m)
+			} else {
+				return fmt.Errorf("could not find mass for atom type: %s", at.AtomType())
+			}
+
 		case L_NBFIX:
+			nb, err := parseNBFixType(line)
+			if err != nil {
+				log.Printf("error in line: %s", line)
+				return err
+			}
+			frc.AddNonBondedType(nb)
+
 		case L_IGNORE:
 			continue
 		}
@@ -217,7 +237,7 @@ func checkLineFields(s string, exp_lens []int) (nfields int, err error) {
 	return nfields, nil
 }
 
-func parseAtomType(s string) (string, float64, error) {
+func parseAtomsLine(s string) (string, float64, error) {
 	if strings.HasPrefix(s, "MASS") {
 		fields := strings.Fields(s)
 		if len(fields) != 4 {
@@ -346,12 +366,31 @@ func parseImproperType(s string) (*ff.ImproperType, error) {
 }
 
 //
-func parseNonBondedType(s string) (*ff.AtomType, error) {
-	return nil, nil
+func parseNBFixType(s string) (*ff.NonBondedType, error) {
+	// atype1  atype2   Emin    Rmin
+	_, err := checkLineFields(s, []int{4})
+	if err != nil {
+		return nil, err
+	}
+
+	var at1, at2 string
+	var sig, eps float64
+
+	n, err := fmt.Sscanf(s, "%s %s %f %f", &at1, &at2, &eps, &sig)
+	if n != 4 || err != nil {
+		return nil, errors.New("could not parse nbfix")
+	}
+
+	nb := ff.NewNonBondedType(at1, at2, ff.FF_NON_BONDED_TYPE_1, ff.FF_CHARMM)
+	nb.SetSigma(sig)
+	nb.SetEpsilon(eps)
+
+	return nb, nil
 }
 
 //
 func parseCMapType(nx, ny int, atypes, vals []string) (*ff.CMapType, error) {
+	//[C NH1 CT1 C NH1 CT1 C N 24]
 
 	if nx*ny != len(vals) {
 		return nil, fmt.Errorf("nx and ny are %d and %d, but len(vals) is %d", nx, ny, len(vals))
@@ -369,7 +408,43 @@ func parseCMapType(nx, ny int, atypes, vals []string) (*ff.CMapType, error) {
 
 	cm := ff.NewCMapType(nx, ny, ff.FF_CHARMM)
 	cm.SetValues(vals_f)
+	cm.SetAtomTypes(atypes[:len(atypes)-1]) // last element is nx
 	return cm, nil
 }
 
 //
+func parseNonBonded(s string) (*ff.AtomType, error) {
+
+	// atom  ignored    epsilon      Rmin/2   ignored   eps,1-4       Rmin/2,1-4
+
+	nfields, err := checkLineFields(s, []int{4, 7})
+	if err != nil {
+		return nil, err
+	}
+
+	var at1, tmp1, tmp2 string
+	var sig, eps, sig14, eps14 float64
+
+	if nfields == 4 {
+		n, err := fmt.Sscanf(s, "%s %s %f %f", &at1, &tmp1, &eps, &sig)
+		if n != 4 || err != nil {
+			return nil, errors.New("could not parse the nonbonded params")
+		}
+	} else if nfields == 7 {
+		n, err := fmt.Sscanf(s, "%s %s %f %f", &at1, &tmp1, &eps, &sig, &tmp2, &eps14, &sig14)
+		if n != 7 || err != nil {
+			return nil, errors.New("could not parse the nonbonded params")
+		}
+	}
+
+	a := ff.NewAtomType(at1, ff.FF_CHARMM)
+	a.SetSigma(sig)
+	a.SetEpsilon(eps)
+	if nfields == 7 {
+		a.SetSigma14(sig14)
+		a.SetEpsilon14(eps14)
+	}
+
+	return a, nil
+
+}
