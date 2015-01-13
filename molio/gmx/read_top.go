@@ -185,7 +185,7 @@ func readtop(reader io.Reader) (*ff.TopSystem, *ff.ForceField, error) {
 					log.Printf("error in line: '%s' \n", line)
 					return nil, nil, err
 				}
-				forcefield.SetGMXDefaults(defaults)
+				forcefield.SetPropsGMX(defaults)
 
 			case G_ATOMTYPES:
 				at, err := parseAtomTypes(line)
@@ -282,9 +282,47 @@ func readtop(reader io.Reader) (*ff.TopSystem, *ff.ForceField, error) {
 				curr_topmol.AddTopAtom(at)
 
 			case G_BONDS:
+				bn, err := parseBonds(line, curr_topmol)
+				if err != nil {
+					log.Printf("error in line: '%s' \n", line)
+					return nil, nil, err
+				}
+
+				curr_topmol.AddTopBond(bn)
+
 			case G_PAIRS:
+				pr, err := parsePairs(line, curr_topmol)
+				if err != nil {
+					log.Printf("error in line: '%s' \n", line)
+					return nil, nil, err
+				}
+
+				curr_topmol.AddTopPair(pr)
+
 			case G_ANGLES:
+				ag, err := parseAngles(line, curr_topmol)
+				if err != nil {
+					log.Printf("error in line: '%s' \n", line)
+					return nil, nil, err
+				}
+
+				curr_topmol.AddTopAngle(ag)
+
 			case G_DIHEDRALS:
+				dh, err := parseDihedral(line, curr_topmol)
+				if err != nil {
+					log.Printf("error in line: '%s' \n", line)
+					return nil, nil, err
+				}
+
+				if dh.Kind()&ff.FF_DIHEDRAL_TYPE_1 != 0 || dh.Kind()&ff.FF_DIHEDRAL_TYPE_9 != 0 {
+					curr_topmol.AddTopDihedral(dh)
+				} else if dh.Kind()&ff.FF_DIHEDRAL_TYPE_2 != 0 {
+					curr_topmol.AddTopImproper(dh)
+				} else {
+					panic("should not reach here")
+				}
+
 			}
 		}
 
@@ -375,11 +413,11 @@ func checkLine(s string, exp_lens []int, exp_fns []int8, fn_index int) (nfields 
 }
 
 // parses [defaults]
-func parseDefaults(s string) (*ff.GMXDefaults, error) {
+func parseDefaults(s string) (*ff.GMXProps, error) {
 	// ; nbfunc	comb-rule	gen-pairs	fudgeLJ	fudgeQQ
 
 	var nbfunc, combrule int8
-	var fudgeLJ, fudgeQQ float32
+	var fudgeLJ, fudgeQQ float64
 	var genpairs string
 
 	n, err := fmt.Sscanf(s, "%d %d %s %f %f", &nbfunc, &combrule, &genpairs, &fudgeLJ, &fudgeQQ)
@@ -387,7 +425,7 @@ func parseDefaults(s string) (*ff.GMXDefaults, error) {
 		return nil, ErrDefaults
 	}
 
-	gd := ff.NewGMXDefaults(nbfunc, combrule, genpairs == "yes", fudgeLJ, fudgeQQ)
+	gd := ff.NewGMXProps(nbfunc, combrule, genpairs == "yes", fudgeLJ, fudgeQQ)
 	return gd, nil
 
 }

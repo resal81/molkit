@@ -291,13 +291,58 @@ func (p *TopPolymer) AddTopAtom(a *TopAtom) {
 	p.atoms = append(p.atoms, a)
 }
 
-func (p *TopPolymer) Atoms() []*TopAtom {
+func (p *TopPolymer) TopAtoms() []*TopAtom {
 	return p.atoms
 }
 
 // Returns *TopAtom or nil.
 func (p *TopPolymer) AtomBySerial(i int64) *TopAtom {
 	return p.atomsMap[i]
+}
+
+//
+func (p *TopPolymer) AddTopBond(b *TopBond) {
+	p.bonds = append(p.bonds, b)
+}
+
+func (p *TopPolymer) TopBonds() []*TopBond {
+	return p.bonds
+}
+
+//
+func (p *TopPolymer) AddTopPair(v *TopPair) {
+	p.pairs = append(p.pairs, v)
+}
+
+func (p *TopPolymer) TopPairs() []*TopPair {
+	return p.pairs
+}
+
+//
+func (p *TopPolymer) AddTopAngle(v *TopAngle) {
+	p.angles = append(p.angles, v)
+}
+
+func (p *TopPolymer) TopAngles() []*TopAngle {
+	return p.angles
+}
+
+//
+func (p *TopPolymer) AddTopDihedral(v *TopDihedral) {
+	p.dihedrals = append(p.dihedrals, v)
+}
+
+func (p *TopPolymer) TopDihedrals() []*TopDihedral {
+	return p.dihedrals
+}
+
+//
+func (p *TopPolymer) AddTopImproper(v *TopDihedral) {
+	p.impropers = append(p.impropers, v)
+}
+
+func (p *TopPolymer) TopImpropers() []*TopDihedral {
+	return p.impropers
 }
 
 //
@@ -584,6 +629,11 @@ func (d *TopDihedral) HasCustomDihedralTypeSet() bool {
 
 func (d *TopDihedral) CustomDihedralType() *DihedralType {
 	return d.customDihedralType
+}
+
+//
+func (d *TopDihedral) Kind() ffTypes {
+	return d.kind
 }
 
 /**********************************************************

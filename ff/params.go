@@ -611,28 +611,4 @@ type ConstraintType struct {
 	b0 float64
 }
 
-/**********************************************************
-* GMXDefaults
-**********************************************************/
-
-type GMXDefaults struct {
-	nbfunc   int8
-	combrule int8
-	genpairs bool
-	fudgeLJ  float32
-	fudgeQQ  float32
-}
-
-func NewGMXDefaults(nbfunc, combrule int8, genpairs bool, fudgeLJ, fudgeQQ float32) *GMXDefaults {
-	gd := GMXDefaults{
-		nbfunc:   nbfunc,
-		combrule: combrule,
-		genpairs: genpairs,
-		fudgeLJ:  fudgeLJ,
-		fudgeQQ:  fudgeQQ,
-	}
-
-	return &gd
-}
-
 //

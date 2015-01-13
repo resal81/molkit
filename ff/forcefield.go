@@ -19,10 +19,62 @@ const (
 	FF_DIHEDRAL_TYPE_9   // proper multiple
 )
 
+/**********************************************************
+* GMXProps
+**********************************************************/
+
+type GMXProps struct {
+	nbfunc   int8
+	combrule int8
+	genpairs bool
+	fudgeLJ  float64
+	fudgeQQ  float64
+}
+
+func NewGMXProps(nbfunc, combrule int8, genpairs bool, fudgeLJ, fudgeQQ float64) *GMXProps {
+	gd := GMXProps{
+		nbfunc:   nbfunc,
+		combrule: combrule,
+		genpairs: genpairs,
+		fudgeLJ:  fudgeLJ,
+		fudgeQQ:  fudgeQQ,
+	}
+
+	return &gd
+}
+
+func (p *GMXProps) NbFunc() int8 {
+	return p.nbfunc
+}
+
+func (p *GMXProps) CombRule() int8 {
+	return p.combrule
+}
+
+func (p *GMXProps) GenPairs() bool {
+	return p.genpairs
+}
+
+func (p *GMXProps) FudgeLJ() float64 {
+	return p.fudgeLJ
+}
+
+func (p *GMXProps) FudgeQQ() float64 {
+	return p.fudgeQQ
+}
+
+/**********************************************************
+* ForceField
+**********************************************************/
+
 type ForceField struct {
 	kind ffTypes
 
-	gmxdefaults *GMXDefaults
+	gmxdefaults *GMXProps
+
+	props struct {
+		gmx *GMXProps
+	}
 
 	atomTypes       []*AtomType      // ANY; normal atom types
 	nonbondTypes    []*NonBondedType // GROMACS; nb interactions that don't obey combination rules
@@ -49,8 +101,13 @@ func (f *ForceField) Kind() ffTypes {
 	return f.kind
 }
 
-func (f *ForceField) SetGMXDefaults(gd *GMXDefaults) {
-	f.gmxdefaults = gd
+//
+func (f *ForceField) SetPropsGMX(gd *GMXProps) {
+	f.props.gmx = gd
+}
+
+func (f *ForceField) PropsGMX() *GMXProps {
+	return f.props.gmx
 }
 
 //
