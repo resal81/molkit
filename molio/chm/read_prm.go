@@ -187,6 +187,7 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 			}
 			if m, ok := massDB[at.AtomType()]; ok {
 				at.SetMass(m)
+				frc.AddAtomType(at)
 			} else {
 				return fmt.Errorf("could not find mass for atom type: %s", at.AtomType())
 			}
@@ -432,13 +433,19 @@ func parseNonBonded(s string) (*ff.AtomType, error) {
 
 	if nfields == 4 {
 		n, err := fmt.Sscanf(s, "%s %s %f %f", &at1, &tmp1, &en, &dist)
-		if n != 4 || err != nil {
-			return nil, errors.New("could not parse the nonbonded params")
+		if n != 4 {
+			return nil, errors.New("NONBONDED line doesn't have 4 fields")
+		}
+		if err != nil {
+			return nil, err
 		}
 	} else if nfields == 7 {
-		n, err := fmt.Sscanf(s, "%s %s %f %f", &at1, &tmp1, &en, &dist, &tmp2, &en14, &dist14)
+		n, err := fmt.Sscanf(s, "%s %s %f %f %s %f %f", &at1, &tmp1, &en, &dist, &tmp2, &en14, &dist14)
 		if n != 7 || err != nil {
-			return nil, errors.New("could not parse the nonbonded params")
+			return nil, errors.New("NONBONDED line doesn't have 7 fields")
+		}
+		if err != nil {
+			return nil, err
 		}
 	}
 

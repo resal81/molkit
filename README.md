@@ -1,5 +1,17 @@
 
+## Go
 
+```
+
+go test -coverprofile=cover.out
+
+go test -coverprofile=cover.out -coverpkg github.com/resal81/molkit/ff,github.com/resal81/molkit/molio/gmx 
+
+
+go tool cover -func=cover.out
+go tool cover -html=cover.out
+
+```
 
 ## Hierarchy
 
