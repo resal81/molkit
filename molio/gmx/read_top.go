@@ -341,6 +341,12 @@ func readtop(reader io.Reader) (*ff.TopSystem, *ff.ForceField, error) {
 				curr_topmol.AddTopExclusion(e)
 
 			case G_SETTLES:
+				st, err := parseSettle(line, curr_topmol)
+				if err != nil {
+					log.Printf("error in line: '%s' \n", line)
+					return nil, nil, err
+				}
+				curr_topmol.SetTopSettle(st)
 			case G_CONSTRAINTS:
 				return nil, nil, errors.New("[constraints] are not implemented yet")
 			case G_POSREST:
@@ -1085,6 +1091,7 @@ func parseMoleculeTypes(s string) (*ff.TopPolymer, error) {
 
 }
 
+//
 func parseExclusions(s string, topPol *ff.TopPolymer) (*ff.TopExclusion, error) {
 	fields := strings.Fields(s)
 	if len(fields) < 2 {
@@ -1108,6 +1115,31 @@ func parseExclusions(s string, topPol *ff.TopPolymer) (*ff.TopExclusion, error) 
 
 	e := ff.NewTopExclusion(atoms...)
 	return e, nil
+}
+
+//
+func parseSettle(s string, topPol *ff.TopPolymer) (*ff.TopSettle, error) {
+	fields := strings.Fields(s)
+	if len(fields) != 4 {
+		return nil, errors.New("[settle] cannot be parsed")
+	}
+
+	var ai int64
+	var fn int8
+	var doh, dhh float64
+
+	n, err := fmt.Sscanf(s, "%d %d %f %f", &ai, &fn, &doh, &dhh)
+	if n != 4 || err != nil {
+		return nil, errors.New("[settle] cannot be parsed")
+	}
+
+	a1 := topPol.AtomBySerial(ai)
+	if a1 == nil {
+		return nil, errors.New("atom is nil")
+	}
+
+	st := ff.NewTopSettle(a1, fn, doh, dhh)
+	return st, nil
 }
 
 /**********************************************************

@@ -354,6 +354,15 @@ func (p *TopPolymer) TopExclusions() []*TopExclusion {
 	return p.exclusions
 }
 
+//
+func (p *TopPolymer) SetTopSettle(s *TopSettle) {
+	p.settle = s
+}
+
+func (p *TopPolymer) TopSettle() *TopSettle {
+	return p.settle
+}
+
 /**********************************************************
 * TopSystem
 **********************************************************/
@@ -784,8 +793,34 @@ func (e *TopExclusion) ExcludedAtoms() []*TopAtom {
 **********************************************************/
 
 type TopSettle struct {
+	atom *TopAtom
+	fn   int8
 	d_OH float64
 	d_HH float64
+}
+
+func NewTopSettle(a *TopAtom, fn int8, d_OH, d_HH float64) *TopSettle {
+	if fn != 1 {
+		panic("only settle fn 1 is acceptable.")
+	}
+	return &TopSettle{
+		atom: a,
+		fn:   fn,
+		d_OH: d_OH,
+		d_HH: d_HH,
+	}
+}
+
+func (t *TopSettle) D_OH() float64 {
+	return t.d_OH
+}
+
+func (t *TopSettle) D_HH() float64 {
+	return t.d_HH
+}
+
+func (t *TopSettle) TopAtom() *TopAtom {
+	return t.atom
 }
 
 /**********************************************************
