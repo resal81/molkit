@@ -245,6 +245,9 @@ func readtop(reader io.Reader) (*ff.TopSystem, *ff.ForceField, error) {
 					}
 					forcefield.AddDihedralType(dt)
 				}
+
+			case G_CONSTRAINTTYPES:
+				return nil, nil, errors.New("[constrainttypes] are not supported")
 			}
 
 		}
@@ -328,6 +331,28 @@ func readtop(reader io.Reader) (*ff.TopSystem, *ff.ForceField, error) {
 
 					curr_topmol.AddTopDihedral(dh)
 				}
+
+			case G_EXCLUSIONS:
+				e, err := parseExclusions(line, curr_topmol)
+				if err != nil {
+					log.Printf("error in line: '%s' \n", line)
+					return nil, nil, err
+				}
+				curr_topmol.AddTopExclusion(e)
+
+			case G_SETTLES:
+			case G_CONSTRAINTS:
+				return nil, nil, errors.New("[constraints] are not implemented yet")
+			case G_POSREST:
+				return nil, nil, errors.New("[position_restraints] are not implemented yet")
+			case G_DISTREST:
+				return nil, nil, errors.New("[distance_restraints] are not implemented yet")
+			case G_ANGLEREST:
+				return nil, nil, errors.New("[angle_restraints] are not implemented yet")
+			case G_DIHEDRALREST:
+				return nil, nil, errors.New("[dihedral_restraints] are not implemented yet")
+			case G_ORIENTREST:
+				return nil, nil, errors.New("[orientation_restraints] are not implemented yet")
 			}
 		}
 
@@ -344,6 +369,10 @@ func readtop(reader io.Reader) (*ff.TopSystem, *ff.ForceField, error) {
 	return topsys, forcefield, nil
 
 }
+
+/**********************************************************
+* Helpers
+**********************************************************/
 
 // removes comments plus leading and tailing spaces
 func cleanLine(s string) string {
@@ -417,6 +446,14 @@ func checkLine(s string, exp_lens []int, exp_fns []int8, fn_index int) (nfields 
 
 }
 
+/**********************************************************
+* Line parsers
+**********************************************************/
+
+/**********************************************************
+* Defaults
+**********************************************************/
+
 // parses [defaults]
 func parseDefaults(s string) (*ff.GMXProps, error) {
 	// ; nbfunc	comb-rule	gen-pairs	fudgeLJ	fudgeQQ
@@ -434,6 +471,10 @@ func parseDefaults(s string) (*ff.GMXProps, error) {
 	return gd, nil
 
 }
+
+/**********************************************************
+* Atoms
+**********************************************************/
 
 // parses [atomstypes]
 func parseAtomTypes(s string) (*ff.AtomType, error) {
@@ -508,6 +549,10 @@ func parseAtoms(s string) (*ff.TopAtom, *resData, error) {
 	return a, &resData{resname, resnumb}, nil
 }
 
+/**********************************************************
+* NonBonded
+**********************************************************/
+
 // parses [nonbonded-params]
 func parseNonBondedTypes(s string) (*ff.NonBondedType, error) {
 	// ; i	j	func	sigma	epsilon
@@ -532,6 +577,10 @@ func parseNonBondedTypes(s string) (*ff.NonBondedType, error) {
 	}
 
 }
+
+/**********************************************************
+* Pairs
+**********************************************************/
 
 // parses [pairtypes]
 func parsePairTypes(s string) (*ff.PairType, error) {
@@ -613,6 +662,10 @@ func parsePairs(s string, topPol *ff.TopPolymer) (*ff.TopPair, error) {
 
 }
 
+/**********************************************************
+* Bonds
+**********************************************************/
+
 // parses [bondtypes]
 func parseBondTypes(s string) (*ff.BondType, error) {
 	// ; i	j	func	b0	Kb
@@ -693,6 +746,10 @@ func parseBonds(s string, topPol *ff.TopPolymer) (*ff.TopBond, error) {
 	}
 
 }
+
+/**********************************************************
+* Angles
+**********************************************************/
 
 // parses [angletypes]
 func parseAngleTypes(s string) (*ff.AngleType, error) {
@@ -824,6 +881,10 @@ func parseAngles(s string, topPol *ff.TopPolymer) (*ff.TopAngle, error) {
 	return tg, nil
 }
 
+/**********************************************************
+* Dihedrals
+**********************************************************/
+
 // parses [dihedraltypes]
 func parseDihedralTypes(s string) (*ff.DihedralType, error) {
 	// ; i	j	k	l	func	phi0	cp	mult
@@ -920,6 +981,10 @@ func parseDihedrals(s string, topPol *ff.TopPolymer) (*ff.TopDihedral, error) {
 	return dh, nil
 }
 
+/**********************************************************
+* Impropers
+**********************************************************/
+
 // parses [dihedraltypes] - improper
 func parseImproperTypes(s string) (*ff.ImproperType, error) {
 	// ; i	j	k	l	func	phi0	cp	mult
@@ -993,6 +1058,10 @@ func parseImpropers(s string, topPol *ff.TopPolymer) (*ff.TopImproper, error) {
 	return dh, nil
 }
 
+/**********************************************************
+* Molecules
+**********************************************************/
+
 // parses [moleculetypes]
 func parseMoleculeTypes(s string) (*ff.TopPolymer, error) {
 	// ; name	nrexcl
@@ -1015,5 +1084,34 @@ func parseMoleculeTypes(s string) (*ff.TopPolymer, error) {
 	return p, nil
 
 }
+
+func parseExclusions(s string, topPol *ff.TopPolymer) (*ff.TopExclusion, error) {
+	fields := strings.Fields(s)
+	if len(fields) < 2 {
+		return nil, errors.New("[exclusions] needs at least two fields")
+	}
+
+	var atoms []*ff.TopAtom = []*ff.TopAtom{}
+	for _, f := range fields {
+		n, err := strconv.ParseInt(f, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		a := topPol.AtomBySerial(n)
+		if a == nil {
+			return nil, errors.New("atom is nil")
+		}
+
+		atoms = append(atoms, a)
+	}
+
+	e := ff.NewTopExclusion(atoms...)
+	return e, nil
+}
+
+/**********************************************************
+* System
+**********************************************************/
 
 //

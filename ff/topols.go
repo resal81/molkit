@@ -346,6 +346,13 @@ func (p *TopPolymer) TopImpropers() []*TopImproper {
 }
 
 //
+func (p *TopPolymer) AddTopExclusion(e *TopExclusion) {
+	p.exclusions = append(p.exclusions, e)
+}
+
+func (p *TopPolymer) TopExclusions() []*TopExclusion {
+	return p.exclusions
+}
 
 /**********************************************************
 * TopSystem
@@ -389,6 +396,34 @@ func (s *TopSystem) AddTopPolymer(p *TopPolymer) {
 
 func (s *TopSystem) TopPolymers() []*TopPolymer {
 	return s.polymers
+}
+
+// Finds the starting index for TopPolymer with the specifid index ind.
+// Used to update atom serials in a TopPolymer.
+func (s *TopSystem) StartIndex(ind int) int {
+
+	if ind > len(s.TopPolymers())-1 {
+		panic("bad index")
+	}
+
+	var ser int
+	for i, p := range s.TopPolymers() {
+		if i == ind {
+			break
+		}
+		ser += len(p.TopAtoms())
+	}
+
+	return ser
+}
+
+//
+func (s *TopSystem) NAtoms() int {
+	var n int
+	for _, p := range s.TopPolymers() {
+		n += len(p.TopAtoms())
+	}
+	return n
 }
 
 /**********************************************************
@@ -721,7 +756,27 @@ type TopConstraint struct {
 **********************************************************/
 
 type TopExclusion struct {
-	atoms []*TopAtom
+	mainAtom      *TopAtom
+	excludedAtoms []*TopAtom
+}
+
+func NewTopExclusion(atoms ...*TopAtom) *TopExclusion {
+	if len(atoms) < 2 {
+		panic("for exclusions, there must be at least two atoms")
+	}
+
+	return &TopExclusion{
+		mainAtom:      atoms[0],
+		excludedAtoms: atoms[1:],
+	}
+}
+
+func (e *TopExclusion) MainAtom() *TopAtom {
+	return e.mainAtom
+}
+
+func (e *TopExclusion) ExcludedAtoms() []*TopAtom {
+	return e.excludedAtoms
 }
 
 /**********************************************************

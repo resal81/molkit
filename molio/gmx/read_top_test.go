@@ -302,11 +302,11 @@ LIG1         3
 ; ai    aj  ak  al  funct   q0  cq
    5    6    1    4     2
 
-[ position_restraints ]
-   8     1      0.0      0.0  1000.0
+;[ position_restraints ]
+;   8     1      0.0      0.0  1000.0
 
-[ dihedral_restraints ]
-   5    1    8    3     1    120.0      2.5  1000.0
+;[ dihedral_restraints ]
+;   5    1    8    3     1    120.0      2.5  1000.0
     
 [ moleculetype ]
 ; name  nrexcl
