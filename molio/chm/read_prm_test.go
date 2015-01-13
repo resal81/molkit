@@ -141,6 +141,11 @@ func TestDihedralTyeps(t *testing.T) {
 	utils.CheckTrue(t, dhs[1].HasPhiSet(), "dhs[0] should have phi set")
 	utils.CheckTrue(t, dhs[2].HasMultSet(), "dhs[0] should have mult set")
 
+	utils.CheckEqString(t, dhs[0].AType1(), "NH2", "dhs[0] has wrong atom type1")
+	utils.CheckEqString(t, dhs[0].AType2(), "CT1", "dhs[0] has wrong atom type2")
+	utils.CheckEqString(t, dhs[0].AType3(), "C", "dhs[0] has wrong atom type3")
+	utils.CheckEqString(t, dhs[0].AType4(), "O", "dhs[0] has wrong atom type4")
+
 }
 
 func TestImproperTyeps(t *testing.T) {
@@ -165,6 +170,12 @@ func TestImproperTyeps(t *testing.T) {
 
 	utils.CheckTrue(t, imps[0].HasPsiConstantSet(), "imps[0] should have kpsi set")
 	utils.CheckTrue(t, imps[0].HasPsiSet(), "imps[0] should have psi set")
+
+	utils.CheckEqString(t, imps[0].AType1(), "HE2", "imps[0] has wrong atom type1")
+	utils.CheckEqString(t, imps[0].AType2(), "HE2", "imps[0] has wrong atom type2")
+	utils.CheckEqString(t, imps[0].AType3(), "CE2", "imps[0] has wrong atom type3")
+	utils.CheckEqString(t, imps[0].AType4(), "CE2", "imps[0] has wrong atom type4")
+
 }
 
 func TestNonBondedTyeps(t *testing.T) {
@@ -180,6 +191,16 @@ func TestNonBondedTyeps(t *testing.T) {
 
 	nbs := frc.NonBondedTypes()
 	utils.CheckEqInt(t, len(nbs), 3, "the length of NonBondedType is not right")
+
+	utils.CheckEqFloat64(t, nbs[0].LJDist(ff.FF_CHARMM), 3.190, "nbs[0] has wrong LJDist")
+	utils.CheckEqFloat64(t, nbs[0].LJEnergy(ff.FF_CHARMM), -0.075020, "nbs[0] has wrong LJEnergy")
+
+	utils.CheckTrue(t, nbs[1].HasLJDistSet(), "nbs[1] should have LJDist set")
+	utils.CheckTrue(t, nbs[1].HasLJEnergySet(), "nbs[1] should have LJEnergy set")
+
+	utils.CheckEqString(t, nbs[0].AType1(), "SOD", "nbs[0] has wrong atom type1")
+	utils.CheckEqString(t, nbs[0].AType2(), "OC", "nbs[0] has wrong atom type2")
+
 }
 
 func TestCMapTyeps(t *testing.T) {
@@ -189,6 +210,16 @@ func TestCMapTyeps(t *testing.T) {
 
 	cms := frc.CMapTypes()
 	utils.CheckEqInt(t, len(cms), 2, "the length of CMapTypes is not right")
+	utils.CheckEqInt(t, len(cms[0].Values()), 24*24, "cms[0] doesn't have right # of values")
+
+	utils.CheckEqString(t, cms[0].AtomType1(), "C", "cms[0] atomtype1 is not right")
+	utils.CheckEqString(t, cms[0].AtomType2(), "NH1", "cms[0] atomtype2 is not right")
+	utils.CheckEqString(t, cms[0].AtomType3(), "CT1", "cms[0] atomtype3 is not right")
+	utils.CheckEqString(t, cms[0].AtomType4(), "C", "cms[0] atomtype4 is not right")
+	utils.CheckEqString(t, cms[0].AtomType5(), "NH1", "cms[0] atomtype5 is not right")
+	utils.CheckEqString(t, cms[0].AtomType6(), "CT1", "cms[0] atomtype6 is not right")
+	utils.CheckEqString(t, cms[0].AtomType7(), "C", "cms[0] atomtype7 is not right")
+	utils.CheckEqString(t, cms[0].AtomType8(), "NH1", "cms[0] atomtype8 is not right")
 }
 
 var cmap_string string = `
