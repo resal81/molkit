@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func AssertNotNil(t *testing.T, err error, msg string) {
+func AssertNil(t *testing.T, err error, msg string) {
 	if err != nil {
 		t.Fatalf("%s : '%s'", msg, err)
 	}
@@ -30,7 +30,7 @@ func CheckEqFloat64(t *testing.T, v1, v2 float64, msg string) {
 
 func CheckEqString(t *testing.T, v1, v2, msg string) {
 	if v1 != v2 {
-		t.Errorf("%s : %d != %d", msg, v1, v2)
+		t.Errorf("%s : %s != %s", msg, v1, v2)
 	}
 }
 
