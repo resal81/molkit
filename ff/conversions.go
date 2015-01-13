@@ -8,7 +8,7 @@ import (
 * Helpers
 **********************************************************/
 
-func convertSigma(sig float64, from, to ffTypes) float64 {
+func convertLJDist(sig float64, from, to ffTypes) float64 {
 	if from&to != 0 {
 		return sig
 	}
@@ -29,7 +29,7 @@ func convertSigma(sig float64, from, to ffTypes) float64 {
 	}
 }
 
-func convertNBSigma(sig float64, from, to ffTypes) float64 {
+func convertNBLJDist(sig float64, from, to ffTypes) float64 {
 	if from&to != 0 {
 		return sig
 	}
@@ -49,7 +49,7 @@ func convertNBSigma(sig float64, from, to ffTypes) float64 {
 	}
 }
 
-func convertEpsilon(eps float64, from, to ffTypes) float64 {
+func convertLJEnergy(eps float64, from, to ffTypes) float64 {
 	if from&to != 0 {
 		return eps
 	}

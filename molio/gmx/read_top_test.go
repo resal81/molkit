@@ -61,8 +61,8 @@ func TestAtomTypes(t *testing.T) {
 	} else {
 		ats := ff.AtomTypes()
 		checkLength(t, len(ats), 2, "AtomTypes()")
-		compareF64(t, ats[0].Sigma(frc.FF_GROMACS), 3.72395664183e-01, "Sigma()")
-		compareF64(t, ats[1].Epsilon(frc.FF_GROMACS), 1.506240e-01, "Epsilon()")
+		compareF64(t, ats[0].LJDist(frc.FF_GROMACS), 3.72395664183e-01, "LJDist()")
+		compareF64(t, ats[1].LJEnergy(frc.FF_GROMACS), 1.506240e-01, "LJEnergy()")
 	}
 }
 
@@ -80,8 +80,8 @@ func TestPairTypes(t *testing.T) {
 	} else {
 		pts := ff.PairTypes()
 		checkLength(t, len(pts), 2, "PairTypes()")
-		compareF64(t, pts[0].Sigma14(frc.FF_GROMACS), 3.55468588538e-01, "Sigma14()")
-		compareF64(t, pts[1].Epsilon14(frc.FF_GROMACS), 1.09105371453e-01, "Epsilon14()")
+		compareF64(t, pts[0].LJDist14(frc.FF_GROMACS), 3.55468588538e-01, "LJDist14()")
+		compareF64(t, pts[1].LJEnergy14(frc.FF_GROMACS), 1.09105371453e-01, "LJEnergy14()")
 	}
 }
 
@@ -99,8 +99,8 @@ func TestNonBondedTypes(t *testing.T) {
 	} else {
 		nbs := ff.NonBondedTypes()
 		checkLength(t, len(nbs), 2, "NondBondedTypes()")
-		compareF64(t, nbs[0].Sigma(frc.FF_GROMACS), 3.57250385974e-01, "Sigma()")
-		compareF64(t, nbs[1].Epsilon(frc.FF_GROMACS), 1.22591200000e-01, "Epsilon()")
+		compareF64(t, nbs[0].LJDist(frc.FF_GROMACS), 3.57250385974e-01, "LJDist()")
+		compareF64(t, nbs[1].LJEnergy(frc.FF_GROMACS), 1.22591200000e-01, "LJEnergy()")
 
 	}
 }

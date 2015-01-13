@@ -488,17 +488,17 @@ func parseAtomTypes(s string) (*ff.AtomType, error) {
 
 	var name, pt string
 	var prot int8
-	var mass, chg, sig, eps, sig14, eps14 float64
+	var mass, chg, dist, energy, dist14, energy14 float64
 
 	fields := strings.Fields(s)
 	switch len(fields) {
 	case 7:
-		_, err := fmt.Sscanf(s, "%s %d %f %f %s %f %f", &name, &prot, &mass, &chg, &pt, &sig, &eps)
+		_, err := fmt.Sscanf(s, "%s %d %f %f %s %f %f", &name, &prot, &mass, &chg, &pt, &dist, &energy)
 		if err != nil {
 			return nil, err
 		}
 	case 9:
-		_, err := fmt.Sscanf(s, "%s %d %f %f %s %f %f %f %f", &name, &prot, &mass, &chg, &pt, &sig, &eps, &sig14, &eps14)
+		_, err := fmt.Sscanf(s, "%s %d %f %f %s %f %f %f %f", &name, &prot, &mass, &chg, &pt, &dist, &energy, &dist14, &energy14)
 		if err != nil {
 			return nil, err
 		}
@@ -510,12 +510,12 @@ func parseAtomTypes(s string) (*ff.AtomType, error) {
 	at.SetProtons(prot)
 	at.SetMass(mass)
 	at.SetCharge(chg)
-	at.SetSigma(sig)
-	at.SetEpsilon(eps)
+	at.SetLJDist(dist)
+	at.SetLJEnergy(energy)
 
 	if len(fields) == 9 {
-		at.SetSigma14(sig14)
-		at.SetEpsilon14(eps14)
+		at.SetLJDist14(dist14)
+		at.SetLJEnergy14(energy14)
 	}
 
 	return at, nil
@@ -564,10 +564,10 @@ func parseNonBondedTypes(s string) (*ff.NonBondedType, error) {
 	// ; i	j	func	sigma	epsilon
 	var at1, at2 string
 	var fn int8
-	var sig, eps float64
+	var dist, energy float64
 	fields := strings.Fields(s)
 
-	n, err := fmt.Sscanf(s, "%s %s %d %f %f", &at1, &at2, &fn, &sig, &eps)
+	n, err := fmt.Sscanf(s, "%s %s %d %f %f", &at1, &at2, &fn, &dist, &energy)
 	if len(fields) != 5 || n != 5 || err != nil {
 		return nil, genError("[nonbonded]", errCouldNotBeParsed)
 	}
@@ -575,8 +575,8 @@ func parseNonBondedTypes(s string) (*ff.NonBondedType, error) {
 	switch fn {
 	case 1:
 		nbt := ff.NewNonBondedType(at1, at2, ff.FF_NON_BONDED_TYPE_1, ff.FF_GROMACS)
-		nbt.SetSigma(sig)
-		nbt.SetEpsilon(eps)
+		nbt.SetLJDist(dist)
+		nbt.SetLJEnergy(energy)
 		return nbt, nil
 	default:
 		return nil, genError("[nonbonded]", errBadFunctionType)
@@ -593,10 +593,10 @@ func parsePairTypes(s string) (*ff.PairType, error) {
 	// ; i	j	func	sigma1-4	epsilon1-4
 	var at1, at2 string
 	var fn int8
-	var sig14, eps14 float64
+	var dist14, energy14 float64
 	fields := strings.Fields(s)
 
-	n, err := fmt.Sscanf(s, "%s %s %d %f %f", &at1, &at2, &fn, &sig14, &eps14)
+	n, err := fmt.Sscanf(s, "%s %s %d %f %f", &at1, &at2, &fn, &dist14, &energy14)
 	if len(fields) != 5 || n != 5 || err != nil {
 		return nil, genError("[pairtypes]", errCouldNotBeParsed)
 	}
@@ -604,8 +604,8 @@ func parsePairTypes(s string) (*ff.PairType, error) {
 	switch fn {
 	case 1:
 		pt := ff.NewPairType(at1, at2, ff.FF_PAIR_TYPE_1, ff.FF_GROMACS)
-		pt.SetSigma14(sig14)
-		pt.SetEpsilon14(eps14)
+		pt.SetLJDist14(dist14)
+		pt.SetLJEnergy14(energy14)
 		return pt, nil
 	default:
 		return nil, genError("[pairtypes]", errBadFunctionType)
@@ -625,7 +625,7 @@ func parsePairs(s string, topPol *ff.TopPolymer) (*ff.TopPair, error) {
 
 	var ai, aj int64
 	var tmp int8
-	var sig14, eps14 float64
+	var dist14, energy14 float64
 
 	switch nfields {
 	case 3:
@@ -635,7 +635,7 @@ func parsePairs(s string, topPol *ff.TopPolymer) (*ff.TopPair, error) {
 		}
 
 	case 5:
-		n, err := fmt.Sscanf(s, "%d %d %d %f %f", &ai, &aj, &fn, &sig14, &eps14)
+		n, err := fmt.Sscanf(s, "%d %d %d %f %f", &ai, &aj, &fn, &dist14, &energy14)
 		if n != 5 || err != nil {
 			return nil, genError("[pairs]", errCouldNotBeParsed)
 		}
@@ -656,6 +656,8 @@ func parsePairs(s string, topPol *ff.TopPolymer) (*ff.TopPair, error) {
 		// if we have custom parameters, create a corresponding *PairType
 		if nfields == 5 {
 			pt := ff.NewPairType(a1.AtomType(), a2.AtomType(), ff.FF_PAIR_TYPE_1, ff.FF_GROMACS)
+			pt.SetLJDist14(dist14)
+			pt.SetLJEnergy14(energy14)
 			p.SetCustomPairType(pt)
 		}
 

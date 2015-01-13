@@ -379,16 +379,16 @@ func parseNBFixType(s string) (*ff.NonBondedType, error) {
 	}
 
 	var at1, at2 string
-	var sig, eps float64
+	var dist, en float64
 
-	n, err := fmt.Sscanf(s, "%s %s %f %f", &at1, &at2, &eps, &sig)
+	n, err := fmt.Sscanf(s, "%s %s %f %f", &at1, &at2, &en, &dist)
 	if n != 4 || err != nil {
 		return nil, errors.New("could not parse nbfix")
 	}
 
 	nb := ff.NewNonBondedType(at1, at2, ff.FF_NON_BONDED_TYPE_1, ff.FF_CHARMM)
-	nb.SetSigma(sig)
-	nb.SetEpsilon(eps)
+	nb.SetLJDist(dist)
+	nb.SetLJEnergy(en)
 
 	return nb, nil
 }
@@ -428,26 +428,26 @@ func parseNonBonded(s string) (*ff.AtomType, error) {
 	}
 
 	var at1, tmp1, tmp2 string
-	var sig, eps, sig14, eps14 float64
+	var dist, en, dist14, en14 float64
 
 	if nfields == 4 {
-		n, err := fmt.Sscanf(s, "%s %s %f %f", &at1, &tmp1, &eps, &sig)
+		n, err := fmt.Sscanf(s, "%s %s %f %f", &at1, &tmp1, &en, &dist)
 		if n != 4 || err != nil {
 			return nil, errors.New("could not parse the nonbonded params")
 		}
 	} else if nfields == 7 {
-		n, err := fmt.Sscanf(s, "%s %s %f %f", &at1, &tmp1, &eps, &sig, &tmp2, &eps14, &sig14)
+		n, err := fmt.Sscanf(s, "%s %s %f %f", &at1, &tmp1, &en, &dist, &tmp2, &en14, &dist14)
 		if n != 7 || err != nil {
 			return nil, errors.New("could not parse the nonbonded params")
 		}
 	}
 
 	a := ff.NewAtomType(at1, ff.FF_CHARMM)
-	a.SetSigma(sig)
-	a.SetEpsilon(eps)
+	a.SetLJDist(dist)
+	a.SetLJEnergy(en)
 	if nfields == 7 {
-		a.SetSigma14(sig14)
-		a.SetEpsilon14(eps14)
+		a.SetLJDist14(dist14)
+		a.SetLJEnergy14(en14)
 	}
 
 	return a, nil

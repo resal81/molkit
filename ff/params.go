@@ -10,21 +10,21 @@ const (
 	at_sett_PROTONS_SET atSetting = 1 << iota
 	at_sett_MASS_SET
 	at_sett_CHARGE_SET
-	at_sett_SIGMA_SET
-	at_sett_SIGMA14_SET
-	at_sett_EPSILON_SET
-	at_sett_EPSILON14_SET
+	at_sett_LJ_DIST_SET
+	at_sett_LJ_DIST_14_SET
+	at_sett_ENERGY_SET
+	at_sett_ENERGY_14_SET
 )
 
 type AtomType struct {
-	atype     string
-	protons   int8
-	mass      float64
-	sigma     float64
-	epsilon   float64
-	sigma14   float64
-	epsilon14 float64
-	charge    float64
+	atype       string
+	protons     int8
+	mass        float64
+	lj_dist     float64
+	lj_energy   float64
+	lj_dist14   float64
+	lj_energy14 float64
+	charge      float64
 
 	setting atSetting
 	ffType  ffTypes
@@ -86,59 +86,59 @@ func (a *AtomType) Charge() float64 {
 }
 
 //
-func (a *AtomType) SetSigma(v float64) {
-	a.setting |= at_sett_SIGMA_SET
-	a.sigma = v
+func (a *AtomType) SetLJDist(v float64) {
+	a.setting |= at_sett_LJ_DIST_SET
+	a.lj_dist = v
 }
 
-func (a *AtomType) HasSigmaSet() bool {
-	return a.setting&at_sett_SIGMA_SET != 0
+func (a *AtomType) HasLJDistSet() bool {
+	return a.setting&at_sett_LJ_DIST_SET != 0
 }
 
-func (a *AtomType) Sigma(to ffTypes) float64 {
-	return convertSigma(a.sigma, a.ffType, to)
-}
-
-//
-func (a *AtomType) SetEpsilon(v float64) {
-	a.setting |= at_sett_EPSILON_SET
-	a.epsilon = v
-}
-
-func (a *AtomType) HasEpsilonSet() bool {
-	return a.setting&at_sett_EPSILON_SET != 0
-}
-
-func (a *AtomType) Epsilon(to ffTypes) float64 {
-	return convertEpsilon(a.epsilon, a.ffType, to)
+func (a *AtomType) LJDist(to ffTypes) float64 {
+	return convertLJDist(a.lj_dist, a.ffType, to)
 }
 
 //
-func (a *AtomType) SetSigma14(v float64) {
-	a.setting |= at_sett_SIGMA14_SET
-	a.sigma14 = v
+func (a *AtomType) SetLJEnergy(v float64) {
+	a.setting |= at_sett_ENERGY_SET
+	a.lj_energy = v
 }
 
-func (a *AtomType) HasSigma14Set() bool {
-	return a.setting&at_sett_SIGMA14_SET != 0
+func (a *AtomType) HasLJEnergySet() bool {
+	return a.setting&at_sett_ENERGY_SET != 0
 }
 
-func (a *AtomType) Sigma14(to ffTypes) float64 {
-	return convertSigma(a.sigma14, a.ffType, to)
+func (a *AtomType) LJEnergy(to ffTypes) float64 {
+	return convertLJEnergy(a.lj_energy, a.ffType, to)
 }
 
 //
-func (a *AtomType) SetEpsilon14(v float64) {
-	a.setting |= at_sett_EPSILON14_SET
-	a.epsilon14 = v
+func (a *AtomType) SetLJDist14(v float64) {
+	a.setting |= at_sett_LJ_DIST_14_SET
+	a.lj_dist14 = v
 }
 
-func (a *AtomType) HasEpsilon14Set() bool {
-	return a.setting&at_sett_EPSILON14_SET != 0
+func (a *AtomType) HasLJDist14Set() bool {
+	return a.setting&at_sett_LJ_DIST_14_SET != 0
 }
 
-func (a *AtomType) Epsilon14(to ffTypes) float64 {
-	return convertEpsilon(a.epsilon14, a.ffType, to)
+func (a *AtomType) LJDist14(to ffTypes) float64 {
+	return convertLJDist(a.lj_dist14, a.ffType, to)
+}
+
+//
+func (a *AtomType) SetLJEnergy14(v float64) {
+	a.setting |= at_sett_ENERGY_14_SET
+	a.lj_energy14 = v
+}
+
+func (a *AtomType) HasLJEnergy14Set() bool {
+	return a.setting&at_sett_ENERGY_14_SET != 0
+}
+
+func (a *AtomType) LJEnergy14(to ffTypes) float64 {
+	return convertLJEnergy(a.lj_energy14, a.ffType, to)
 }
 
 /**********************************************************
@@ -148,18 +148,16 @@ func (a *AtomType) Epsilon14(to ffTypes) float64 {
 type nonbondedtypeSetting int32
 
 const (
-	nbt_sett_SIGMA_SET nonbondedtypeSetting = 1 << iota
-	nbt_sett_EPSILON_SET
+	nbt_sett_LJ_DIST_SET nonbondedtypeSetting = 1 << iota
+	nbt_sett_LJ_ENERGY_SET
 )
 
 type NonBondedType struct {
 	atype1 string
 	atype2 string
 
-	nbtype nonbondedtypeSetting
-
-	sigma   float64
-	epsilon float64
+	lj_dist   float64
+	lj_energy float64
 
 	setting nonbondedtypeSetting
 	kind    prTypes
@@ -189,31 +187,31 @@ func (n *NonBondedType) AType2() string {
 }
 
 //
-func (n *NonBondedType) SetSigma(v float64) {
-	n.setting |= nbt_sett_SIGMA_SET
-	n.sigma = v
+func (n *NonBondedType) SetLJDist(v float64) {
+	n.setting |= nbt_sett_LJ_DIST_SET
+	n.lj_dist = v
 }
 
-func (n *NonBondedType) HasSigmaSet() bool {
-	return n.setting&nbt_sett_SIGMA_SET != 0
+func (n *NonBondedType) HasLJDistSet() bool {
+	return n.setting&nbt_sett_LJ_DIST_SET != 0
 }
 
-func (n *NonBondedType) Sigma(to ffTypes) float64 {
-	return convertNBSigma(n.sigma, n.ffType, to)
+func (n *NonBondedType) LJDist(to ffTypes) float64 {
+	return convertNBLJDist(n.lj_dist, n.ffType, to)
 }
 
 //
-func (n *NonBondedType) SetEpsilon(v float64) {
-	n.setting |= nbt_sett_EPSILON_SET
-	n.epsilon = v
+func (n *NonBondedType) SetLJEnergy(v float64) {
+	n.setting |= nbt_sett_LJ_ENERGY_SET
+	n.lj_energy = v
 }
 
-func (n *NonBondedType) HasEpsilonSet() bool {
-	return n.setting&nbt_sett_EPSILON_SET != 0
+func (n *NonBondedType) HasLJEnergySet() bool {
+	return n.setting&nbt_sett_LJ_ENERGY_SET != 0
 }
 
-func (n *NonBondedType) Epsilon(to ffTypes) float64 {
-	return convertEpsilon(n.epsilon, n.ffType, to)
+func (n *NonBondedType) LJEnergy(to ffTypes) float64 {
+	return convertLJEnergy(n.lj_energy, n.ffType, to)
 }
 
 /**********************************************************
@@ -223,15 +221,15 @@ func (n *NonBondedType) Epsilon(to ffTypes) float64 {
 type pairtypeSetting int32
 
 const (
-	pt_sett_SIGMA14_SET pairtypeSetting = 1 << iota
-	pt_sett_EPSILON14_SET
+	pt_sett_LJ_DIST_14_SET pairtypeSetting = 1 << iota
+	pt_sett_LJ_ENERGY_14_SET
 )
 
 type PairType struct {
-	atype1    string
-	atype2    string
-	sigma14   float64
-	epsilon14 float64
+	atype1      string
+	atype2      string
+	lj_dist14   float64
+	lj_energy14 float64
 
 	setting pairtypeSetting
 	kind    prTypes
@@ -261,31 +259,31 @@ func (p *PairType) AType2() string {
 }
 
 //
-func (p *PairType) SetSigma14(v float64) {
-	p.setting |= pt_sett_SIGMA14_SET
-	p.sigma14 = v
+func (p *PairType) SetLJDist14(v float64) {
+	p.setting |= pt_sett_LJ_DIST_14_SET
+	p.lj_dist14 = v
 }
 
-func (p *PairType) HasSigma14Set() bool {
-	return p.setting&pt_sett_SIGMA14_SET != 0
+func (p *PairType) HasLJDist14Set() bool {
+	return p.setting&pt_sett_LJ_DIST_14_SET != 0
 }
 
-func (p *PairType) Sigma14(to ffTypes) float64 {
-	return convertSigma(p.sigma14, p.ffType, to)
+func (p *PairType) LJDist14(to ffTypes) float64 {
+	return convertLJDist(p.lj_dist14, p.ffType, to)
 }
 
 //
-func (p *PairType) SetEpsilon14(v float64) {
-	p.setting |= pt_sett_EPSILON14_SET
-	p.epsilon14 = v
+func (p *PairType) SetLJEnergy14(v float64) {
+	p.setting |= pt_sett_LJ_ENERGY_14_SET
+	p.lj_energy14 = v
 }
 
-func (p *PairType) HasEpsilon14Set() bool {
-	return p.setting&pt_sett_EPSILON14_SET != 0
+func (p *PairType) HasLJEnergy14Set() bool {
+	return p.setting&pt_sett_LJ_ENERGY_14_SET != 0
 }
 
-func (p *PairType) Epsilon14(to ffTypes) float64 {
-	return convertEpsilon(p.epsilon14, p.ffType, to)
+func (p *PairType) LJEnergy14(to ffTypes) float64 {
+	return convertLJEnergy(p.lj_energy14, p.ffType, to)
 }
 
 /**********************************************************
