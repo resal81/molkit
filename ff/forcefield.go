@@ -89,6 +89,7 @@ type ForceField struct {
 	dihedralTypes   []*DihedralType
 	improperTypes   []*ImproperType
 	constraintTypes []*ConstraintType
+	cmapTypes       []*CMapType
 
 	fragments []*TopFragment
 }
@@ -179,4 +180,13 @@ func (f *ForceField) AddImproperType(im *ImproperType) {
 
 func (f *ForceField) ImproperTypes() []*ImproperType {
 	return f.improperTypes
+}
+
+//
+func (f *ForceField) AddCMapType(cm *CMapType) {
+	f.cmapTypes = append(f.cmapTypes, cm)
+}
+
+func (f *ForceField) CMapTypes() []*CMapType {
+	return f.cmapTypes
 }

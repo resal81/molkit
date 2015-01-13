@@ -59,6 +59,9 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 	var lvl prmLevel
 	massDB := map[string]float64{}
 
+	cmap_header := ""
+	var cmap_str_vals []string = []string{}
+
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -76,7 +79,7 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 			panic("line length less that 5 " + line)
 		}
 
-		switch line[:4] {
+		switch strings.ToUpper(line[:4]) {
 		case "ATOM":
 			lvl = L_ATOMS
 			continue
@@ -117,6 +120,7 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 				return err
 			}
 			massDB[name] = mass
+
 		case L_BONDS:
 			bt, err := parseBondType(line)
 			if err != nil {
@@ -124,6 +128,7 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 				return err
 			}
 			frc.AddBondType(bt)
+
 		case L_ANGLES:
 			at, err := parseAngleType(line)
 			if err != nil {
@@ -131,6 +136,7 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 				return err
 			}
 			frc.AddAngleType(at)
+
 		case L_DIHEDRALS:
 			dh, err := parseDihedralType(line)
 			if err != nil {
@@ -138,6 +144,7 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 				return err
 			}
 			frc.AddDihedralType(dh)
+
 		case L_IMPROPERS:
 			im, err := parseImproperType(line)
 			if err != nil {
@@ -145,7 +152,24 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 				return err
 			}
 			frc.AddImproperType(im)
+
 		case L_CMAP:
+			if cmap_header == "" {
+				// this is the header line
+				cmap_header = line
+				cmap_str_vals = []string{}
+			} else {
+				cmap_str_vals = append(cmap_str_vals, strings.Fields(line)...)
+				if len(cmap_str_vals) == 24*24 {
+					cm, err := parseCMapType(24, 24, strings.Fields(cmap_header), cmap_str_vals)
+					if err != nil {
+						log.Printf("error in line: %s", line)
+						return err
+					}
+					frc.AddCMapType(cm)
+					cmap_header = ""
+				}
+			}
 		case L_NBFIX:
 		case L_IGNORE:
 			continue
@@ -327,8 +351,25 @@ func parseNonBondedType(s string) (*ff.AtomType, error) {
 }
 
 //
-func parseCMAPType(s string) error {
-	return nil
+func parseCMapType(nx, ny int, atypes, vals []string) (*ff.CMapType, error) {
+
+	if nx*ny != len(vals) {
+		return nil, fmt.Errorf("nx and ny are %d and %d, but len(vals) is %d", nx, ny, len(vals))
+	}
+
+	vals_f := make([]float64, len(vals))
+	for i, v := range vals {
+		fv, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		vals_f[i] = fv
+	}
+
+	cm := ff.NewCMapType(nx, ny, ff.FF_CHARMM)
+	cm.SetValues(vals_f)
+	return cm, nil
 }
 
 //

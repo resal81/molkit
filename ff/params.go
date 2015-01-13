@@ -684,4 +684,46 @@ type ConstraintType struct {
 	b0 float64
 }
 
+/**********************************************************
+* CMAP
+**********************************************************/
+
+type CMapType struct {
+	nx     int
+	ny     int
+	values []float64
+	atypes []string
+	ffType ffTypes
+}
+
+func NewCMapType(nx, ny int, ffType ffTypes) *CMapType {
+	return &CMapType{
+		nx:     nx,
+		ny:     ny,
+		ffType: ffType,
+	}
+}
+
+//
+func (c *CMapType) SetAtomTypes(atypes ...string) {
+	if len(atypes) != 5 || len(atypes) != 8 {
+		panic("cmap number of atypes must be 5 or 8")
+	}
+
+	c.atypes = atypes
+}
+
+func (c *CMapType) AtomTypes() []string {
+	return c.atypes
+}
+
+//
+func (c *CMapType) SetValues(v []float64) {
+	c.values = v
+}
+
+func (c *CMapType) Values() []float64 {
+	return c.values
+}
+
 //
