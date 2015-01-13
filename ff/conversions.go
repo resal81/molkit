@@ -18,7 +18,28 @@ func convertSigma(sig float64, from, to ffTypes) float64 {
 		switch to {
 		case FF_GROMACS:
 			// self.charmm['param']['ljl'] * 2 * 0.1 / (2**(1.0/6.0))
+			// nm, double distance and rmin2sigma factor
 			return sig * 2 * 0.1 / math.Pow(2.0, 1.0/6.0)
+		default:
+			panic("not implemented")
+		}
+
+	default:
+		panic("not implemented")
+	}
+}
+
+func convertNBSigma(sig float64, from, to ffTypes) float64 {
+	if from&to != 0 {
+		return sig
+	}
+
+	switch from {
+	case FF_CHARMM:
+		switch to {
+		case FF_GROMACS:
+			// nm, rmin2sigma factor ; no factor of 2 b/c it's Rmin not RminHalf
+			return sig * 0.1 / math.Pow(2.0, 1.0/6.0)
 		default:
 			panic("not implemented")
 		}
@@ -38,6 +59,7 @@ func convertEpsilon(eps float64, from, to ffTypes) float64 {
 		switch to {
 		case FF_GROMACS:
 			// abs(self.charmm['param']['lje']) * 4.184
+			// conversion to kJ and positive
 			return math.Abs(eps) * 4.184
 		default:
 			panic("not implemented")
@@ -57,7 +79,7 @@ func convertHarmonicConstant(kb float64, from, to ffTypes) float64 {
 	case FF_CHARMM:
 		switch to {
 		case FF_GROMACS:
-			// self.charmm['param']['kb'] * 2 * 4.184 * (1.0 / 0.01)   # nm^2
+			// converstion from kcal/mole/A**2 -> kJ/mole/nm**2 incl factor 2
 			return kb * 2 * 4.184 * 100
 		default:
 			panic("not implemented")
@@ -76,7 +98,7 @@ func convertHarmonicDistance(b0 float64, from, to ffTypes) float64 {
 	case FF_CHARMM:
 		switch to {
 		case FF_GROMACS:
-			// self.charmm['param']['b0'] * 0.1
+			// conversion from A -> nm
 			return b0 * 0.1
 		default:
 			panic("not implemented")
@@ -95,7 +117,7 @@ func convertThetaConstant(kt float64, from, to ffTypes) float64 {
 	case FF_CHARMM:
 		switch to {
 		case FF_GROMACS:
-			// self.charmm['param']['ktetha'] * 2 * 4.184
+			// kcal/mol to kJ/mol and a factor 2
 			return kt * 2 * 4.184
 		default:
 			panic("not implemented")
@@ -152,7 +174,7 @@ func convertR13(r13 float64, from, to ffTypes) float64 {
 	case FF_CHARMM:
 		switch to {
 		case FF_GROMACS:
-			// self.charmm['param']['s0'] * 0.1
+			// Angstrom to nm
 			return r13 * 0.1
 		default:
 			panic("not implemented")
@@ -229,6 +251,7 @@ func convertPsiConstant(kpsi float64, from, to ffTypes) float64 {
 		switch to {
 		case FF_GROMACS:
 			// imp['kpsi'] * 2 * 4.184
+			// conversion to kJ, factor 2 from definition difference
 			return kpsi * 2 * 4.184
 		default:
 			panic("not implemented")
@@ -266,7 +289,7 @@ func convertCMap(cm float64, from, to ffTypes) float64 {
 	case FF_CHARMM:
 		switch to {
 		case FF_GROMACS:
-			return cm
+			return cm * 4.184
 		default:
 			panic("not implemented")
 		}

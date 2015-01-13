@@ -194,7 +194,7 @@ func (n *NonBondedType) HasSigmaSet() bool {
 }
 
 func (n *NonBondedType) Sigma(to ffTypes) float64 {
-	return convertSigma(n.sigma, n.ffType, to)
+	return convertNBSigma(n.sigma, n.ffType, to)
 }
 
 //
