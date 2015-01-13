@@ -228,22 +228,23 @@ func readtop(reader io.Reader) (*ff.TopSystem, *ff.ForceField, error) {
 				forcefield.AddAngleType(ag)
 
 			case G_DIHEDRALTYPES:
-				dt, err := parseDihedralTypes(line)
-				if err != nil {
-					log.Printf("error in line: '%s' \n", line)
-					return nil, nil, err
-				}
-
-				if dt.Kind()&ff.FF_DIHEDRAL_TYPE_1 != 0 || dt.Kind()&ff.FF_DIHEDRAL_TYPE_9 != 0 {
-					forcefield.AddDihedralType(dt)
-
-				} else if dt.Kind()&ff.FF_DIHEDRAL_TYPE_2 != 0 {
-					forcefield.AddImproperType(dt)
-
+				fn := strings.Fields(line)[4]
+				if fn == "2" {
+					im, err := parseImproperTypes(line)
+					if err != nil {
+						log.Printf("error in line: '%s' \n", line)
+						return nil, nil, err
+					}
+					forcefield.AddImproperType(im)
 				} else {
-					return nil, nil, errors.New("dihedral type is not valid")
-				}
 
+					dt, err := parseDihedralTypes(line)
+					if err != nil {
+						log.Printf("error in line: '%s' \n", line)
+						return nil, nil, err
+					}
+					forcefield.AddDihedralType(dt)
+				}
 			}
 
 		}
@@ -309,20 +310,24 @@ func readtop(reader io.Reader) (*ff.TopSystem, *ff.ForceField, error) {
 				curr_topmol.AddTopAngle(ag)
 
 			case G_DIHEDRALS:
-				dh, err := parseDihedral(line, curr_topmol)
-				if err != nil {
-					log.Printf("error in line: '%s' \n", line)
-					return nil, nil, err
-				}
-
-				if dh.Kind()&ff.FF_DIHEDRAL_TYPE_1 != 0 || dh.Kind()&ff.FF_DIHEDRAL_TYPE_9 != 0 {
-					curr_topmol.AddTopDihedral(dh)
-				} else if dh.Kind()&ff.FF_DIHEDRAL_TYPE_2 != 0 {
-					curr_topmol.AddTopImproper(dh)
+				fn := strings.Fields(line)[4]
+				if fn == "2" {
+					im, err := parseImpropers(line, curr_topmol)
+					if err != nil {
+						log.Printf("error in line: '%s' \n", line)
+						return nil, nil, err
+					}
+					curr_topmol.AddTopImproper(im)
 				} else {
-					panic("should not reach here")
-				}
 
+					dh, err := parseDihedrals(line, curr_topmol)
+					if err != nil {
+						log.Printf("error in line: '%s' \n", line)
+						return nil, nil, err
+					}
+
+					curr_topmol.AddTopDihedral(dh)
+				}
 			}
 		}
 
@@ -824,88 +829,57 @@ func parseDihedralTypes(s string) (*ff.DihedralType, error) {
 	// ; i	j	k	l	func	phi0	cp	mult
 
 	// find the function type
-	_, fn, err := checkLine(s, []int{7, 8}, []int8{1, 2, 9}, 4)
+	_, fn, err := checkLine(s, []int{8}, []int8{1, 9}, 4)
 	if err != nil {
 		return nil, genError("[dihedraltypes]", errCouldNotBeParsed)
 	}
 
 	var at1, at2, at3, at4 string
 	var tmp, mult int8
-	var phi, psi, kphi, kpsi float64
+	var phi, kphi float64
 
-	switch fn {
-	case 1, 9:
-		n, err := fmt.Sscanf(s, "%s %s %s %s %d %f %f %d", &at1, &at2, &at3, &at4, &tmp, &phi, &kphi, &mult)
-		if n != 8 || err != nil {
-			return nil, genError("[dihedraltypes]", errCouldNotBeParsed)
-		}
-
-		var dt *ff.DihedralType
-		if fn == 1 {
-			dt = ff.NewDihedralType(at1, at2, at3, at4, ff.FF_DIHEDRAL_TYPE_1, ff.FF_GROMACS)
-		} else if fn == 9 {
-			dt = ff.NewDihedralType(at1, at2, at3, at4, ff.FF_DIHEDRAL_TYPE_9, ff.FF_GROMACS)
-		}
-
-		dt.SetPhi(phi)
-		dt.SetPhiConstant(kphi)
-		dt.SetMult(mult)
-		return dt, nil
-
-	case 2:
-		n, err := fmt.Sscanf(s, "%s %s %s %s %d %f %f", &at1, &at2, &at3, &at4, &tmp, &psi, &kpsi)
-		if n != 7 || err != nil {
-			return nil, genError("[dihedraltypes]", errCouldNotBeParsed)
-		}
-		dt := ff.NewDihedralType(at1, at2, at3, at4, ff.FF_DIHEDRAL_TYPE_2, ff.FF_GROMACS)
-		dt.SetPsiConstant(kpsi)
-		dt.SetPsi(psi)
-		return dt, nil
+	n, err := fmt.Sscanf(s, "%s %s %s %s %d %f %f %d", &at1, &at2, &at3, &at4, &tmp, &phi, &kphi, &mult)
+	if n != 8 || err != nil {
+		return nil, genError("[dihedraltypes]", errCouldNotBeParsed)
 	}
 
-	return nil, genError("[dihedraltypes]", errCouldNotBeParsed)
+	var dt *ff.DihedralType
+	if fn == 1 {
+		dt = ff.NewDihedralType(at1, at2, at3, at4, ff.FF_DIHEDRAL_TYPE_1, ff.FF_GROMACS)
+	} else if fn == 9 {
+		dt = ff.NewDihedralType(at1, at2, at3, at4, ff.FF_DIHEDRAL_TYPE_9, ff.FF_GROMACS)
+	}
+
+	dt.SetPhi(phi)
+	dt.SetPhiConstant(kphi)
+	dt.SetMult(mult)
+	return dt, nil
+
 }
 
 // parses [dihedrals]
-func parseDihedral(s string, topPol *ff.TopPolymer) (*ff.TopDihedral, error) {
+func parseDihedrals(s string, topPol *ff.TopPolymer) (*ff.TopDihedral, error) {
 	// ; ai    aj  ak  al  funct   phi0    cp  mult
-	// ; ai    aj  ak  al  funct   q0  cq
 
 	// find the function type
-	nfields, fn, err := checkLine(s, []int{5, 7, 8}, []int8{1, 2, 9}, 4)
+	nfields, fn, err := checkLine(s, []int{5, 8}, []int8{1, 9}, 4)
 	if err != nil {
 		return nil, genError("[dihedrals]", errCouldNotBeParsed)
 	}
 
 	var ai, aj, ak, am int64
 	var tmp, mult int8
-	var phi, psi, kphi, kpsi float64
+	var phi, kphi float64
 
-	switch fn {
-	case 1, 9:
-		if nfields == 5 {
-			n, err := fmt.Sscanf(s, "%d %d %d %d %d", &ai, &aj, &ak, &am, &tmp)
-			if n != 5 || err != nil {
-				return nil, genError("[dihedrals]", errCouldNotBeParsed)
-			}
-		} else if nfields == 8 {
-			n, err := fmt.Sscanf(s, "%d %d %d %d %d %f %f %d", &ai, &aj, &ak, &am, &tmp, &phi, &kphi, &mult)
-			if n != 8 || err != nil {
-				return nil, genError("[dihedrals]", errCouldNotBeParsed)
-			}
+	if nfields == 5 {
+		n, err := fmt.Sscanf(s, "%d %d %d %d %d", &ai, &aj, &ak, &am, &tmp)
+		if n != 5 || err != nil {
+			return nil, genError("[dihedrals]", errCouldNotBeParsed)
 		}
-
-	case 2:
-		if nfields == 5 {
-			n, err := fmt.Sscanf(s, "%d %d %d %d %d", &ai, &aj, &ak, &am, &tmp)
-			if n != 5 || err != nil {
-				return nil, genError("[dihedrals]", errCouldNotBeParsed)
-			}
-		} else if nfields == 7 {
-			n, err := fmt.Sscanf(s, "%d %d %d %d %d %f %f %d", &ai, &aj, &ak, &am, &tmp, &psi, &kpsi)
-			if n != 7 || err != nil {
-				return nil, genError("[dihedrals]", errCouldNotBeParsed)
-			}
+	} else if nfields == 8 {
+		n, err := fmt.Sscanf(s, "%d %d %d %d %d %f %f %d", &ai, &aj, &ak, &am, &tmp, &phi, &kphi, &mult)
+		if n != 8 || err != nil {
+			return nil, genError("[dihedrals]", errCouldNotBeParsed)
 		}
 	}
 
@@ -941,15 +915,79 @@ func parseDihedral(s string, topPol *ff.TopPolymer) (*ff.TopDihedral, error) {
 
 			dh.SetCustomDihedralType(dt)
 		}
-	case 2:
-		dh = ff.NewTopDihedral(a1, a2, a3, a4, ff.FF_DIHEDRAL_TYPE_2)
-		if nfields == 7 {
-			dt := ff.NewDihedralType(a1.AtomType(), a2.AtomType(), a3.AtomType(), a4.AtomType(), ff.FF_DIHEDRAL_TYPE_2, ff.FF_GROMACS)
-			dt.SetPsiConstant(kpsi)
-			dt.SetPsi(psi)
+	}
 
-			dh.SetCustomDihedralType(dt)
+	return dh, nil
+}
+
+// parses [dihedraltypes] - improper
+func parseImproperTypes(s string) (*ff.ImproperType, error) {
+	// ; i	j	k	l	func	phi0	cp	mult
+
+	// find the function type
+	_, fn, err := checkLine(s, []int{7}, []int8{2}, 4)
+	if err != nil || fn != 2 {
+		return nil, genError("[dihedraltypes] improper", errCouldNotBeParsed)
+	}
+
+	var at1, at2, at3, at4 string
+	var tmp int8
+	var psi, kpsi float64
+
+	n, err := fmt.Sscanf(s, "%s %s %s %s %d %f %f", &at1, &at2, &at3, &at4, &tmp, &psi, &kpsi)
+	if n != 7 || err != nil {
+		return nil, genError("[dihedraltypes] improper", errCouldNotBeParsed)
+	}
+	dt := ff.NewImproperType(at1, at2, at3, at4, ff.FF_IMPROPER_TYPE_1, ff.FF_GROMACS)
+	dt.SetPsiConstant(kpsi)
+	dt.SetPsi(psi)
+	return dt, nil
+}
+
+// parses [dihedrals] - improper
+func parseImpropers(s string, topPol *ff.TopPolymer) (*ff.TopImproper, error) {
+	// ; ai    aj  ak  al  funct   q0  cq
+
+	// find the function type
+	nfields, _, err := checkLine(s, []int{5, 7}, []int8{2}, 4)
+	if err != nil {
+		return nil, genError("[dihedrals] - improper", errCouldNotBeParsed)
+	}
+
+	var ai, aj, ak, am int64
+	var tmp int8
+	var psi, kpsi float64
+
+	if nfields == 5 {
+		n, err := fmt.Sscanf(s, "%d %d %d %d %d", &ai, &aj, &ak, &am, &tmp)
+		if n != 5 || err != nil {
+			return nil, genError("[dihedrals] - improper", errCouldNotBeParsed)
 		}
+	} else if nfields == 7 {
+		n, err := fmt.Sscanf(s, "%d %d %d %d %d %f %f %d", &ai, &aj, &ak, &am, &tmp, &psi, &kpsi)
+		if n != 7 || err != nil {
+			return nil, genError("[dihedrals] - improper", errCouldNotBeParsed)
+		}
+	}
+
+	a1 := topPol.AtomBySerial(ai)
+	a2 := topPol.AtomBySerial(aj)
+	a3 := topPol.AtomBySerial(ak)
+	a4 := topPol.AtomBySerial(am)
+
+	if a1 == nil || a2 == nil || a3 == nil || a4 == nil {
+		return nil, genError("[dihedrals] - improper", errCouldNotFindTopAtom)
+	}
+
+	var dh *ff.TopImproper
+
+	dh = ff.NewTopImproper(a1, a2, a3, a4, ff.FF_IMPROPER_TYPE_1)
+	if nfields == 7 {
+		dt := ff.NewImproperType(a1.AtomType(), a2.AtomType(), a3.AtomType(), a4.AtomType(), ff.FF_IMPROPER_TYPE_1, ff.FF_GROMACS)
+		dt.SetPsiConstant(kpsi)
+		dt.SetPsi(psi)
+
+		dh.SetCustomImproperType(dt)
 	}
 
 	return dh, nil

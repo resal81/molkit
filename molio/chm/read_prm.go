@@ -132,7 +132,19 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 			}
 			frc.AddAngleType(at)
 		case L_DIHEDRALS:
+			dh, err := parseDihedralType(line)
+			if err != nil {
+				log.Printf("error in line: %s", line)
+				return err
+			}
+			frc.AddDihedralType(dh)
 		case L_IMPROPERS:
+			im, err := parseImproperType(line)
+			if err != nil {
+				log.Printf("error in line: %s", line)
+				return err
+			}
+			frc.AddImproperType(im)
 		case L_CMAP:
 		case L_NBFIX:
 		case L_IGNORE:
@@ -261,13 +273,52 @@ func parseAngleType(s string) (*ff.AngleType, error) {
 }
 
 //
-func parseDihedralType(s string) (*ff.AtomType, error) {
-	return nil, nil
+func parseDihedralType(s string) (*ff.DihedralType, error) {
+
+	// atype1 atype2 atype3  atype4 Kchi    n   delta
+	_, err := checkLineFields(s, []int{7})
+	if err != nil {
+		return nil, err
+	}
+
+	var at1, at2, at3, at4 string
+	var mult int8
+	var kphi, phi float64
+
+	n, err := fmt.Sscanf(s, "%s %s %s %s %f %d %f", &at1, &at2, &at3, &at4, &kphi, &mult, &phi)
+	if n != 7 || err != nil {
+		return nil, errors.New("could not parse dihedraltype")
+	}
+
+	dh := ff.NewDihedralType(at1, at2, at3, at4, ff.FF_DIHEDRAL_TYPE_9, ff.FF_CHARMM)
+	dh.SetPhiConstant(kphi)
+	dh.SetPhi(phi)
+	dh.SetMult(mult)
+
+	return dh, nil
 }
 
 //
-func parseImproperType(s string) (*ff.AtomType, error) {
-	return nil, nil
+func parseImproperType(s string) (*ff.ImproperType, error) {
+	// atype1 atype2 atype3  atype4  Kpsi ign psi0
+	_, err := checkLineFields(s, []int{7})
+	if err != nil {
+		return nil, err
+	}
+
+	var at1, at2, at3, at4, tmp string
+	var kpsi, psi float64
+
+	n, err := fmt.Sscanf(s, "%s %s %s %s %f %s %f", &at1, &at2, &at3, &at4, &kpsi, &tmp, &psi)
+	if n != 7 || err != nil {
+		return nil, errors.New("could not parse dihedraltype")
+	}
+
+	it := ff.NewImproperType(at1, at2, at3, at4, ff.FF_IMPROPER_TYPE_1, ff.FF_CHARMM)
+	it.SetPsiConstant(kpsi)
+	it.SetPsi(psi)
+
+	return it, nil
 }
 
 //

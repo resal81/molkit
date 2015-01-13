@@ -478,8 +478,6 @@ const (
 	dih_sett_PHI_CONSTANT_SET dihedraltypeSetting = 1 << iota
 	dih_sett_PHI_SET
 	dih_sett_MULT_SET
-	dih_sett_PSI_CONSTANT_SET
-	dih_sett_PSI_SET
 )
 
 type DihedralType struct {
@@ -492,17 +490,13 @@ type DihedralType struct {
 	phi   float64
 	mult  int8
 
-	// for improper
-	k_psi float64
-	psi   float64
-
 	setting dihedraltypeSetting
 	kind    prTypes
 	ffType  ffTypes
 }
 
 func NewDihedralType(atype1, atype2, atype3, atype4 string, dht prTypes, ffType ffTypes) *DihedralType {
-	if dht&FF_DIHEDRAL_TYPE_1 == 0 && dht&FF_DIHEDRAL_TYPE_2 == 0 && dht&FF_DIHEDRAL_TYPE_9 == 0 {
+	if dht&FF_DIHEDRAL_TYPE_1 == 0 && dht&FF_DIHEDRAL_TYPE_9 == 0 {
 		panic("unsupported dihedraltype")
 	}
 
@@ -567,40 +561,12 @@ func (d *DihedralType) Phi(to ffTypes) float64 {
 }
 
 //
-func (d *DihedralType) SetPsiConstant(v float64) {
-	d.setting |= dih_sett_PSI_CONSTANT_SET
-	d.k_psi = v
-}
-
-func (d *DihedralType) HasPsiConstantSet() bool {
-	return d.setting&dih_sett_PSI_CONSTANT_SET != 0
-}
-
-func (d *DihedralType) PsiConstant(to ffTypes) float64 {
-	return convertPsiConstant(d.k_psi, d.ffType, to)
-}
-
-//
-func (d *DihedralType) SetPsi(v float64) {
-	d.setting |= dih_sett_PSI_SET
-	d.psi = v
-}
-
-func (d *DihedralType) HasPsiSet() bool {
-	return d.setting&dih_sett_PSI_SET != 0
-}
-
-func (d *DihedralType) Psi(to ffTypes) float64 {
-	return convertPsi(d.psi, d.ffType, to)
-}
-
-//
 func (d *DihedralType) SetMult(v int8) {
 	d.setting |= dih_sett_MULT_SET
 	d.mult = v
 }
 
-func (d *DihedralType) HasMultiSet() bool {
+func (d *DihedralType) HasMultSet() bool {
 	return d.setting&dih_sett_MULT_SET != 0
 }
 
@@ -609,6 +575,101 @@ func (d *DihedralType) Mult(to ffTypes) int8 {
 }
 
 func (d *DihedralType) Setting() dihedraltypeSetting {
+	return d.setting
+}
+
+/**********************************************************
+* ImproperType
+**********************************************************/
+
+type impropertypeSetting int32
+
+const (
+	imp_sett_PSI_CONSTANT_SET impropertypeSetting = 1 << iota
+	imp_sett_PSI_SET
+)
+
+type ImproperType struct {
+	atype1 string
+	atype2 string
+	atype3 string
+	atype4 string
+
+	// for improper
+	k_psi float64
+	psi   float64
+
+	setting impropertypeSetting
+	kind    prTypes
+	ffType  ffTypes
+}
+
+func NewImproperType(atype1, atype2, atype3, atype4 string, dht prTypes, ffType ffTypes) *ImproperType {
+	if dht&FF_IMPROPER_TYPE_1 == 0 {
+		panic("unsupported dihedraltype")
+	}
+
+	return &ImproperType{
+		atype1: atype1,
+		atype2: atype2,
+		atype3: atype3,
+		atype4: atype4,
+		kind:   dht,
+		ffType: ffType,
+	}
+}
+
+//
+func (d *ImproperType) Kind() prTypes {
+	return d.kind
+}
+
+//
+func (d *ImproperType) AType1() string {
+	return d.atype1
+}
+
+func (d *ImproperType) AType2() string {
+	return d.atype2
+}
+
+func (d *ImproperType) AType3() string {
+	return d.atype3
+}
+
+func (d *ImproperType) AType4() string {
+	return d.atype4
+}
+
+//
+func (d *ImproperType) SetPsiConstant(v float64) {
+	d.setting |= imp_sett_PSI_CONSTANT_SET
+	d.k_psi = v
+}
+
+func (d *ImproperType) HasPsiConstantSet() bool {
+	return d.setting&imp_sett_PSI_CONSTANT_SET != 0
+}
+
+func (d *ImproperType) PsiConstant(to ffTypes) float64 {
+	return convertPsiConstant(d.k_psi, d.ffType, to)
+}
+
+//
+func (d *ImproperType) SetPsi(v float64) {
+	d.setting |= imp_sett_PSI_SET
+	d.psi = v
+}
+
+func (d *ImproperType) HasPsiSet() bool {
+	return d.setting&imp_sett_PSI_SET != 0
+}
+
+func (d *ImproperType) Psi(to ffTypes) float64 {
+	return convertPsi(d.psi, d.ffType, to)
+}
+
+func (d *ImproperType) Setting() impropertypeSetting {
 	return d.setting
 }
 

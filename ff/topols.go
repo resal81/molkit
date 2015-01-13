@@ -224,7 +224,7 @@ type TopPolymer struct {
 	bonds      []*TopBond
 	angles     []*TopAngle
 	dihedrals  []*TopDihedral
-	impropers  []*TopDihedral
+	impropers  []*TopImproper
 	pairs      []*TopPair
 	exclusions []*TopExclusion
 	settle     *TopSettle
@@ -337,11 +337,11 @@ func (p *TopPolymer) TopDihedrals() []*TopDihedral {
 }
 
 //
-func (p *TopPolymer) AddTopImproper(v *TopDihedral) {
+func (p *TopPolymer) AddTopImproper(v *TopImproper) {
 	p.impropers = append(p.impropers, v)
 }
 
-func (p *TopPolymer) TopImpropers() []*TopDihedral {
+func (p *TopPolymer) TopImpropers() []*TopImproper {
 	return p.impropers
 }
 
@@ -587,7 +587,7 @@ type TopDihedral struct {
 
 //
 func NewTopDihedral(atom1, atom2, atom3, atom4 *TopAtom, kind prTypes) *TopDihedral {
-	if kind&FF_DIHEDRAL_TYPE_1 == 0 && kind&FF_DIHEDRAL_TYPE_2 == 0 && kind&FF_DIHEDRAL_TYPE_9 == 0 {
+	if kind&FF_DIHEDRAL_TYPE_1 == 0 && kind&FF_DIHEDRAL_TYPE_9 == 0 {
 		panic("unsupported dihedral type")
 	}
 
@@ -633,6 +633,78 @@ func (d *TopDihedral) CustomDihedralType() *DihedralType {
 
 //
 func (d *TopDihedral) Kind() prTypes {
+	return d.kind
+}
+
+/**********************************************************
+* TopImproper
+**********************************************************/
+
+type topImproperSetting int32
+
+const (
+	t_imp_sett_CUSTOM_IMPROPER_TYPE_SET topImproperSetting = 1 << iota
+)
+
+type TopImproper struct {
+	atom1 *TopAtom
+	atom2 *TopAtom
+	atom3 *TopAtom
+	atom4 *TopAtom
+	kind  prTypes
+
+	customImproperType *ImproperType
+	setting            topImproperSetting
+}
+
+//
+func NewTopImproper(atom1, atom2, atom3, atom4 *TopAtom, kind prTypes) *TopImproper {
+	if kind&FF_IMPROPER_TYPE_1 == 0 {
+		panic("unsupported improper type")
+	}
+
+	return &TopImproper{
+		atom1: atom1,
+		atom2: atom2,
+		atom3: atom3,
+		atom4: atom4,
+		kind:  kind,
+	}
+}
+
+//
+func (d *TopImproper) TopAtom1() *TopAtom {
+	return d.atom1
+}
+
+func (d *TopImproper) TopAtom2() *TopAtom {
+	return d.atom2
+}
+
+func (d *TopImproper) TopAtom3() *TopAtom {
+	return d.atom3
+}
+
+func (d *TopImproper) TopAtom4() *TopAtom {
+	return d.atom4
+}
+
+//
+func (d *TopImproper) SetCustomImproperType(dt *ImproperType) {
+	d.setting |= t_imp_sett_CUSTOM_IMPROPER_TYPE_SET
+	d.customImproperType = dt
+}
+
+func (d *TopImproper) HasCustomImproperTypeSet() bool {
+	return d.setting&t_imp_sett_CUSTOM_IMPROPER_TYPE_SET != 0
+}
+
+func (d *TopImproper) CustomImproperType() *ImproperType {
+	return d.customImproperType
+}
+
+//
+func (d *TopImproper) Kind() prTypes {
 	return d.kind
 }
 

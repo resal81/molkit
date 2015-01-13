@@ -20,8 +20,8 @@ const (
 	FF_ANGLE_TYPE_1                          // harmonic
 	FF_ANGLE_TYPE_5                          // UB
 	FF_DIHEDRAL_TYPE_1                       // proper dihedral
-	FF_DIHEDRAL_TYPE_2                       // improper
 	FF_DIHEDRAL_TYPE_9                       // proper multiple
+	FF_IMPROPER_TYPE_1                       // improper
 )
 
 /**********************************************************
@@ -87,7 +87,7 @@ type ForceField struct {
 	bondTypes       []*BondType      // ANY;
 	angleTypes      []*AngleType
 	dihedralTypes   []*DihedralType
-	improperTypes   []*DihedralType
+	improperTypes   []*ImproperType
 	constraintTypes []*ConstraintType
 
 	fragments []*TopFragment
@@ -170,13 +170,13 @@ func (f *ForceField) DihedralTypes() []*DihedralType {
 }
 
 //
-func (f *ForceField) AddImproperType(im *DihedralType) {
-	if im.kind&FF_DIHEDRAL_TYPE_2 == 0 {
+func (f *ForceField) AddImproperType(im *ImproperType) {
+	if im.kind&FF_IMPROPER_TYPE_1 == 0 {
 		panic("cannot add a imporper with a bad type")
 	}
 	f.improperTypes = append(f.improperTypes, im)
 }
 
-func (f *ForceField) ImproperTypes() []*DihedralType {
+func (f *ForceField) ImproperTypes() []*ImproperType {
 	return f.improperTypes
 }
