@@ -18,6 +18,6 @@ func TestPRMRead(t *testing.T) {
 	}
 	_, err := ReadPRMFiles(fnames...)
 	if err != nil {
-		t.Fatalf("could not read prm file: %s", err)
+		t.Fatalf("could not read prm file -> %s", err)
 	}
 }
