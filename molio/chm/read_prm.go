@@ -129,35 +129,35 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 
 		switch lvl {
 		case L_ATOMS:
-			name, mass, err := parseAtomsLine(line)
+			name, mass, err := prmParseAtomsLine(line)
 			if err != nil {
 				return prmLogError("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
 			massDB[name] = mass
 
 		case L_BONDS:
-			bt, err := parseBondType(line)
+			bt, err := prmParseBondType(line)
 			if err != nil {
 				return prmLogError("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
 			frc.AddBondType(bt)
 
 		case L_ANGLES:
-			at, err := parseAngleType(line)
+			at, err := prmParseAngleType(line)
 			if err != nil {
 				return prmLogError("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
 			frc.AddAngleType(at)
 
 		case L_DIHEDRALS:
-			dh, err := parseDihedralType(line)
+			dh, err := prmParseDihedralType(line)
 			if err != nil {
 				return prmLogError("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
 			frc.AddDihedralType(dh)
 
 		case L_IMPROPERS:
-			im, err := parseImproperType(line)
+			im, err := prmParseImproperType(line)
 			if err != nil {
 				return prmLogError("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
@@ -171,7 +171,7 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 			} else {
 				cmap_str_vals = append(cmap_str_vals, strings.Fields(line)...)
 				if len(cmap_str_vals) == 24*24 {
-					cm, err := parseCMapType(24, 24, strings.Fields(cmap_header), cmap_str_vals)
+					cm, err := prmParseCMapType(24, 24, strings.Fields(cmap_header), cmap_str_vals)
 					if err != nil {
 						return prmLogError("in line: {'%s'} - reason: {'%s'}", line, err)
 					}
@@ -181,7 +181,7 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 			}
 
 		case L_NONBONDED:
-			at, err := parseNonBonded(line)
+			at, err := prmParseNonBonded(line)
 			if err != nil {
 				return prmLogError("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
@@ -193,7 +193,7 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 			}
 
 		case L_NBFIX:
-			nb, err := parseNBFixType(line)
+			nb, err := prmParseNBFixType(line)
 			if err != nil {
 				return prmLogError("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
@@ -207,6 +207,10 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 
 	return nil
 }
+
+/**********************************************************
+* Helpers
+**********************************************************/
 
 // removes comments plus leading and tailing spaces
 func cleanLine(s string) string {
@@ -242,8 +246,12 @@ func prmCheckLineFields(s string, exp_lens []int, header string) (nfields int, e
 	return 0, fmt.Errorf("%s : bad length", header)
 }
 
+/**********************************************************
+* Line parsers
+**********************************************************/
+
 //
-func parseAtomsLine(s string) (string, float64, error) {
+func prmParseAtomsLine(s string) (string, float64, error) {
 	if strings.HasPrefix(s, "MASS") {
 		fields := strings.Fields(s)
 		if len(fields) != 4 {
@@ -264,7 +272,7 @@ func parseAtomsLine(s string) (string, float64, error) {
 }
 
 //
-func parseBondType(s string) (*ff.BondType, error) {
+func prmParseBondType(s string) (*ff.BondType, error) {
 
 	// atype1 atype2  Kb  b0
 	_, err := prmCheckLineFields(s, []int{4}, "BONDS")
@@ -289,7 +297,7 @@ func parseBondType(s string) (*ff.BondType, error) {
 }
 
 //
-func parseAngleType(s string) (*ff.AngleType, error) {
+func prmParseAngleType(s string) (*ff.AngleType, error) {
 
 	// atyp1 atype2 atype3     Ktheta    Theta0   Kub     S0
 	nfields, err := prmCheckLineFields(s, []int{5, 7}, "ANGLES")
@@ -323,7 +331,7 @@ func parseAngleType(s string) (*ff.AngleType, error) {
 }
 
 //
-func parseDihedralType(s string) (*ff.DihedralType, error) {
+func prmParseDihedralType(s string) (*ff.DihedralType, error) {
 
 	// atype1 atype2 atype3  atype4 Kchi    n   delta
 	_, err := prmCheckLineFields(s, []int{7}, "DIHEDRALS")
@@ -349,7 +357,7 @@ func parseDihedralType(s string) (*ff.DihedralType, error) {
 }
 
 //
-func parseImproperType(s string) (*ff.ImproperType, error) {
+func prmParseImproperType(s string) (*ff.ImproperType, error) {
 	// atype1 atype2 atype3  atype4  Kpsi ign psi0
 	_, err := prmCheckLineFields(s, []int{7}, "IMPROPER")
 	if err != nil {
@@ -372,7 +380,7 @@ func parseImproperType(s string) (*ff.ImproperType, error) {
 }
 
 //
-func parseNBFixType(s string) (*ff.NonBondedType, error) {
+func prmParseNBFixType(s string) (*ff.NonBondedType, error) {
 	// atype1  atype2   Emin    Rmin
 	_, err := prmCheckLineFields(s, []int{4}, "NBFIX")
 	if err != nil {
@@ -395,7 +403,7 @@ func parseNBFixType(s string) (*ff.NonBondedType, error) {
 }
 
 //
-func parseCMapType(nx, ny int, atypes, vals []string) (*ff.CMapType, error) {
+func prmParseCMapType(nx, ny int, atypes, vals []string) (*ff.CMapType, error) {
 	//[C NH1 CT1 C NH1 CT1 C N 24]
 
 	if nx*ny != len(vals) {
@@ -419,7 +427,7 @@ func parseCMapType(nx, ny int, atypes, vals []string) (*ff.CMapType, error) {
 }
 
 //
-func parseNonBonded(s string) (*ff.AtomType, error) {
+func prmParseNonBonded(s string) (*ff.AtomType, error) {
 
 	// atom  ignored    epsilon      Rmin/2   ignored   eps,1-4       Rmin/2,1-4
 

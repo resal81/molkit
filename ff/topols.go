@@ -131,6 +131,69 @@ func (a *TopAtom) Fragment() *TopFragment {
 	return a.fragment
 }
 
+// Compares two atoms using the fields that have been set except serial
+func (a1 *TopAtom) IsEquivalentTo(a2 *TopAtom) bool {
+
+	/*
+		two similar field are equal if:
+		  - either neither have been set
+		  - both are set and are have the same values
+
+		fields that are compared:
+			- name (string), type (string)
+			- mass (f64), charge (f64)
+			- cgnr (i64)
+	*/
+
+	switch {
+	case a1.HasNameSet() && a2.HasNameSet():
+		if a1.Name() != a2.Name() {
+			return false
+		}
+	case a1.HasNameSet() || a2.HasNameSet():
+		return false
+	}
+
+	switch {
+	case a1.HasAtomTypeSet() && a2.HasAtomTypeSet():
+		if a1.AtomType() != a2.AtomType() {
+			return false
+		}
+	case a1.HasAtomTypeSet() || a2.HasAtomTypeSet():
+		return false
+	}
+
+	switch {
+	case a1.HasMassSet() && a2.HasMassSet():
+		if a1.Mass() != a2.Mass() {
+			return false
+		}
+	case a1.HasMassSet() || a2.HasMassSet():
+		return false
+	}
+
+	switch {
+	case a1.HasChargeSet() && a2.HasChargeSet():
+		if a1.Charge() != a2.Charge() {
+			return false
+		}
+	case a1.HasChargeSet() || a2.HasChargeSet():
+		return false
+	}
+
+	switch {
+	case a1.HasCGNRSet() && a2.HasCGNRSet():
+		if a1.CGNR() != a2.CGNR() {
+			return false
+		}
+	case a1.HasCGNRSet() || a2.HasCGNRSet():
+		return false
+	}
+
+	return true
+
+}
+
 /**********************************************************
 * TopFragment
 **********************************************************/
@@ -385,6 +448,7 @@ func (s *TopSystem) RegisterTopPolymer(p *TopPolymer) {
 	}
 
 	if _, found := s.polymersMap[p.Name()]; found {
+		// check
 		panic("a polymer with the same name has been already registered")
 	}
 	s.polymersMap[p.Name()] = p
@@ -443,12 +507,14 @@ type topBondSetting int32
 const (
 	t_bnd_sett_CUSTOM_BOND_TYPE_SET topBondSetting = 1 << iota
 	t_bnd_sett_RESTRAINT_SET
+	t_bnd_sett_ORDER_SET
 )
 
 type TopBond struct {
 	atom1 *TopAtom
 	atom2 *TopAtom
 	kind  prTypes
+	order int8
 
 	customBondType *BondType
 	bondrest       *TopDistanceRestraint
@@ -490,6 +556,66 @@ func (b *TopBond) HasCustomBondTypeSet() bool {
 
 func (b *TopBond) CustomBondType() *BondType {
 	return b.customBondType
+}
+
+//
+func (b *TopBond) SetOrder(order int8) {
+	b.setting |= t_bnd_sett_ORDER_SET
+	b.order = order
+}
+
+func (b *TopBond) HasOrderSet() bool {
+	return b.setting&t_bnd_sett_ORDER_SET != 0
+}
+
+func (b *TopBond) Order() int8 {
+	return b.order
+}
+
+//
+func (b1 *TopBond) IsEquivalentTo(b2 *TopBond) bool {
+
+	/*
+		two bonds are equivalent if:
+			- both have equivalent atoms
+			- same order
+			- no custom bond type
+	*/
+
+	if b1.HasCustomBondTypeSet() || b2.HasCustomBondTypeSet() {
+		return false
+	}
+
+	b1a1 := b1.TopAtom1()
+	b1a2 := b1.TopAtom2()
+	b2a1 := b2.TopAtom1()
+	b2a2 := b2.TopAtom2()
+
+	// check if b1.atom1 is equiv to any of b2 atoms
+	if b1a1.IsEquivalentTo(b2a1) {
+		if !b1a2.IsEquivalentTo(b2a2) {
+			return false
+		}
+	}
+
+	// check if b1.atom2 is equiv to any of b2 atoms
+	if b1a1.IsEquivalentTo(b2a2) {
+		if !b1a2.IsEquivalentTo(b2a1) {
+			return false
+		}
+	}
+
+	// check order
+	switch {
+	case b1.HasOrderSet() && b2.HasOrderSet():
+		if b1.Order() != b2.Order() {
+			return false
+		}
+	case b1.HasOrderSet() || b2.HasOrderSet():
+		return false
+	}
+
+	return true
 }
 
 /**********************************************************
@@ -844,74 +970,74 @@ func NewTopCMap() *TopCMap {
 }
 
 //
-func (c *TopCMap) SetAtom1(a *TopAtom) {
+func (c *TopCMap) SetTopAtom1(a *TopAtom) {
 	c.atom1 = a
 }
 
-func (c *TopCMap) Atom1() *TopAtom {
+func (c *TopCMap) TopAtom1() *TopAtom {
 	return c.atom1
 }
 
 //
-func (c *TopCMap) SetAtom2(a *TopAtom) {
+func (c *TopCMap) SetTopAtom2(a *TopAtom) {
 	c.atom2 = a
 }
 
-func (c *TopCMap) Atom2() *TopAtom {
+func (c *TopCMap) TopAtom2() *TopAtom {
 	return c.atom2
 }
 
 //
-func (c *TopCMap) SetAtom3(a *TopAtom) {
+func (c *TopCMap) SetTopAtom3(a *TopAtom) {
 	c.atom3 = a
 }
 
-func (c *TopCMap) Atom3() *TopAtom {
+func (c *TopCMap) TopAtom3() *TopAtom {
 	return c.atom3
 }
 
 //
-func (c *TopCMap) SetAtom4(a *TopAtom) {
+func (c *TopCMap) SetTopAtom4(a *TopAtom) {
 	c.atom4 = a
 }
 
-func (c *TopCMap) Atom4() *TopAtom {
+func (c *TopCMap) TopAtom4() *TopAtom {
 	return c.atom4
 }
 
 //
-func (c *TopCMap) SetAtom5(a *TopAtom) {
+func (c *TopCMap) SetTopAtom5(a *TopAtom) {
 	c.atom5 = a
 }
 
-func (c *TopCMap) Atom5() *TopAtom {
+func (c *TopCMap) TopAtom5() *TopAtom {
 	return c.atom5
 }
 
 //
-func (c *TopCMap) SetAtom6(a *TopAtom) {
+func (c *TopCMap) SetTopAtom6(a *TopAtom) {
 	c.atom6 = a
 }
 
-func (c *TopCMap) Atom6() *TopAtom {
+func (c *TopCMap) TopAtom6() *TopAtom {
 	return c.atom6
 }
 
 //
-func (c *TopCMap) SetAtom7(a *TopAtom) {
+func (c *TopCMap) SetTopAtom7(a *TopAtom) {
 	c.atom7 = a
 }
 
-func (c *TopCMap) Atom7() *TopAtom {
+func (c *TopCMap) TopAtom7() *TopAtom {
 	return c.atom7
 }
 
 //
-func (c *TopCMap) SetAtom8(a *TopAtom) {
+func (c *TopCMap) SetTopAtom8(a *TopAtom) {
 	c.atom8 = a
 }
 
-func (c *TopCMap) Atom8() *TopAtom {
+func (c *TopCMap) TopAtom8() *TopAtom {
 	return c.atom8
 }
 
