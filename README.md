@@ -10,7 +10,7 @@ topologies.
 - Then:
 
 ```bash
-go get github.com/resal81/molkit
+go get -U github.com/resal81/molkit
 ```
 
 
