@@ -13,58 +13,30 @@ var (
 
 // --------------------------------------------------------
 
-type MTSetting int64
+type PTSetting int64
 
 const (
-	MT_TYPE_CHM MTSetting = 1 << iota
-	MT_TYPE_GMX
-	MT_HAS_PROTONS_SET
-	MT_HAS_MASS_SET
-	MT_HAS_LJ_DIST_SET
-	MT_HAS_LJ_ENERGY_SET
-	MT_HAS_LJ_DIST14_SET
-	MT_HAS_LJ_ENERGY14_SET
+	PT_TYPE_CHM PTSetting = 1 << iota
+	PT_HAS_LJ_DIST_SET
+	PT_HAS_LJ_ENERGY_SET
+	PT_HAS_LJ_DIST14_SET
+	PT_HAS_LJ_ENERGY14_SET
 )
 
-type AtomType struct {
-	Name       string
-	Protons    int
-	Mass       float64
-	LJDist     float64
-	LJEnergy   float64
-	LJDist14   float64
-	LJEnergy14 float64
-	Charge     int
-	ParCharge  float64
-	Setting    MTSetting
-}
-
-// --------------------------------------------------------
-
-type NBSetting int64
-
-const (
-	NB_TYPE_CHM NBSetting = 1 << iota
-	NB_HAS_LJ_DIST_SET
-	NB_HAS_LJ_ENERGY_SET
-	NB_HAS_LJ_DIST14_SET
-	NB_HAS_LJ_ENERGY14_SET
-)
-
-type NonBonded struct {
+type PairType struct {
 	AType1     string
 	Atype2     string
 	LJDist     float64
 	LJEnergy   float64
 	LJDist14   float64
 	LJEnergy14 float64
-	Setting    NBSetting
+	Setting    PTSetting
 }
 
 type Pair struct {
 	Atom1 *Atom
 	Atom2 *Atom
-	Type  *NonBonded
+	Type  *PairType
 }
 
 // --------------------------------------------------------
@@ -111,16 +83,16 @@ func (b *Bond) Id() int64 {
 }
 
 // --------------------------------------------------------
-type ATSetting int64
+type NTSetting int64
 
 const (
-	AT_TYPE_CHM   ATSetting = 1 << iota // Harmonic
-	AT_TYPE_GMX_1                       // Harmonic
-	AT_TYPE_GMX_5                       // UB
-	AT_HAS_THETA_CONST_SET
-	AT_HAS_THETA_ANGLE_SET
-	AT_HAS_UB_CONST_SET
-	AT_HAS_R13_SET
+	NT_TYPE_CHM   NTSetting = 1 << iota // Harmonic
+	NT_TYPE_GMX_1                       // Harmonic
+	NT_TYPE_GMX_5                       // UB
+	NT_HAS_THETA_CONST_SET
+	NT_HAS_THETA_ANGLE_SET
+	NT_HAS_UB_CONST_SET
+	NT_HAS_R13_SET
 )
 
 type AngleType struct {
@@ -131,7 +103,7 @@ type AngleType struct {
 	Theta         float64
 	R13           float64
 	UBConst       float64
-	Setting       ATSetting
+	Setting       NTSetting
 }
 
 type Angle struct {

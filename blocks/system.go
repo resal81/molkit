@@ -12,7 +12,7 @@ var (
 type System struct {
 	id int64
 
-	polymers []*Polymer
+	Polymers []*Polymer
 }
 
 func NewSystem() *System {
@@ -22,9 +22,9 @@ func NewSystem() *System {
 }
 
 func (s *System) deletePolymer(p1 *Polymer) {
-	for i, p2 := range s.Polymers() {
+	for i, p2 := range s.Polymers {
 		if p1.Id() == p2.Id() {
-			s.polymers = append(s.polymers[:i], s.polymers[i+1:]...)
+			s.Polymers = append(s.Polymers[:i], s.Polymers[i+1:]...)
 			return
 		}
 	}
@@ -36,13 +36,13 @@ func (s *System) Id() int64 {
 
 func (s *System) Atoms() []*Atom {
 	n := 0
-	for _, poly := range s.Polymers() {
+	for _, poly := range s.Polymers {
 		n += len(poly.Atoms())
 	}
 
 	var i int = 0
 	out := make([]*Atom, n, n)
-	for _, poly := range s.Polymers() {
+	for _, poly := range s.Polymers {
 		for _, atm := range poly.Atoms() {
 			out[i] = atm
 			i++
@@ -53,28 +53,19 @@ func (s *System) Atoms() []*Atom {
 
 func (s *System) Fragments() []*Fragment {
 	n := 0
-	for _, poly := range s.Polymers() {
-		n += len(poly.Fragments())
+	for _, poly := range s.Polymers {
+		n += len(poly.Fragments)
 	}
 
 	var i int = 0
 	out := make([]*Fragment, n)
-	for _, poly := range s.Polymers() {
-		for _, frag := range poly.Fragments() {
+	for _, poly := range s.Polymers {
+		for _, frag := range poly.Fragments {
 			out[i] = frag
 			i++
 		}
 	}
 	return out
-}
-
-func (s *System) AddPolymer(p *Polymer) {
-	p.setSystem(s)
-	s.polymers = append(s.polymers, p)
-}
-
-func (s *System) Polymers() []*Polymer {
-	return s.polymers
 }
 
 func (s *System) String() string {
