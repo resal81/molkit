@@ -1,5 +1,5 @@
 
-# Go-Molkit: A molecular manipulation toolkit written in Go
+# Molkit: A molecular manipulation toolkit written in Go
 
 This is a work-in-progress kit for manipulating molecular structures such as 
 topologies.
