@@ -8,6 +8,14 @@ var (
 	fragmentHash = utils.NewComponentHash()
 )
 
+type FragmentType struct {
+	AtomTypes []*AtomType
+	Bonds     []*Bond
+	Angles    []*Angle
+	Dihedrals []*Dihedral
+	Impropers []*Improper
+}
+
 type Fragment struct {
 	id      int64
 	Name    string
