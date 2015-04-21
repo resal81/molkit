@@ -12,11 +12,33 @@ var (
 
 // --------------------------------------------------------
 
+type BTSetting int64
+
+const (
+	BT_HARM_CONST_SET BTSetting = 1 << iota
+	BT_HARM_DIST_SET
+	BT_TYPE_GMX_1
+	BT_TYPE_CHM_1
+	BT_ORDER_SINGLE
+	BT_ORDER_DOUBLE
+	BT_ORDER_TRIPLE
+)
+
+type BondType struct {
+	AType1    string
+	AType2    string
+	HarmConst float64
+	HarmDist  float64
+	Setting   BTSetting
+}
+
 type Bond struct {
 	id int64
 
 	atom1 *Atom
 	atom2 *Atom
+	order int
+	btype *BondType
 }
 
 func NewBond(atom1, atom2 *Atom) *Bond {

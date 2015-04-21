@@ -29,7 +29,7 @@ System                          : a multi-chain complex; e.g. a simulation box
         |__ Bonds, Angles, Dihedrals, Impropers
 
 
-- Bond specifies the connection between atoms. A Bond doesn't have direction.
+Bond : specifies the connection between atoms. A Bond doesn't have direction.
 
 
 
