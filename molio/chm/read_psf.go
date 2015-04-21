@@ -45,6 +45,12 @@ func ReadPSFString(s string) (*ff.TopSystem, error) {
 
 type psfLevel int64
 
+type resData struct {
+	resname string
+	resnumb int64
+	segname string
+}
+
 func readpsf(reader io.Reader) (*ff.TopSystem, error) {
 
 	const (
@@ -68,8 +74,11 @@ func readpsf(reader io.Reader) (*ff.TopSystem, error) {
 	var lvl psfLevel
 
 	// var curr_pol *ff.TopPolymer
-	// pol_list := make([]*ff.TopPolymer, 1)
+	// var pol_list []*ff.TopPolymer = []*ff.TopPolymer{}
 	// topSys := ff.NewTopSystem()
+
+	tmp_atoms_map := make(map[int64]*ff.TopAtom, 0) // atom serial : *ff.TopAtom
+	tmp_resdata_map := make(map[int64]*resData, 0)  // atom serial : *resData
 
 	var lineno int64
 
@@ -134,10 +143,13 @@ func readpsf(reader io.Reader) (*ff.TopSystem, error) {
 		switch lvl {
 		case L_TITLE:
 		case L_ATOMS:
-			_, err := psfParseAtomsLine(line)
+			a, rd, err := psfParseAtomsLine(line)
 			if err != nil {
 				return psfLogError("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
+
+			tmp_atoms_map[a.Serial()] = a
+			tmp_resdata_map[a.Serial()] = rd
 
 		case L_BONDS:
 		case L_ANGLES:
@@ -176,10 +188,44 @@ func psfLogError(format string, args ...interface{}) (*ff.TopSystem, error) {
 	return nil, fmt.Errorf(format, args...)
 }
 
+//
+
 /**********************************************************
 * Line parsers
 **********************************************************/
 
-func psfParseAtomsLine(line string) (*ff.TopAtom, error) {
-	return nil, nil
+func psfParseAtomsLine(line string) (*ff.TopAtom, *resData, error) {
+	fields := strings.Fields(line)
+	if len(fields) != 9 {
+		return nil, nil, errors.New("bad length in atoms line")
+	}
+
+	var aser, resnumb int64
+	var chg, mass float64
+	var aname, atype, resname, segname, tmp string
+
+	n, err := fmt.Sscanf(line,
+		"%d %s %d %s %s %s %f %f %s",
+		&aser, &segname, &resnumb, &resname, &aname, &atype, &chg, &mass, &tmp)
+	if n != 9 {
+		return nil, nil, errors.New("# of scanned fields is not 9")
+	}
+	if err != nil {
+		return nil, nil, err
+	}
+
+	at := ff.NewTopAtom()
+	at.SetName(aname)
+	at.SetAtomType(atype)
+	at.SetSerial(aser)
+	at.SetMass(mass)
+	at.SetCharge(chg)
+
+	rd := resData{
+		resname: resname,
+		resnumb: resnumb,
+		segname: segname,
+	}
+
+	return at, &rd, nil
 }

@@ -1,6 +1,7 @@
 package blocks
 
 import (
+	"fmt"
 	"sync/atomic"
 )
 
@@ -75,4 +76,8 @@ func (s *System) AddPolymer(p *Polymer) {
 
 func (s *System) Polymers() []*Polymer {
 	return s.polymers
+}
+
+func (s *System) String() string {
+	return fmt.Sprintf("<system with %d atoms>", len(s.Atoms()))
 }

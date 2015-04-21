@@ -591,15 +591,13 @@ func (b1 *TopBond) IsEquivalentTo(b2 *TopBond) bool {
 	b2a1 := b2.TopAtom1()
 	b2a2 := b2.TopAtom2()
 
-	// check if b1.atom1 is equiv to any of b2 atoms
-	if b1a1.IsEquivalentTo(b2a1) {
+	switch {
+	case b1a1.IsEquivalentTo(b2a1):
 		if !b1a2.IsEquivalentTo(b2a2) {
 			return false
 		}
-	}
 
-	// check if b1.atom2 is equiv to any of b2 atoms
-	if b1a1.IsEquivalentTo(b2a2) {
+	case b1a1.IsEquivalentTo(b2a2):
 		if !b1a2.IsEquivalentTo(b2a1) {
 			return false
 		}
@@ -734,6 +732,42 @@ func (a *TopAngle) CustomAngleType() *AngleType {
 	return a.customAngleType
 }
 
+//
+func (a1 *TopAngle) IsEquivalentTo(a2 *TopAngle) bool {
+
+	/*
+		two angles are equivalent if:
+			- their atoms are equivalent
+			- no custom angle types
+
+	*/
+
+	if a1.HasCustomAngleTypeSet() || a2.HasCustomAngleTypeSet() {
+		return false
+	}
+
+	g1a1 := a1.TopAtom1()
+	g1a2 := a1.TopAtom2()
+	g1a3 := a1.TopAtom3()
+
+	g2a1 := a2.TopAtom1()
+	g2a2 := a2.TopAtom2()
+	g2a3 := a2.TopAtom3()
+
+	switch {
+	case g1a1.IsEquivalentTo(g2a1):
+		if (!g1a2.IsEquivalentTo(g2a2)) || (!g1a3.IsEquivalentTo(g2a3)) {
+			return false
+		}
+	case g1a1.IsEquivalentTo(g2a3):
+		if (!g1a2.IsEquivalentTo(g2a2)) || (!g1a3.IsEquivalentTo(g2a1)) {
+			return false
+		}
+	}
+
+	return true
+}
+
 /**********************************************************
 * TopDihedral
 **********************************************************/
@@ -806,6 +840,43 @@ func (d *TopDihedral) Kind() prTypes {
 	return d.kind
 }
 
+//
+func (d1 *TopDihedral) IsEquivalentTo(d2 *TopDihedral) bool {
+	/*
+		two dihedrals are equivalent if
+			- their atoms are equivalent
+			- there's no custom dihedral type
+
+	*/
+
+	if d1.HasCustomDihedralTypeSet() || d2.HasCustomDihedralTypeSet() {
+		return false
+	}
+
+	g1a1 := d1.TopAtom1()
+	g1a2 := d1.TopAtom2()
+	g1a3 := d1.TopAtom3()
+	g1a4 := d1.TopAtom4()
+
+	g2a1 := d2.TopAtom1()
+	g2a2 := d2.TopAtom2()
+	g2a3 := d2.TopAtom3()
+	g2a4 := d2.TopAtom4()
+
+	switch {
+	case g1a1.IsEquivalentTo(g2a1):
+		if (!g1a2.IsEquivalentTo(g2a2)) || (!g1a3.IsEquivalentTo(g2a3)) || (!g1a4.IsEquivalentTo(g2a4)) {
+			return false
+		}
+	case g1a1.IsEquivalentTo(g2a4):
+		if (!g1a2.IsEquivalentTo(g2a3)) || (!g1a3.IsEquivalentTo(g2a2)) || (!g1a4.IsEquivalentTo(g2a1)) {
+			return false
+		}
+	}
+
+	return true
+}
+
 /**********************************************************
 * TopImproper
 **********************************************************/
@@ -876,6 +947,44 @@ func (d *TopImproper) CustomImproperType() *ImproperType {
 //
 func (d *TopImproper) Kind() prTypes {
 	return d.kind
+}
+
+//
+//
+func (d1 *TopImproper) IsEquivalentTo(d2 *TopImproper) bool {
+	/*
+		two impropers are equivalent if
+			- their atoms are equivalent
+			- there's no custom improper type
+
+	*/
+
+	if d1.HasCustomImproperTypeSet() || d2.HasCustomImproperTypeSet() {
+		return false
+	}
+
+	g1a1 := d1.TopAtom1()
+	g1a2 := d1.TopAtom2()
+	g1a3 := d1.TopAtom3()
+	g1a4 := d1.TopAtom4()
+
+	g2a1 := d2.TopAtom1()
+	g2a2 := d2.TopAtom2()
+	g2a3 := d2.TopAtom3()
+	g2a4 := d2.TopAtom4()
+
+	switch {
+	case g1a1.IsEquivalentTo(g2a1):
+		if (!g1a2.IsEquivalentTo(g2a2)) || (!g1a3.IsEquivalentTo(g2a3)) || (!g1a4.IsEquivalentTo(g2a4)) {
+			return false
+		}
+	case g1a1.IsEquivalentTo(g2a4):
+		if (!g1a2.IsEquivalentTo(g2a3)) || (!g1a3.IsEquivalentTo(g2a2)) || (!g1a4.IsEquivalentTo(g2a1)) {
+			return false
+		}
+	}
+
+	return true
 }
 
 /**********************************************************
