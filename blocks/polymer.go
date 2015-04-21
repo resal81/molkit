@@ -1,11 +1,11 @@
 package blocks
 
 import (
-	"sync/atomic"
+	"github.com/resal81/molkit/utils"
 )
 
 var (
-	polid_counter int64 = 0
+	polymerHash = utils.NewComponentHash()
 )
 
 type Polymer struct {
@@ -22,10 +22,9 @@ type Polymer struct {
 }
 
 func NewPolymer() *Polymer {
-	id := atomic.AddInt64(&polid_counter, 1)
-	return &Polymer{
-		id: id,
-	}
+	pol := &Polymer{}
+	pol.id = polymerHash.Add(pol)
+	return pol
 }
 
 func (p *Polymer) Delete() {
@@ -53,6 +52,7 @@ func (s *Polymer) Id() int64 {
 	return s.id
 }
 
+// Name
 func (p *Polymer) SetName(name string) {
 	p.name = name
 }
@@ -61,6 +61,7 @@ func (p *Polymer) Name() string {
 	return p.name
 }
 
+// Atoms
 func (p *Polymer) Atoms() []*Atom {
 	n := 0
 	for _, frag := range p.Fragments() {
@@ -78,6 +79,7 @@ func (p *Polymer) Atoms() []*Atom {
 	return out
 }
 
+// Fragment
 func (p *Polymer) AddFragment(f *Fragment) {
 	f.setPolymer(p)
 	p.fragments = append(p.fragments, f)
@@ -87,6 +89,7 @@ func (p *Polymer) Fragments() []*Fragment {
 	return p.fragments
 }
 
+// System
 func (p *Polymer) setSystem(s *System) {
 	p.system = s
 }

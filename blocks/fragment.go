@@ -1,11 +1,11 @@
 package blocks
 
 import (
-	"sync/atomic"
+	"github.com/resal81/molkit/utils"
 )
 
 var (
-	fragid_counter int64 = 0
+	fragmentHash = utils.NewComponentHash()
 )
 
 type Fragment struct {
@@ -19,10 +19,9 @@ type Fragment struct {
 }
 
 func NewFragment() *Fragment {
-	id := atomic.AddInt64(&fragid_counter, 1)
-	return &Fragment{
-		id: id,
-	}
+	frag := &Fragment{}
+	frag.id = fragmentHash.Add(frag)
+	return frag
 }
 
 func (f *Fragment) Delete() {

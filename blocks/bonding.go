@@ -1,13 +1,13 @@
 package blocks
 
 import (
-	"sync/atomic"
+	"github.com/resal81/molkit/utils"
 )
 
 var (
-	bondid_counter     int64 = 0
-	angleid_counter    int64 = 0
-	dihedralid_counter int64 = 0
+	bondHash     = utils.NewComponentHash()
+	angleHash    = utils.NewComponentHash()
+	dihedralHash = utils.NewComponentHash()
 )
 
 // --------------------------------------------------------
@@ -20,12 +20,12 @@ type Bond struct {
 }
 
 func NewBond(atom1, atom2 *Atom) *Bond {
-	id := atomic.AddInt64(&bondid_counter, 1)
-	return &Bond{
-		id:    id,
+	bnd := &Bond{
 		atom1: atom1,
 		atom2: atom2,
 	}
+	bnd.id = bondHash.Add(bnd)
+	return bnd
 }
 
 func (b *Bond) Id() int64 {
@@ -43,13 +43,13 @@ type Angle struct {
 }
 
 func NewAngle(atom1, atom2, atom3 *Atom) *Angle {
-	id := atomic.AddInt64(&angleid_counter, 1)
-	return &Angle{
-		id:    id,
+	ang := &Angle{
 		atom1: atom1,
 		atom2: atom2,
 		atom3: atom3,
 	}
+	ang.id = angleHash.Add(ang)
+	return ang
 }
 
 func (a *Angle) Id() int64 {
@@ -68,14 +68,15 @@ type Dihedral struct {
 }
 
 func NewDihedral(atom1, atom2, atom3, atom4 *Atom) *Dihedral {
-	id := atomic.AddInt64(&dihedralid_counter, 1)
-	return &Dihedral{
-		id:    id,
+	dih := &Dihedral{
 		atom1: atom1,
 		atom2: atom2,
 		atom3: atom3,
 		atom4: atom4,
 	}
+
+	dih.id = dihedralHash.Add(dih)
+	return dih
 }
 
 func (d *Dihedral) Id() int64 {

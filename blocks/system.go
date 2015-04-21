@@ -2,11 +2,11 @@ package blocks
 
 import (
 	"fmt"
-	"sync/atomic"
+	"github.com/resal81/molkit/utils"
 )
 
 var (
-	sysid_counter int64 = 0
+	systemHash = utils.NewComponentHash()
 )
 
 type System struct {
@@ -16,10 +16,9 @@ type System struct {
 }
 
 func NewSystem() *System {
-	id := atomic.AddInt64(&sysid_counter, 1)
-	return &System{
-		id: id,
-	}
+	sys := &System{}
+	sys.id = systemHash.Add(sys)
+	return sys
 }
 
 func (s *System) deletePolymer(p1 *Polymer) {
