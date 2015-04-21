@@ -1,19 +1,22 @@
 
-## Go
+# Go-Molkit: A molecular manipulation toolkit written in Go
 
+This is a work-in-progress kit for manipulating molecular structures such as 
+topologies.
+
+
+## Installation
+- Make sure you have Go installed. More information [here](https://golang.org/doc/install).
+- Then:
+
+```bash
+go get github.com/resal81/molkit
 ```
 
-go test -coverprofile=cover.out
 
-go test -coverprofile=cover.out -coverpkg github.com/resal81/molkit/ff,github.com/resal81/molkit/molio/gmx 
+## Details
 
-
-go tool cover -func=cover.out
-go tool cover -html=cover.out
-
-```
-
-## Hierarchy
+### Structure Hierarchy
 
 ```
 Collection                      : independent systems; e.g. entries in a SDF file
@@ -54,37 +57,19 @@ ParamsDB
 ForceField
     |__ TopolDB
     |__ ParamsDB
-
-
-
-
 ```
 
-```go
-sys.DeepCopy()  // returns a deep copy; useful when building topologies
-
-// reading files - implement using io.Reader
-molio.ReadPDBFile(fname)
-molio.ReadPSFFile(fname)
-
-molio.ReadGroTopFile(sys *System, fname string)
-
-// selection
-fnBB := selection.ByAtomName(true, 'CA', 'C', 'N', 'O')
-sel  := selection.Select(pdb, fnBB, ...)
-
-// writing files
-molio.WritePDB(io.Writer)
-molio.WritePSF(io.Writer)
-
-
-// forcefield
-ff := forcefield.NewFF(FF_CHARMM)
-ff.ReadFile('...') // based on extension
-ff.ReadFile('...')
-
-ff.Apply(sys System)
-
+### Testing
 
 ```
+go test -coverprofile=cover.out
+
+go test -coverprofile=cover.out -coverpkg github.com/resal81/molkit/ff,github.com/resal81/molkit/molio/gmx 
+
+
+go tool cover -func=cover.out
+go tool cover -html=cover.out
+```
+
+
 
