@@ -11,7 +11,9 @@ var (
 	improperHash = utils.NewComponentHash()
 )
 
-// --------------------------------------------------------
+/*
+	PairType
+*/
 
 type PTSetting int64
 
@@ -33,13 +35,19 @@ type PairType struct {
 	Setting    PTSetting
 }
 
+/*
+	Pair
+*/
+
 type Pair struct {
 	Atom1 *Atom
 	Atom2 *Atom
 	Type  *PairType
 }
 
-// --------------------------------------------------------
+/*
+	BondType
+*/
 
 type BTSetting int64
 
@@ -60,6 +68,10 @@ type BondType struct {
 	HarmDist  float64
 	Setting   BTSetting
 }
+
+/*
+	Bond
+*/
 
 type Bond struct {
 	id int64
@@ -82,7 +94,10 @@ func (b *Bond) Id() int64 {
 	return b.id
 }
 
-// --------------------------------------------------------
+/*
+	AngleType
+*/
+
 type NTSetting int64
 
 const (
@@ -106,6 +121,10 @@ type AngleType struct {
 	Setting       NTSetting
 }
 
+/*
+	Angle
+*/
+
 type Angle struct {
 	id    int64
 	Atom1 *Atom
@@ -128,7 +147,9 @@ func (a *Angle) Id() int64 {
 	return a.id
 }
 
-// --------------------------------------------------------
+/*
+	DihedralType
+*/
 
 type DTSetting int64
 
@@ -151,6 +172,10 @@ type DihedralType struct {
 	Mult     float64
 	Setting  DTSetting
 }
+
+/*
+	Dihedral
+*/
 
 type Dihedral struct {
 	id    int64
@@ -177,7 +202,9 @@ func (d *Dihedral) Id() int64 {
 	return d.id
 }
 
-// --------------------------------------------------------
+/*
+	ImproperType
+*/
 
 type ITSetting int64
 
@@ -197,6 +224,10 @@ type ImproperType struct {
 	PsiConst float64
 	Setting  ITSetting
 }
+
+/*
+	Improper
+*/
 
 type Improper struct {
 	id    int64
@@ -223,4 +254,21 @@ func (d *Improper) Id() int64 {
 	return d.id
 }
 
-// --------------------------------------------------------
+/*
+	CMapType
+*/
+
+type CMSetting int64
+
+type CMapType struct {
+	AType1 string
+}
+
+/*
+	CMap
+*/
+
+type CMap struct {
+	Atom1 *Atom
+	Type  *CMapType
+}
