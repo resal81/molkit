@@ -1,11 +1,17 @@
 package blocks
 
-/*
-	Link
-*/
+/**********************************************************
+* Link
+**********************************************************/
 
 type Link struct {
-	Fragment1   *Fragment
-	Fragment2   *Fragment
-	Connections [][2]int64
+	conns [][2]*Atom
+}
+
+func NewLink() *Link {
+	return &Link{}
+}
+
+func (ln *Link) Connect(a1, a2 *Atom) {
+	ln.conns = append(ln.conns, [2]*Atom{a1, a2})
 }

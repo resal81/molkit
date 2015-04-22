@@ -102,25 +102,57 @@ func (dt *ImproperType) Setting() ITSetting {
 
 type Improper struct {
 	id    int64
-	Atom1 *Atom
-	Atom2 *Atom
-	Atom3 *Atom
-	Atom4 *Atom
-	Type  ImproperType
+	atom1 *Atom
+	atom2 *Atom
+	atom3 *Atom
+	atom4 *Atom
+	tipe  *ImproperType
 }
+
+/* new improper */
 
 func NewImproper(atom1, atom2, atom3, atom4 *Atom) *Improper {
 	imp := &Improper{
-		Atom1: atom1,
-		Atom2: atom2,
-		Atom3: atom3,
-		Atom4: atom4,
+		atom1: atom1,
+		atom2: atom2,
+		atom3: atom3,
+		atom4: atom4,
 	}
 
 	imp.id = improperHash.Add(imp)
 	return imp
 }
 
+/* id */
+
 func (d *Improper) Id() int64 {
 	return d.id
+}
+
+/* atoms */
+
+func (d *Improper) Atom1() *Atom {
+	return d.atom1
+}
+
+func (d *Improper) Atom2() *Atom {
+	return d.atom2
+}
+
+func (d *Improper) Atom3() *Atom {
+	return d.atom3
+}
+
+func (d *Improper) Atom4() *Atom {
+	return d.atom4
+}
+
+/* type */
+
+func (d *Improper) SetType(dt *ImproperType) {
+	d.tipe = dt
+}
+
+func (d *Improper) Type() *ImproperType {
+	return d.tipe
 }
