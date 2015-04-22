@@ -3,7 +3,7 @@ package chm
 import (
 	"testing"
 
-	"github.com/resal81/molkit/ff"
+	"github.com/resal81/molkit/blocks"
 	"github.com/resal81/molkit/utils"
 )
 
@@ -44,30 +44,31 @@ func TestAtomTypes(t *testing.T) {
 	frc, err := ReadPRMString(s)
 	utils.AssertNil(t, err, "could not read prm string")
 
-	ats := frc.AtomTypes()
+	ats := frc.AtomTypes
 	utils.CheckEqInt(t, len(ats), 5, "AtomTypes()")
-	utils.CheckEqFloat64(t, ats[0].Mass(), 12.01100, "mass is not right")
-	utils.CheckEqFloat64(t, ats[1].LJDist(ff.FF_CHARMM), 2.09, "rmin/2 is not right")
-	utils.CheckEqFloat64(t, ats[2].LJEnergy(ff.FF_CHARMM), -0.05, "epsilon is not right")
-	utils.CheckEqFloat64(t, ats[4].LJDist14(ff.FF_CHARMM), 1.4, "rmin/2 for 1-4 interaction is not right")
-	utils.CheckEqFloat64(t, ats[4].LJEnergy14(ff.FF_CHARMM), -0.12, "epsilon for 1-4 interaction is not right")
-	utils.CheckEqString(t, ats[4].AtomType(), "OB", "atom type is not right")
+	utils.CheckEqFloat64(t, ats[0].Mass, 12.01100, "mass is not right")
+	utils.CheckEqFloat64(t, ats[1].LJDist, 2.09, "rmin/2 is not right")
+	utils.CheckEqFloat64(t, ats[2].LJEnergy, -0.05, "epsilon is not right")
+	utils.CheckEqFloat64(t, ats[4].LJDist14, 1.4, "rmin/2 for 1-4 interaction is not right")
+	utils.CheckEqFloat64(t, ats[4].LJEnergy14, -0.12, "epsilon for 1-4 interaction is not right")
+	utils.CheckEqString(t, ats[4].Label, "OB", "atom type is not right")
 
-	utils.CheckTrue(t, ats[0].HasLJDistSet(), "ats[0] should have LJDist")
-	utils.CheckTrue(t, ats[0].HasLJEnergySet(), "ats[0] should have LJEnergy")
-	utils.CheckTrue(t, ats[0].HasMassSet(), "ats[0] should have Mass")
-	utils.CheckTrue(t, !ats[0].HasLJDist14Set(), "ats[0] should not have LJDist14")
-	utils.CheckTrue(t, !ats[0].HasLJEnergy14Set(), "ats[0] should not have LJEnergy14")
-	utils.CheckTrue(t, !ats[0].HasChargeSet(), "ats[0] should not have Charge")
-	utils.CheckTrue(t, !ats[0].HasProtonsSet(), "ats[0] should not have Protons")
+	utils.CheckTrue(t, ats[0].Setting&blocks.AT_HAS_LJ_DIST_SET != 0, "ats[0] should have LJDist")
+	utils.CheckTrue(t, ats[0].Setting&blocks.AT_HAS_LJ_ENERGY_SET != 0, "ats[0] should have LJEnergy")
+	utils.CheckTrue(t, ats[0].Setting&blocks.AT_HAS_MASS_SET != 0, "ats[0] should have Mass")
+	utils.CheckTrue(t, ats[0].Setting&blocks.AT_HAS_LJ_DIST14_SET == 0, "ats[0] should not have LJDist14")
+	utils.CheckTrue(t, ats[0].Setting&blocks.AT_HAS_LJ_ENERGY14_SET == 0, "ats[0] should not have LJEnergy14")
+	utils.CheckTrue(t, ats[0].Setting&blocks.AT_HAS_PAR_CHARGE_SET == 0, "ats[0] should not have Charge")
+	utils.CheckTrue(t, ats[0].Setting&blocks.AT_HAS_PROTONS_SET == 0, "ats[0] should not have Protons")
 
-	utils.CheckTrue(t, ats[4].HasLJDistSet(), "ats[4] should have LJDist")
-	utils.CheckTrue(t, ats[4].HasLJEnergySet(), "ats[4] should have LJEnergy")
-	utils.CheckTrue(t, ats[4].HasLJDist14Set(), "ats[4] should have LJDist14")
-	utils.CheckTrue(t, ats[4].HasLJEnergy14Set(), "ats[4] should have LJEnergy14")
+	utils.CheckTrue(t, ats[4].Setting&blocks.AT_HAS_LJ_DIST_SET != 0, "ats[4] should have LJDist")
+	utils.CheckTrue(t, ats[4].Setting&blocks.AT_HAS_LJ_ENERGY_SET != 0, "ats[4] should have LJEnergy")
+	utils.CheckTrue(t, ats[4].Setting&blocks.AT_HAS_LJ_DIST14_SET != 0, "ats[4] should have LJDist14")
+	utils.CheckTrue(t, ats[4].Setting&blocks.AT_HAS_LJ_ENERGY14_SET != 0, "ats[4] should have LJEnergy14")
 
 }
 
+/*
 func TestBondTypes(t *testing.T) {
 	s := `
     BONDS
@@ -123,7 +124,7 @@ func TestDihedralTyeps(t *testing.T) {
     !atom types             Kchi    n   delta
     !Neutral N terminus
     NH2  CT1  C    O        0.0000  1     0.00
-    NH2  CT1  C    NH1      0.0000  1     0.00 
+    NH2  CT1  C    NH1      0.0000  1     0.00
     X    CT3  OS   X       -0.1000  3     5.00 ! ALLOW   PEP POL
     `
 
@@ -152,7 +153,7 @@ func TestImproperTyeps(t *testing.T) {
 	s := `
     IMPROPER
     !atom types           Kpsi                   psi0
-    HE2  HE2  CE2  CE2     3.0            0      0.00   ! 
+    HE2  HE2  CE2  CE2     3.0            0      0.00   !
     HR3  CPH1 NR2  CPH1    0.5000         0      0.0000 ! ALLOW ARO
     N    C    CP1  CP3     0.0000         0      0.0000 ! ALLOW PRO
     NC2  X    X    C      40.0000         0      0.0000 ! ALLOW   PEP POL ARO
@@ -566,3 +567,4 @@ C    NH1  CT1  C    NH1  CT1  C    N     24
 -3.826180 -3.596820 -2.994790 -2.231020
 
 `
+*/

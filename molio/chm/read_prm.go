@@ -2,22 +2,23 @@ package chm
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
-	"github.com/resal81/molkit/ff"
 	"io"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/resal81/molkit/blocks"
 )
 
 /**********************************************************
 * ReadPRMFile
 **********************************************************/
 
-func ReadPRMFiles(fnames ...string) (*ff.ForceField, error) {
+// Parses one or multiple CHARMM prm files.
+func ReadPRMFiles(fnames ...string) (*blocks.ForceField, error) {
 
-	frc := ff.NewForceField(ff.FF_CHARMM)
+	ff := blocks.NewForceField(blocks.FF_CHM)
 
 	for _, fname := range fnames {
 		file, err := os.Open(fname)
@@ -26,13 +27,13 @@ func ReadPRMFiles(fnames ...string) (*ff.ForceField, error) {
 		}
 		defer file.Close()
 
-		err = readprm(file, frc)
+		err = readprm(file, ff)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return frc, nil
+	return ff, nil
 
 }
 
@@ -40,8 +41,9 @@ func ReadPRMFiles(fnames ...string) (*ff.ForceField, error) {
 * ReadPRMString
 **********************************************************/
 
-func ReadPRMString(s string) (*ff.ForceField, error) {
-	frc := ff.NewForceField(ff.FF_CHARMM)
+// Parses a prm string (e.g. contents of a file).
+func ReadPRMString(s string) (*blocks.ForceField, error) {
+	frc := blocks.NewForceField(blocks.FF_CHM)
 	reader := strings.NewReader(s)
 	err := readprm(reader, frc)
 	return frc, err
@@ -53,10 +55,10 @@ func ReadPRMString(s string) (*ff.ForceField, error) {
 
 type prmLevel int64
 
-func readprm(reader io.Reader, frc *ff.ForceField) error {
+func readprm(reader io.Reader, frc *blocks.ForceField) error {
 
 	const (
-		L_ATOMS prmLevel = 1 << iota
+		L_MASS prmLevel = 1 << iota
 		L_BONDS
 		L_ANGLES
 		L_DIHEDRALS
@@ -79,7 +81,7 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 		line := scanner.Text()
 
 		// clean out comments and flanking whitespace
-		line = cleanLine(line)
+		line = cleanPRMLine(line)
 		if line == "" {
 			continue
 		}
@@ -96,7 +98,7 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 
 		switch strings.ToUpper(line[:4]) {
 		case "ATOM":
-			lvl = L_ATOMS
+			lvl = L_MASS
 			continue
 		case "BOND":
 			lvl = L_BONDS
@@ -128,40 +130,40 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 		}
 
 		switch lvl {
-		case L_ATOMS:
-			name, mass, err := prmParseAtomsLine(line)
+		case L_MASS:
+			name, mass, err := prmParseMassLine(line)
 			if err != nil {
-				return prmLogError("in line: {'%s'} - reason: {'%s'}", line, err)
+				return fmt.Errorf("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
 			massDB[name] = mass
 
 		case L_BONDS:
 			bt, err := prmParseBondType(line)
 			if err != nil {
-				return prmLogError("in line: {'%s'} - reason: {'%s'}", line, err)
+				return fmt.Errorf("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
-			frc.AddBondType(bt)
+			frc.BondTypes = append(frc.BondTypes, bt)
 
 		case L_ANGLES:
 			at, err := prmParseAngleType(line)
 			if err != nil {
-				return prmLogError("in line: {'%s'} - reason: {'%s'}", line, err)
+				return fmt.Errorf("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
-			frc.AddAngleType(at)
+			frc.AngleTypes = append(frc.AngleTypes, at)
 
 		case L_DIHEDRALS:
 			dh, err := prmParseDihedralType(line)
 			if err != nil {
-				return prmLogError("in line: {'%s'} - reason: {'%s'}", line, err)
+				return fmt.Errorf("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
-			frc.AddDihedralType(dh)
+			frc.DihedralTypes = append(frc.DihedralTypes, dh)
 
 		case L_IMPROPERS:
 			im, err := prmParseImproperType(line)
 			if err != nil {
-				return prmLogError("in line: {'%s'} - reason: {'%s'}", line, err)
+				return fmt.Errorf("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
-			frc.AddImproperType(im)
+			frc.ImproperTypes = append(frc.ImproperTypes, im)
 
 		case L_CMAP:
 			if cmap_header == "" {
@@ -173,9 +175,9 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 				if len(cmap_str_vals) == 24*24 {
 					cm, err := prmParseCMapType(24, 24, strings.Fields(cmap_header), cmap_str_vals)
 					if err != nil {
-						return prmLogError("in line: {'%s'} - reason: {'%s'}", line, err)
+						return fmt.Errorf("in line: {'%s'} - reason: {'%s'}", line, err)
 					}
-					frc.AddCMapType(cm)
+					frc.CMapTypes = append(frc.CMapTypes, cm)
 					cmap_header = ""
 				}
 			}
@@ -183,21 +185,22 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 		case L_NONBONDED:
 			at, err := prmParseNonBonded(line)
 			if err != nil {
-				return prmLogError("in line: {'%s'} - reason: {'%s'}", line, err)
+				return fmt.Errorf("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
-			if m, ok := massDB[at.AtomType()]; ok {
-				at.SetMass(m)
-				frc.AddAtomType(at)
+			if m, ok := massDB[at.Label]; ok {
+				at.Mass = m
+				at.Setting |= blocks.AT_HAS_MASS_SET
+				frc.AtomTypes = append(frc.AtomTypes, at)
 			} else {
-				return fmt.Errorf("could not find mass for atom type: %s", at.AtomType())
+				return fmt.Errorf("could not find mass for atom type: %s", at.Label)
 			}
 
 		case L_NBFIX:
 			nb, err := prmParseNBFixType(line)
 			if err != nil {
-				return prmLogError("in line: {'%s'} - reason: {'%s'}", line, err)
+				return fmt.Errorf("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
-			frc.AddNonBondedType(nb)
+			frc.NonBondedTypes = append(frc.NonBondedTypes, nb)
 
 		case L_IGNORE:
 			continue
@@ -213,7 +216,7 @@ func readprm(reader io.Reader, frc *ff.ForceField) error {
 **********************************************************/
 
 // removes comments plus leading and tailing spaces
-func cleanLine(s string) string {
+func cleanPRMLine(s string) string {
 	i := strings.Index(s, "!")
 	if i != -1 {
 		s = s[:i]
@@ -226,11 +229,6 @@ func cleanLine(s string) string {
 
 	s = strings.TrimSpace(s)
 	return s
-}
-
-//
-func prmLogError(format string, args ...interface{}) error {
-	return fmt.Errorf(format, args...)
 }
 
 //
@@ -251,13 +249,18 @@ func prmCheckLineFields(s string, exp_lens []int, header string) (nfields int, e
 **********************************************************/
 
 //
-func prmParseAtomsLine(s string) (string, float64, error) {
+func prmParseMassLine(s string) (string, float64, error) {
+	/*
+		ATOMS
+		MASS    41 H      1.00800 ! polar H
+		MASS    42 HC     1.00800 ! N-ter H
+	*/
+
 	if strings.HasPrefix(s, "MASS") {
 		fields := strings.Fields(s)
 		if len(fields) != 4 {
-			return "", 0, errors.New("bad length in MASS line")
+			return "", 0, fmt.Errorf("bad length in MASS line")
 		}
-
 		name := fields[2]
 		m, err := strconv.ParseFloat(fields[3], 64)
 		if err != nil {
@@ -265,18 +268,26 @@ func prmParseAtomsLine(s string) (string, float64, error) {
 		}
 
 		return name, m, nil
-
 	} else {
-		panic("ATOMS line without MASS prefix")
+		return "", 0, fmt.Errorf("bad length in MASS line")
 	}
 }
 
 //
-func prmParseBondType(s string) (*ff.BondType, error) {
+func prmParseBondType(s string) (*blocks.BondType, error) {
+	/*
+
+		BONDS
+		!V(bond) = Kb(b - b0)**2
+		!Kb: kcal/mole/A**2
+		!b0: A
+		!atom type Kb          b0
+		NH2   CT1   240.00      1.455  ! From LSN NH2-CT2
+		CA   CA    305.000     1.3750 ! ALLOW   ARO
+	*/
 
 	// atype1 atype2  Kb  b0
-	_, err := prmCheckLineFields(s, []int{4}, "BONDS")
-	if err != nil {
+	if _, err := prmCheckLineFields(s, []int{4}, "BONDS"); err != nil {
 		return nil, err
 	}
 
@@ -285,19 +296,39 @@ func prmParseBondType(s string) (*ff.BondType, error) {
 
 	n, err := fmt.Sscanf(s, "%s %s %f %f", &at1, &at2, &kb, &b0)
 	if n != 4 || err != nil {
-		return nil, errors.New("error paring BONDS line")
+		return nil, fmt.Errorf("error paring BONDS line")
 	}
 
-	bt := ff.NewBondType(at1, at2, ff.FF_BOND_TYPE_1, ff.FF_CHARMM)
-	bt.SetHarmonicConstant(kb)
-	bt.SetHarmonicDistance(b0)
+	bt := blocks.BondType{
+		AType1:    at1,
+		AType2:    at2,
+		HarmConst: kb,
+		HarmDist:  b0,
+	}
+	bt.Setting |= blocks.BT_TYPE_CHM_1
+	bt.Setting |= blocks.BT_HAS_HARM_CONST_SET
+	bt.Setting |= blocks.BT_HAS_HARM_DIST_SET
 
-	return bt, nil
+	return &bt, nil
 
 }
 
 //
-func prmParseAngleType(s string) (*ff.AngleType, error) {
+func prmParseAngleType(s string) (*blocks.AngleType, error) {
+	/*
+
+		ANGLES
+		!V(angle) = Ktheta(Theta - Theta0)**2
+		!V(Urey-Bradley) = Kub(S - S0)**2
+		!Ktheta: kcal/mole/rad**2
+		!Theta0: degrees
+		!Kub: kcal/mole/A**2 (Urey-Bradley)
+		!S0: A
+		!atom types     Ktheta    Theta0   Kub     S0
+		NH2  CT1  CT2   67.700    110.00                  ! From LSN NH2-CT2-CT2
+		NH2  CT1  HB    38.000    109.50   50.00   2.1400 ! From LSN NH2-CT2-HA
+
+	*/
 
 	// atyp1 atype2 atype3     Ktheta    Theta0   Kub     S0
 	nfields, err := prmCheckLineFields(s, []int{5, 7}, "ANGLES")
@@ -312,26 +343,49 @@ func prmParseAngleType(s string) (*ff.AngleType, error) {
 	case 5:
 		n, err := fmt.Sscanf(s, "%s %s %s %f %f", &at1, &at2, &at3, &kt, &theta)
 		if n != 5 || err != nil {
-			return nil, errors.New("could not parse angletype - 5")
+			return nil, fmt.Errorf("could not parse angletype - 5")
 		}
 	case 7:
 		n, err := fmt.Sscanf(s, "%s %s %s %f %f %f %f", &at1, &at2, &at3, &kt, &theta, &kub, &r13)
 		if n != 7 || err != nil {
-			return nil, errors.New("could not parse angletype - 7")
+			return nil, fmt.Errorf("could not parse angletype - 7")
 		}
 	}
 
-	at := ff.NewAngleType(at1, at2, at3, ff.FF_ANGLE_TYPE_5, ff.FF_CHARMM)
-	at.SetThetaConstant(kt)
-	at.SetTheta(theta)
-	at.SetUBConstant(kub)
-	at.SetR13(r13)
+	angt := blocks.AngleType{
+		AType1:     at1,
+		AType2:     at2,
+		AType3:     at3,
+		Theta:      theta,
+		ThetaConst: kt,
+	}
+	angt.Setting |= blocks.NT_TYPE_CHM_1
+	angt.Setting |= blocks.NT_HAS_THETA_CONST_SET
 
-	return at, nil
+	if nfields == 7 {
+		angt.R13 = r13
+		angt.UBConst = kub
+		angt.Setting |= blocks.NT_HAS_R13_SET
+		angt.Setting |= blocks.NT_HAS_UB_CONST_SET
+
+	}
+
+	return &angt, nil
 }
 
 //
-func prmParseDihedralType(s string) (*ff.DihedralType, error) {
+func prmParseDihedralType(s string) (*blocks.DihedralType, error) {
+	/*
+		DIHEDRALS
+		!V(dihedral) = Kchi(1 + cos(n(chi) - delta))
+		!Kchi: kcal/mole
+		!n: multiplicity
+		!delta: degrees
+		!atom types             Kchi    n   delta
+		!Neutral N terminus
+		H    NH2  CT1  CT3      0.110   3     0.00  ! From LSN HC-NH2-CT2-CT2
+		C    CT1  NH1  C        0.2000  1   180.00  ! ALLOW PEP
+	*/
 
 	// atype1 atype2 atype3  atype4 Kchi    n   delta
 	_, err := prmCheckLineFields(s, []int{7}, "DIHEDRALS")
@@ -340,24 +394,44 @@ func prmParseDihedralType(s string) (*ff.DihedralType, error) {
 	}
 
 	var at1, at2, at3, at4 string
-	var mult int8
+	var mult int
 	var kphi, phi float64
 
 	n, err := fmt.Sscanf(s, "%s %s %s %s %f %d %f", &at1, &at2, &at3, &at4, &kphi, &mult, &phi)
 	if n != 7 || err != nil {
-		return nil, errors.New("could not parse dihedraltype")
+		return nil, fmt.Errorf("could not parse dihedraltype")
 	}
 
-	dh := ff.NewDihedralType(at1, at2, at3, at4, ff.FF_DIHEDRAL_TYPE_9, ff.FF_CHARMM)
-	dh.SetPhiConstant(kphi)
-	dh.SetPhi(phi)
-	dh.SetMult(mult)
+	dh := blocks.DihedralType{
+		AType1:   at1,
+		AType2:   at2,
+		AType3:   at3,
+		AType4:   at4,
+		PhiAngle: phi,
+		PhiConst: kphi,
+		Mult:     mult,
+	}
+	dh.Setting |= blocks.DT_TYPE_CHM_1
+	dh.Setting |= blocks.DT_HAS_PHI_ANGLE_SET
+	dh.Setting |= blocks.DT_HAS_PHI_CONST_SET
+	dh.Setting |= blocks.DT_HAS_MULT_SET
 
-	return dh, nil
+	return &dh, nil
 }
 
 //
-func prmParseImproperType(s string) (*ff.ImproperType, error) {
+func prmParseImproperType(s string) (*blocks.ImproperType, error) {
+	/*
+		IMPROPER
+		!V(improper) = Kpsi(psi - psi0)**2
+		!Kpsi: kcal/mole/rad**2
+		!psi0: degrees
+		!note that the second column of numbers (0) is ignored
+		!atom types           Kpsi                   psi0
+		HE2  HE2  CE2  CE2     3.0            0      0.00   !
+		HR1  NR1  NR2  CPH2    0.5000         0      0.0000 ! ALLOW ARO
+	*/
+
 	// atype1 atype2 atype3  atype4  Kpsi ign psi0
 	_, err := prmCheckLineFields(s, []int{7}, "IMPROPER")
 	if err != nil {
@@ -369,21 +443,95 @@ func prmParseImproperType(s string) (*ff.ImproperType, error) {
 
 	n, err := fmt.Sscanf(s, "%s %s %s %s %f %s %f", &at1, &at2, &at3, &at4, &kpsi, &tmp, &psi)
 	if n != 7 || err != nil {
-		return nil, errors.New("could not parse dihedraltype")
+		return nil, fmt.Errorf("could not parse dihedraltype")
 	}
 
-	it := ff.NewImproperType(at1, at2, at3, at4, ff.FF_IMPROPER_TYPE_1, ff.FF_CHARMM)
-	it.SetPsiConstant(kpsi)
-	it.SetPsi(psi)
+	it := blocks.ImproperType{
+		AType1:   at1,
+		AType2:   at2,
+		AType3:   at3,
+		AType4:   at4,
+		PsiAngle: psi,
+		PsiConst: kpsi,
+	}
+	it.Setting |= blocks.IT_TYPE_CHM_1
+	it.Setting |= blocks.IT_HAS_PSI_ANGLE_SET
+	it.Setting |= blocks.IT_HAS_PSI_CONST_SET
 
-	return it, nil
+	return &it, nil
 }
 
 //
-func prmParseNBFixType(s string) (*ff.NonBondedType, error) {
-	// atype1  atype2   Emin    Rmin
-	_, err := prmCheckLineFields(s, []int{4}, "NBFIX")
+func prmParseNonBonded(s string) (*blocks.AtomType, error) {
+
+	/*
+		NONBONDED nbxmod  5 atom cdiel fshift vatom vdistance vfswitch -
+		cutnb 14.0 ctofnb 12.0 ctonnb 10.0 eps 1.0 e14fac 1.0 wmin 1.5
+		!V(Lennard-Jones) = Eps,i,j[(Rmin,i,j/ri,j)**12 - 2(Rmin,i,j/ri,j)**6]
+		!epsilon: kcal/mole, Eps,i,j = sqrt(eps,i * eps,j)
+		!Rmin/2: A, Rmin,i,j = Rmin/2,i + Rmin/2,j
+		!atom  ignored    epsilon      Rmin/2   ignored   eps,1-4       Rmin/2,1-4
+		CE2    0.000000  -0.064000     2.080000 !
+		CP1    0.000000  -0.020000     2.275000   0.000000  -0.010000     1.900000 ! ALLOW   ALI
+
+	*/
+
+	// atom  ignored    epsilon      Rmin/2   ignored   eps,1-4       Rmin/2,1-4
+
+	nfields, err := prmCheckLineFields(s, []int{4, 7}, "NONBONDED")
 	if err != nil {
+		return nil, err
+	}
+
+	var at1, tmp1, tmp2 string
+	var dist, en, dist14, en14 float64
+
+	if nfields == 4 {
+		n, err := fmt.Sscanf(s, "%s %s %f %f", &at1, &tmp1, &en, &dist)
+		if n != 4 {
+			return nil, fmt.Errorf("NONBONDED line doesn't have 4 fields")
+		}
+		if err != nil {
+			return nil, err
+		}
+	} else if nfields == 7 {
+		n, err := fmt.Sscanf(s, "%s %s %f %f %s %f %f", &at1, &tmp1, &en, &dist, &tmp2, &en14, &dist14)
+		if n != 7 || err != nil {
+			return nil, fmt.Errorf("NONBONDED line doesn't have 7 fields")
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	atmt := blocks.AtomType{
+		Label:    at1,
+		LJDist:   dist,
+		LJEnergy: en,
+	}
+	atmt.Setting |= blocks.AT_TYPE_CHM_1
+	atmt.Setting |= blocks.AT_HAS_LJ_DIST_SET
+	atmt.Setting |= blocks.AT_HAS_LJ_ENERGY_SET
+
+	if nfields == 7 {
+		atmt.LJDist14 = dist14
+		atmt.LJEnergy14 = en14
+		atmt.Setting |= blocks.AT_HAS_LJ_DIST14_SET
+		atmt.Setting |= blocks.AT_HAS_LJ_ENERGY14_SET
+	}
+
+	return &atmt, nil
+
+}
+
+func prmParseNBFixType(s string) (*blocks.PairType, error) {
+	/*
+		NBFIX
+		SOD    OC       -0.075020   3.190 ! For prot carboxylate groups
+		SOD    OCL      -0.075020   3.190 ! For lipid carboxylate groups
+	*/
+	// atype1  atype2   Emin    Rmin
+	if _, err := prmCheckLineFields(s, []int{4}, "NBFIX"); err != nil {
 		return nil, err
 	}
 
@@ -392,18 +540,49 @@ func prmParseNBFixType(s string) (*ff.NonBondedType, error) {
 
 	n, err := fmt.Sscanf(s, "%s %s %f %f", &at1, &at2, &en, &dist)
 	if n != 4 || err != nil {
-		return nil, errors.New("could not parse nbfix")
+		return nil, fmt.Errorf("could not parse nbfix")
 	}
 
-	nb := ff.NewNonBondedType(at1, at2, ff.FF_NON_BONDED_TYPE_1, ff.FF_CHARMM)
-	nb.SetLJDist(dist)
-	nb.SetLJEnergy(en)
+	nb := blocks.PairType{
+		AType1:   at1,
+		AType2:   at2,
+		LJDist:   dist,
+		LJEnergy: en,
+	}
+	nb.Setting |= blocks.PT_TYPE_CHM_1
+	nb.Setting |= blocks.PT_HAS_LJ_DIST_SET
+	nb.Setting |= blocks.PT_HAS_LJ_ENERGY_SET
 
-	return nb, nil
+	return &nb, nil
 }
 
 //
-func prmParseCMapType(nx, ny int, atypes, vals []string) (*ff.CMapType, error) {
+func prmParseCMapType(nx, ny int, atypes []string, vals []string) (*blocks.CMapType, error) {
+	/*
+		CMAP
+		! 2D grid correction data.  The following surfaces are the correction
+		! to the CHARMM22 phi, psi alanine, proline and glycine dipeptide surfaces.
+		! Use of CMAP requires generation with the topology file containing the
+		! CMAP specifications along with version 31 or later of CHARMM.  Note that
+		! use of "skip CMAP" yields the charmm22 energy surfaces.
+		! alanine map
+		C    NH1  CT1  C    NH1  CT1  C    NH1   24
+
+		!-180
+		0.126790 0.768700 0.971260 1.250970 2.121010
+		2.695430 2.064440 1.764790 0.755870 -0.713470
+		0.976130 -2.475520 -5.455650 -5.096450 -5.305850
+		-3.975630 -3.088580 -2.784200 -2.677120 -2.646060
+		-2.335350 -2.010440 -1.608040 -0.482250
+
+		!-165
+		-0.802290 1.377090 1.577020 1.872290 2.398990
+		2.461630 2.333840 1.904070 1.061460 0.518400
+		-0.116320 -3.575440 -5.284480 -5.160310 -4.196010
+		-3.276210 -2.715340 -1.806200 -1.101780 -1.210320
+		-1.008810 -0.637100 -1.603360 -1.776870
+	*/
+
 	//[C NH1 CT1 C NH1 CT1 C N 24]
 
 	if nx*ny != len(vals) {
@@ -419,52 +598,19 @@ func prmParseCMapType(nx, ny int, atypes, vals []string) (*ff.CMapType, error) {
 
 		vals_f[i] = fv
 	}
-
-	cm := ff.NewCMapType(nx, ny, ff.FF_CHARMM)
-	cm.SetValues(vals_f)
-	cm.SetAtomTypes(atypes[:len(atypes)-1]) // last element is nx
-	return cm, nil
-}
-
-//
-func prmParseNonBonded(s string) (*ff.AtomType, error) {
-
-	// atom  ignored    epsilon      Rmin/2   ignored   eps,1-4       Rmin/2,1-4
-
-	nfields, err := prmCheckLineFields(s, []int{4, 7}, "NONBONDED")
-	if err != nil {
-		return nil, err
+	cm := blocks.CMapType{
+		NX:     nx,
+		NY:     ny,
+		Values: vals,
+		AType1: atypes[0],
+		AType2: atypes[1],
+		AType3: atypes[2],
+		AType4: atypes[3],
+		AType5: atypes[4],
+		AType6: atypes[5],
+		AType7: atypes[6],
+		AType8: atypes[7],
 	}
 
-	var at1, tmp1, tmp2 string
-	var dist, en, dist14, en14 float64
-
-	if nfields == 4 {
-		n, err := fmt.Sscanf(s, "%s %s %f %f", &at1, &tmp1, &en, &dist)
-		if n != 4 {
-			return nil, errors.New("NONBONDED line doesn't have 4 fields")
-		}
-		if err != nil {
-			return nil, err
-		}
-	} else if nfields == 7 {
-		n, err := fmt.Sscanf(s, "%s %s %f %f %s %f %f", &at1, &tmp1, &en, &dist, &tmp2, &en14, &dist14)
-		if n != 7 || err != nil {
-			return nil, errors.New("NONBONDED line doesn't have 7 fields")
-		}
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	a := ff.NewAtomType(at1, ff.FF_CHARMM)
-	a.SetLJDist(dist)
-	a.SetLJEnergy(en)
-	if nfields == 7 {
-		a.SetLJDist14(dist14)
-		a.SetLJEnergy14(en14)
-	}
-
-	return a, nil
-
+	return &cm, nil
 }

@@ -69,6 +69,10 @@ go test -coverprofile=cover.out -coverpkg github.com/resal81/molkit/ff,github.co
 
 go tool cover -func=cover.out
 go tool cover -html=cover.out
+
+
+go test -cpuprofile=cpu.out 
+go tool pprof -pdf [executable] cpu.out > out.pdf
 ```
 
 

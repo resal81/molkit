@@ -8,7 +8,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/resal81/molkit/ff"
+	//"github.com/resal81/molkit/ff"
+	"github.com/resal81/molkit/blocks"
 )
 
 type psfFileFormat int32
@@ -21,7 +22,7 @@ const (
 * ReadPSFFile
 **********************************************************/
 
-func ReadPSFFile(fname string) (*ff.TopSystem, error) {
+func ReadPSFFile(fname string) (*blocks.System, error) {
 	file, err := os.Open(fname)
 	if err != nil {
 		return nil, nil
@@ -34,7 +35,7 @@ func ReadPSFFile(fname string) (*ff.TopSystem, error) {
 * ReadPSFString
 **********************************************************/
 
-func ReadPSFString(s string) (*ff.TopSystem, error) {
+func ReadPSFString(s string) (*blocks.System, error) {
 
 	return readpsf(strings.NewReader(s))
 }
@@ -47,11 +48,11 @@ type psfLevel int64
 
 type resData struct {
 	resname string
-	resnumb int64
+	resnumb int
 	segname string
 }
 
-func readpsf(reader io.Reader) (*ff.TopSystem, error) {
+func readpsf(reader io.Reader) (*blocks.System, error) {
 
 	const (
 		L_TITLE psfLevel = 1 << iota
@@ -73,12 +74,8 @@ func readpsf(reader io.Reader) (*ff.TopSystem, error) {
 	var format psfFileFormat
 	var lvl psfLevel
 
-	// var curr_pol *ff.TopPolymer
-	// var pol_list []*ff.TopPolymer = []*ff.TopPolymer{}
-	// topSys := ff.NewTopSystem()
-
-	tmp_atoms_map := make(map[int64]*ff.TopAtom, 0) // atom serial : *ff.TopAtom
-	tmp_resdata_map := make(map[int64]*resData, 0)  // atom serial : *resData
+	tmp_atoms_map := make(map[int64]*blocks.Atom, 0) // atom.Id() : *blocks.Atom
+	tmp_resdata_map := make(map[int64]*resData, 0)   // atom.Id() : *resData
 
 	var lineno int64
 
@@ -145,11 +142,11 @@ func readpsf(reader io.Reader) (*ff.TopSystem, error) {
 		case L_ATOMS:
 			a, rd, err := psfParseAtomsLine(line)
 			if err != nil {
-				return psfLogError("in line: {'%s'} - reason: {'%s'}", line, err)
+				return nil, fmt.Errorf("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
 
-			tmp_atoms_map[a.Serial()] = a
-			tmp_resdata_map[a.Serial()] = rd
+			tmp_atoms_map[a.Id()] = a
+			tmp_resdata_map[a.Id()] = rd
 
 		case L_BONDS:
 		case L_ANGLES:
@@ -183,24 +180,17 @@ func cleanPSFLine(line string, format psfFileFormat) string {
 	return line
 }
 
-//
-func psfLogError(format string, args ...interface{}) (*ff.TopSystem, error) {
-	return nil, fmt.Errorf(format, args...)
-}
-
-//
-
 /**********************************************************
 * Line parsers
 **********************************************************/
 
-func psfParseAtomsLine(line string) (*ff.TopAtom, *resData, error) {
+func psfParseAtomsLine(line string) (*blocks.Atom, *resData, error) {
 	fields := strings.Fields(line)
 	if len(fields) != 9 {
 		return nil, nil, errors.New("bad length in atoms line")
 	}
 
-	var aser, resnumb int64
+	var aser, resnumb int
 	var chg, mass float64
 	var aname, atype, resname, segname, tmp string
 
@@ -214,12 +204,19 @@ func psfParseAtomsLine(line string) (*ff.TopAtom, *resData, error) {
 		return nil, nil, err
 	}
 
-	at := ff.NewTopAtom()
-	at.SetName(aname)
-	at.SetAtomType(atype)
-	at.SetSerial(aser)
-	at.SetMass(mass)
-	at.SetCharge(chg)
+	a := blocks.NewAtom()
+	a.Name = aname
+	a.Serial = aser
+
+	at := blocks.NewAtomType()
+	at.Label = atype
+	at.Mass = mass
+	at.ParCharge = chg
+
+	at.Setting |= blocks.AT_HAS_MASS_SET
+	at.Setting |= blocks.AT_HAS_PAR_CHARGE_SET
+
+	a.Type = at
 
 	rd := resData{
 		resname: resname,
@@ -227,5 +224,5 @@ func psfParseAtomsLine(line string) (*ff.TopAtom, *resData, error) {
 		segname: segname,
 	}
 
-	return at, &rd, nil
+	return a, &rd, nil
 }

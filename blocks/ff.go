@@ -16,6 +16,8 @@ type ForceField struct {
 	ImproperTypes  []*ImproperType
 	NonBondedTypes []*PairType
 	OneFourTypes   []*PairType
+	CMapTypes      []*CMapType
+	Fragments      []*Fragment
 	Setting        FFSetting
 
 	GMXNbFunc   int
@@ -25,6 +27,9 @@ type ForceField struct {
 	GMXFudgeQQ  float64
 }
 
-func NewForceField() *ForceField {
-	return &ForceField{}
+func NewForceField(ft FFSetting) *ForceField {
+	ff := &ForceField{}
+	ff.Setting |= ft
+
+	return ff
 }
