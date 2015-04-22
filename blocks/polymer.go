@@ -9,43 +9,21 @@ var (
 )
 
 type Polymer struct {
-	id   int64
-	Name string
-
-	Fragments []*Fragment
-	System    *System
-
+	id        int64
+	Name      string
 	Bonds     []*Bond
 	Angles    []*Angle
 	Dihedrals []*Dihedral
 	Impropers []*Dihedral
+	Fragments []*Fragment
+	Links     []*Link
+	System    *System
 }
 
 func NewPolymer() *Polymer {
 	pol := &Polymer{}
 	pol.id = polymerHash.Add(pol)
 	return pol
-}
-
-func (p *Polymer) Delete() {
-	p.System.deletePolymer(p)
-}
-
-func (p *Polymer) deleteFragment(f1 *Fragment) {
-	for i, f2 := range p.Fragments {
-		if f1.Id() == f2.Id() {
-			for _, a1 := range f1.Atoms {
-				p.atomDeleted(a1)
-			}
-			p.Fragments = append(p.Fragments[:i], p.Fragments[i+1:]...)
-			return
-		}
-	}
-}
-
-func (p *Polymer) atomDeleted(a *Atom) {
-	// update bonds, angles, dihedrals and impropers
-	panic("updates for atom deletetion hasn't been implemented yet")
 }
 
 func (s *Polymer) Id() int64 {
