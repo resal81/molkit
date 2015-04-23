@@ -1,1 +1,1 @@
-package blocks\n
+package blocks
