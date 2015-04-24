@@ -113,6 +113,6 @@ func TestForceField(t *testing.T) {
 	ff.AddFragment(f2)
 
 	if v := len(ff.Fragments()); v != 2 {
-		t.Errorf("wrong number of fragments => %q, %q", v, 2)
+		t.Errorf("wrong number of fragments => %d, %d", v, 2)
 	}
 }
