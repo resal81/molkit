@@ -51,3 +51,7 @@ func NewLink() *Link {
 func (ln *Link) AddConnection(c *Connection) {
 	ln.conns = append(ln.conns, c)
 }
+
+func (ln *Link) Connections() []*Connection {
+	return ln.conns
+}

@@ -15,7 +15,11 @@ func TestBondType(t *testing.T) {
 	}
 
 	for _, el := range bts {
-		b := NewBondType(el.atype1, el.atype2)
+		b := NewBondType(el.atype1, el.atype2, BT_TYPE_GMX_1)
+
+		if v := b.Setting(); v&BT_TYPE_GMX_1 == 0 {
+			t.Errorf("BT_TYPE is wrong => %q, expected %q", v, BT_TYPE_GMX_1)
+		}
 
 		// types
 		if b.AType1() != el.atype1 {
@@ -26,10 +30,6 @@ func TestBondType(t *testing.T) {
 		}
 
 		// harmonic constant
-		if b.HasHarmonicConstantSet() {
-			t.Errorf("harmonic constant is already set")
-		}
-
 		b.SetHarmonicConstant(el.hconst)
 
 		if b.HarmonicConstant() != el.hconst {
@@ -41,10 +41,6 @@ func TestBondType(t *testing.T) {
 		}
 
 		// harmonic distance
-		if b.HasHarmonicDistanceSet() {
-			t.Errorf("harmonic distance is already set")
-		}
-
 		b.SetHarmonicDistance(el.hdist)
 
 		if b.HarmonicDistance() != el.hdist {
@@ -84,7 +80,7 @@ func TestBond(t *testing.T) {
 		}
 
 		// bond type
-		bt := NewBondType(el.atype1, el.atype2)
+		bt := NewBondType(el.atype1, el.atype2, BT_TYPE_CHM_1)
 		b.SetType(bt)
 
 		if lb := b.Type().AType1(); lb != el.atype1 {
@@ -94,5 +90,11 @@ func TestBond(t *testing.T) {
 		if lb := b.Type().AType2(); lb != el.atype2 {
 			t.Errorf("bondtype.atype2 is not correct => %q, wanted %q", lb, el.atype2)
 		}
+	}
+
+	b1 := NewBond(NewAtom("C"), NewAtom("N"))
+	b2 := NewBond(NewAtom("P"), NewAtom("O"))
+	if b1.Id() == b2.Id() {
+		t.Errorf("bond ids are identical => %q", b1.Id())
 	}
 }

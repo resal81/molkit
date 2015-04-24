@@ -44,9 +44,10 @@ type AtomType struct {
 
 /* new atomtype */
 
-func NewAtomType(label string) *AtomType {
+func NewAtomType(label string, t ATSetting) *AtomType {
 	return &AtomType{
-		label: label,
+		label:   label,
+		setting: t,
 	}
 }
 
@@ -319,7 +320,7 @@ func (a *Atom) Fragment() *Fragment {
 
 /* bond */
 
-func (a *Atom) AddBond(b *Bond) {
+func (a *Atom) addBond(b *Bond) {
 	a.bonds = append(a.bonds, b)
 }
 

@@ -33,12 +33,13 @@ type ImproperType struct {
 
 /* new dihedraltype */
 
-func NewImproprtType(at1, at2, at3, at4 string) *ImproperType {
+func NewImproprtType(at1, at2, at3, at4 string, t ITSetting) *ImproperType {
 	return &ImproperType{
-		aType1: at1,
-		aType2: at2,
-		aType3: at3,
-		aType4: at4,
+		aType1:  at1,
+		aType2:  at2,
+		aType3:  at3,
+		aType4:  at4,
+		setting: t,
 	}
 }
 
@@ -86,7 +87,7 @@ func (dt *ImproperType) HasPsiConstantSet() bool {
 	return dt.setting&IT_HAS_PSI_CONSTANT_SET != 0
 }
 
-func (dt *ImproperType) psiConstant() float64 {
+func (dt *ImproperType) PsiConstant() float64 {
 	return dt.psiConst
 }
 

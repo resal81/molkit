@@ -38,11 +38,12 @@ type AngleType struct {
 
 /* new angletype */
 
-func NewAngleType(at1, at2, at3 string) *AngleType {
+func NewAngleType(at1, at2, at3 string, t NTSetting) *AngleType {
 	return &AngleType{
-		aType1: at1,
-		aType2: at2,
-		aType3: at3,
+		aType1:  at1,
+		aType2:  at2,
+		aType3:  at3,
+		setting: t,
 	}
 }
 

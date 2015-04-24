@@ -21,9 +21,12 @@ func TestAtomType(t *testing.T) {
 	}
 
 	for _, el := range ats {
-		at := NewAtomType(el.label)
+		at := NewAtomType(el.label, AT_TYPE_GMX_1)
 		if lb := at.Label(); lb != el.label {
 			t.Errorf("wrong label => %q, wanted %q", lb, el.label)
+		}
+		if v := at.Setting(); v&AT_TYPE_GMX_1 == 0 {
+			t.Errorf("AT_TYPE is wrong => %q, expected %q", v, AT_TYPE_GMX_1)
 		}
 
 		//
@@ -196,8 +199,33 @@ func TestAtom(t *testing.T) {
 			t.Errorf("first coord is not right => %q, expected %q", c, el.coord)
 		}
 
-		at := NewAtomType(el.atype)
+		at := NewAtomType(el.atype, AT_TYPE_GMX_1)
 		a.SetType(at)
+		if v := a.Type().Label(); v != el.atype {
+			t.Errorf("wrong atom type => %q, expected %q", v, el.atype)
+		}
+	}
+
+	// id
+	a1 := NewAtom("C")
+	a2 := NewAtom("N")
+	if a1.Id() == a2.Id() {
+		t.Errorf("atom ids are identical => %q", a1.Id())
+	}
+
+	// bonds
+	n1 := len(a1.Bonds())
+	n2 := len(a2.Bonds())
+	if n1 != 0 || n2 != 0 {
+		t.Errorf("initial # bonds is not zero => %q, %q", n1, n2)
+	}
+
+	NewBond(a1, a2)
+
+	n3 := len(a1.Bonds())
+	n4 := len(a2.Bonds())
+	if n3 != 1 || n4 != 1 {
+		t.Errorf("# bonds is not 1 => %q, %q", n3, n4)
 	}
 
 }

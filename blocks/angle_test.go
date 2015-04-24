@@ -15,7 +15,11 @@ func TestAngleType(t *testing.T) {
 	}
 
 	for _, el := range angts {
-		at := NewAngleType(el.atype1, el.atype2, el.atype3)
+		at := NewAngleType(el.atype1, el.atype2, el.atype3, NT_TYPE_CHM_1)
+
+		if v := at.Setting(); v&NT_TYPE_CHM_1 == 0 {
+			t.Errorf("NT_TYPE is not correct => %q, expected %q", v, NT_TYPE_CHM_1)
+		}
 
 		// types
 		if t1 := at.AType1(); t1 != el.atype1 {
@@ -124,7 +128,7 @@ func TestAngle(t *testing.T) {
 		}
 
 		// angle type
-		at := NewAngleType(el.atype1, el.atype2, el.atype3)
+		at := NewAngleType(el.atype1, el.atype2, el.atype3, NT_TYPE_CHM_1)
 		ang.SetType(at)
 
 		if lb := ang.Type().AType1(); lb != el.atype1 {
@@ -138,6 +142,12 @@ func TestAngle(t *testing.T) {
 		if lb := ang.Type().AType3(); lb != el.atype3 {
 			t.Errorf("angletype.atype3 is not correct => %q, wanted %q", lb, el.atype3)
 		}
+	}
+
+	a1 := NewAngle(NewAtom("C"), NewAtom("C"), NewAtom("C"))
+	a2 := NewAngle(NewAtom("C"), NewAtom("C"), NewAtom("C"))
+	if a1.Id() == a2.Id() {
+		t.Errorf("angle ids are identical => %q", a1.Id())
 	}
 
 }

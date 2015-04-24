@@ -8,6 +8,7 @@ type PTSetting int64
 
 const (
 	PT_TYPE_CHM_1 PTSetting = 1 << iota
+	PT_TYPE_GMX_1
 	PT_HAS_LJ_DISTANCE_SET
 	PT_HAS_LJ_ENERGY_SET
 	PT_HAS_LJ_DISTANCE_14_SET
@@ -27,10 +28,11 @@ type PairType struct {
 
 /* new pairtype */
 
-func NewPairType(at1, at2 string) *PairType {
+func NewPairType(at1, at2 string, t PTSetting) *PairType {
 	return &PairType{
-		aType1: at1,
-		aType2: at2,
+		aType1:  at1,
+		aType2:  at2,
+		setting: t,
 	}
 }
 
@@ -94,6 +96,12 @@ func (pt *PairType) HasLJEnergy14Set() bool {
 }
 func (pt *PairType) LJEnergy14() float64 {
 	return pt.ljEnergy14
+}
+
+/* setting */
+
+func (pt *PairType) Setting() PTSetting {
+	return pt.setting
 }
 
 /**********************************************************

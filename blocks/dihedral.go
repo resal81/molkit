@@ -36,12 +36,13 @@ type DihedralType struct {
 
 /* new dihedraltype */
 
-func NewDihedralType(at1, at2, at3, at4 string) *DihedralType {
+func NewDihedralType(at1, at2, at3, at4 string, t DTSetting) *DihedralType {
 	return &DihedralType{
-		aType1: at1,
-		aType2: at2,
-		aType3: at3,
-		aType4: at4,
+		aType1:  at1,
+		aType2:  at2,
+		aType3:  at3,
+		aType4:  at4,
+		setting: t,
 	}
 }
 
@@ -104,7 +105,7 @@ func (dt *DihedralType) HasMultiplicitySet() bool {
 	return dt.setting&DT_HAS_MULTIPLICITY_SET != 0
 }
 
-func (dt *DihedralType) Mult() int {
+func (dt *DihedralType) Multiplicity() int {
 	return dt.mult
 }
 

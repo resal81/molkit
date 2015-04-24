@@ -34,10 +34,11 @@ type BondType struct {
 
 /* new bondtype */
 
-func NewBondType(at1, at2 string) *BondType {
+func NewBondType(at1, at2 string, t BTSetting) *BondType {
 	return &BondType{
-		aType1: at1,
-		aType2: at2,
+		aType1:  at1,
+		aType2:  at2,
+		setting: t,
 	}
 }
 
@@ -112,8 +113,8 @@ func NewBond(atom1, atom2 *Atom) *Bond {
 		atom1: atom1,
 		atom2: atom2,
 	}
-	atom1.AddBond(bnd)
-	atom2.AddBond(bnd)
+	atom1.addBond(bnd)
+	atom2.addBond(bnd)
 	bnd.id = bondHash.Add(bnd)
 	return bnd
 }
