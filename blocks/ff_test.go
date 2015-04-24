@@ -56,7 +56,7 @@ func TestForceField(t *testing.T) {
 		ff.AddAtomType(NewAtomType(el.at4, AT_TYPE_GMX_1))
 
 		if v := len(ff.AtomTypes()); v != 4 {
-			t.Errorf("wrong # of atom types => %q, expected %q", v, 4)
+			t.Errorf("wrong # of atom types => %d, expected %d", v, 4)
 		}
 
 		ff.AddBondType(NewBondType(el.at1, el.at2, BT_TYPE_GMX_1))
@@ -64,39 +64,40 @@ func TestForceField(t *testing.T) {
 		ff.AddBondType(NewBondType(el.at3, el.at4, BT_TYPE_GMX_1))
 
 		if v := len(ff.BondTypes()); v != 3 {
-			t.Errorf("wrong # of bond types => %q, expected %q", v, 3)
+			t.Errorf("wrong # of bond types => %d, expected %d", v, 3)
 		}
 
 		ff.AddAngleType(NewAngleType(el.at1, el.at2, el.at3, NT_TYPE_CHM_2))
 		ff.AddAngleType(NewAngleType(el.at2, el.at3, el.at4, NT_TYPE_CHM_2))
 
 		if v := len(ff.AngleTypes()); v != 2 {
-			t.Errorf("wrong # of angle types => %q, expected %q", v, 2)
+			t.Errorf("wrong # of angle types => %d, expected %d", v, 2)
 		}
 
 		ff.AddDihedralType(NewDihedralType(el.at1, el.at2, el.at3, el.at4, DT_TYPE_GMX_1))
 		ff.AddImproperType(NewImproprtType(el.at1, el.at2, el.at3, el.at4, IT_TYPE_GMX_1))
 
 		if v := len(ff.DihedralTypes()); v != 1 {
-			t.Errorf("wrong # of dihedral types => %q, expected %q", v, 1)
+			t.Errorf("wrong # of dihedral types => %d, expected %d", v, 1)
 		}
 		if v := len(ff.ImproperTypes()); v != 1 {
-			t.Errorf("wrong # of improper types => %q, expected %q", v, 1)
+			t.Errorf("wrong # of improper types => %d, expected %d", v, 1)
 		}
 
 		ff.AddNonBondedType(NewPairType(el.at1, el.at2, PT_TYPE_GMX_1))
 		ff.AddOneFourType(NewPairType(el.at1, el.at2, PT_TYPE_GMX_1))
 
 		if v := len(ff.NonBondedTypes()); v != 1 {
-			t.Errorf("wrong # of nonbonded types => %q, expected %q", v, 1)
+			t.Errorf("wrong # of nonbonded types => %d, expected %d", v, 1)
 		}
 		if v := len(ff.OneFourTypes()); v != 1 {
-			t.Errorf("wrong # of onefour types => %q, expected %q", v, 1)
+			t.Errorf("wrong # of onefour types => %d, expected %d", v, 1)
 		}
 
+		// two entries per cmap
 		ff.AddCMapType(NewCMapType(el.at1, el.at2, el.at3, el.at4, el.at1, el.at2, el.at3, el.at4, CM_TYPE_GMX_1))
-		if v := len(ff.CMapTypes()); v != 1 {
-			t.Errorf("wrong # of cmap types => %q, expected %q", v, 1)
+		if v := len(ff.CMapTypes()); v != 2 {
+			t.Errorf("wrong # of cmap types => %d, expected %d", v, 1)
 		}
 
 	}

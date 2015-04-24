@@ -1,5 +1,76 @@
 package blocks
 
+import (
+	"strings"
+)
+
+const HASH_KEY_SEP = "_"
+
+/**********************************************************
+* Hash Keys
+**********************************************************/
+
+func GenerateHashKey(v interface{}) []string {
+
+	switch v := v.(type) {
+
+	case *AtomType:
+		return []string{
+			v.Label(),
+		}
+	case *BondType:
+		return []string{
+			v.AType1() + HASH_KEY_SEP + v.AType2(),
+		}
+	case *AngleType:
+		return []string{
+			v.AType1() + HASH_KEY_SEP + v.AType2() + HASH_KEY_SEP + v.AType3(),
+		}
+	case *DihedralType:
+		return []string{
+			v.AType1() + HASH_KEY_SEP + v.AType2() + HASH_KEY_SEP + v.AType3() + HASH_KEY_SEP + v.AType4(),
+		}
+	case *ImproperType:
+		return []string{
+			v.AType1() + HASH_KEY_SEP + v.AType2() + HASH_KEY_SEP + v.AType3() + HASH_KEY_SEP + v.AType4(),
+		}
+	case *PairType:
+		return []string{
+			v.AType1() + HASH_KEY_SEP + v.AType2(),
+		}
+	case *CMapType:
+		types1 := []string{
+			v.AType1(),
+			v.AType2(),
+			v.AType3(),
+			v.AType4(),
+			v.AType5(),
+			v.AType6(),
+			v.AType7(),
+			v.AType8(),
+		}
+		types2 := []string{
+			v.AType1(),
+			v.AType2(),
+			v.AType3(),
+			v.AType4(),
+			v.AType8(),
+		}
+
+		return []string{
+			strings.Join(types1, HASH_KEY_SEP),
+			strings.Join(types2, HASH_KEY_SEP),
+		}
+	case *Fragment:
+		return []string{
+			v.Name(),
+		}
+
+	}
+
+	return []string{}
+}
+
 /**********************************************************
 * GMXSetup
 **********************************************************/
@@ -57,22 +128,32 @@ const (
 )
 
 type ForceField struct {
-	atomTypes      []*AtomType
-	bondTypes      []*BondType
-	angleTypes     []*AngleType
-	dihedralTypes  []*DihedralType
-	improperTypes  []*ImproperType
-	nonBondedTypes []*PairType
-	oneFourTypes   []*PairType
-	cMapTypes      []*CMapType
-	fragments      []*Fragment
+	atomTypes      map[string]*AtomType
+	bondTypes      map[string]*BondType
+	angleTypes     map[string]*AngleType
+	dihedralTypes  map[string]*DihedralType
+	improperTypes  map[string]*ImproperType
+	nonBondedTypes map[string]*PairType
+	oneFourTypes   map[string]*PairType
+	cMapTypes      map[string]*CMapType
+	fragments      map[string]*Fragment
 	gmxSetup       *GMXSetup
 	setting        FFSetting
+	errors         []error
 }
 
 func NewForceField(ft FFSetting) *ForceField {
 	return &ForceField{
-		setting: ft,
+		atomTypes:      make(map[string]*AtomType),
+		bondTypes:      make(map[string]*BondType),
+		angleTypes:     make(map[string]*AngleType),
+		dihedralTypes:  make(map[string]*DihedralType),
+		improperTypes:  make(map[string]*ImproperType),
+		nonBondedTypes: make(map[string]*PairType),
+		oneFourTypes:   make(map[string]*PairType),
+		cMapTypes:      make(map[string]*CMapType),
+		fragments:      make(map[string]*Fragment),
+		setting:        ft,
 	}
 }
 
@@ -89,90 +170,108 @@ func (ff *ForceField) GMXSetup() *GMXSetup {
 /* atom types */
 
 func (ff *ForceField) AddAtomType(v *AtomType) {
-	ff.atomTypes = append(ff.atomTypes, v)
+	for _, el := range GenerateHashKey(v) {
+		ff.atomTypes[el] = v
+	}
 }
 
-func (ff *ForceField) AtomTypes() []*AtomType {
+func (ff *ForceField) AtomTypes() map[string]*AtomType {
 	return ff.atomTypes
 }
 
 /* bond types */
 
 func (ff *ForceField) AddBondType(v *BondType) {
-	ff.bondTypes = append(ff.bondTypes, v)
+	for _, el := range GenerateHashKey(v) {
+		ff.bondTypes[el] = v
+	}
 }
 
-func (ff *ForceField) BondTypes() []*BondType {
+func (ff *ForceField) BondTypes() map[string]*BondType {
 	return ff.bondTypes
 }
 
 /* angle types */
 
 func (ff *ForceField) AddAngleType(v *AngleType) {
-	ff.angleTypes = append(ff.angleTypes, v)
+	for _, el := range GenerateHashKey(v) {
+		ff.angleTypes[el] = v
+	}
 }
 
-func (ff *ForceField) AngleTypes() []*AngleType {
+func (ff *ForceField) AngleTypes() map[string]*AngleType {
 	return ff.angleTypes
 }
 
 /* dihedral types */
 
 func (ff *ForceField) AddDihedralType(v *DihedralType) {
-	ff.dihedralTypes = append(ff.dihedralTypes, v)
+	for _, el := range GenerateHashKey(v) {
+		ff.dihedralTypes[el] = v
+	}
 }
 
-func (ff *ForceField) DihedralTypes() []*DihedralType {
+func (ff *ForceField) DihedralTypes() map[string]*DihedralType {
 	return ff.dihedralTypes
 }
 
 /* improper types */
 
 func (ff *ForceField) AddImproperType(v *ImproperType) {
-	ff.improperTypes = append(ff.improperTypes, v)
+	for _, el := range GenerateHashKey(v) {
+		ff.improperTypes[el] = v
+	}
 }
 
-func (ff *ForceField) ImproperTypes() []*ImproperType {
+func (ff *ForceField) ImproperTypes() map[string]*ImproperType {
 	return ff.improperTypes
 }
 
 /* nonbonded types */
 
 func (ff *ForceField) AddNonBondedType(v *PairType) {
-	ff.nonBondedTypes = append(ff.nonBondedTypes, v)
+	for _, el := range GenerateHashKey(v) {
+		ff.nonBondedTypes[el] = v
+	}
 }
 
-func (ff *ForceField) NonBondedTypes() []*PairType {
+func (ff *ForceField) NonBondedTypes() map[string]*PairType {
 	return ff.nonBondedTypes
 }
 
 /* one four types */
 
 func (ff *ForceField) AddOneFourType(v *PairType) {
-	ff.oneFourTypes = append(ff.oneFourTypes, v)
+	for _, el := range GenerateHashKey(v) {
+		ff.oneFourTypes[el] = v
+	}
 }
 
-func (ff *ForceField) OneFourTypes() []*PairType {
+func (ff *ForceField) OneFourTypes() map[string]*PairType {
 	return ff.oneFourTypes
 }
 
 /* cmap types */
 
 func (ff *ForceField) AddCMapType(v *CMapType) {
-	ff.cMapTypes = append(ff.cMapTypes, v)
+	for _, el := range GenerateHashKey(v) {
+		ff.cMapTypes[el] = v
+	}
 }
 
-func (ff *ForceField) CMapTypes() []*CMapType {
+func (ff *ForceField) CMapTypes() map[string]*CMapType {
 	return ff.cMapTypes
 }
 
 /* fragments */
 
 func (ff *ForceField) AddFragment(v *Fragment) {
-	ff.fragments = append(ff.fragments, v)
+	for _, el := range GenerateHashKey(v) {
+		ff.fragments[el] = v
+	}
 }
 
-func (ff *ForceField) Fragments() []*Fragment {
+func (ff *ForceField) Fragments() map[string]*Fragment {
 	return ff.fragments
 }
 
