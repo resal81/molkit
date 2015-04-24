@@ -91,6 +91,10 @@ func (bt *BondType) SetOrderSingle() {
 	bt.setting |= BT_ORDER_SINGLE
 }
 
+func (bt *BondType) IsSingle() bool {
+	return bt.setting&BT_ORDER_SINGLE != 0
+}
+
 /**********************************************************
 * Bond
 **********************************************************/
@@ -108,6 +112,8 @@ func NewBond(atom1, atom2 *Atom) *Bond {
 		atom1: atom1,
 		atom2: atom2,
 	}
+	atom1.AddBond(bnd)
+	atom2.AddBond(bnd)
 	bnd.id = bondHash.Add(bnd)
 	return bnd
 }

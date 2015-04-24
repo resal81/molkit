@@ -13,8 +13,8 @@ type Connection struct {
 
 func NewConnection(atom1, atom2 *Atom) *Connection {
 	return &Connection{
-		frag1: atom1.Fragment,
-		frag2: atom2.Fragment,
+		frag1: atom1.Fragment(),
+		frag2: atom2.Fragment(),
 		atom1: atom1,
 		atom2: atom2,
 	}

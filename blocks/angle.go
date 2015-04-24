@@ -53,7 +53,7 @@ func (at *AngleType) AType1() string {
 }
 
 func (at *AngleType) AType2() string {
-	return at.aType3
+	return at.aType2
 }
 
 func (at *AngleType) AType3() string {
@@ -94,7 +94,7 @@ func (at *AngleType) Theta() float64 {
 
 func (at *AngleType) SetUBConstant(ub float64) {
 	at.setting |= NT_HAS_UB_CONSTANT_SET
-	at.thetaConst = ub
+	at.ubConst = ub
 }
 
 func (at *AngleType) HasUBConstantSet() bool {

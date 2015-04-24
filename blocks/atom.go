@@ -112,7 +112,7 @@ func (at *AtomType) HasLJDistance14Set() bool {
 	return at.setting&AT_HAS_LJ_DISTANCE_14_SET != 0
 }
 
-func (at *AtomType) LJDistace14() float64 {
+func (at *AtomType) LJDistance14() float64 {
 	return at.ljDist14
 }
 
@@ -146,6 +146,21 @@ func (at *AtomType) LJEnergy14() float64 {
 	return at.ljEnergy14
 }
 
+/* charge */
+
+func (at *AtomType) SetCharge(v int) {
+	at.setting |= AT_HAS_CHARGE_SET
+	at.charge = v
+}
+
+func (at *AtomType) HasChargeSet() bool {
+	return at.setting&AT_HAS_CHARGE_SET != 0
+}
+
+func (at *AtomType) Charge() int {
+	return at.charge
+}
+
 /* par charge */
 
 func (at *AtomType) SetPartialCharge(v float64) {
@@ -163,7 +178,7 @@ func (at *AtomType) PartialCharge() float64 {
 
 /* radius */
 
-func (at *AtomType) SetRadiues(v float64) {
+func (at *AtomType) SetRadius(v float64) {
 	at.setting |= AT_HAS_RADIUS_SET
 	at.radius = v
 }
@@ -197,12 +212,15 @@ type Atom struct {
 	coords    [][3]float64
 	tipe      *AtomType
 	fragment  *Fragment
+	bonds     []*Bond
 }
 
 /* new atom */
 
-func NewAtom() *Atom {
-	at := &Atom{}
+func NewAtom(name string) *Atom {
+	at := &Atom{
+		name: name,
+	}
 	id := atmHash.Add(at)
 	at.id = id
 	return at
@@ -215,10 +233,6 @@ func (a *Atom) Id() int64 {
 }
 
 /* name */
-
-func (a *Atom) SetName(n string) {
-	a.name = n
-}
 
 func (a *Atom) Name() string {
 	return a.name
@@ -275,6 +289,13 @@ func (a *Atom) IsHetero() bool {
 }
 
 /* coords */
+func (a *Atom) AddCoord(c [3]float64) {
+	a.coords = append(a.coords, c)
+}
+
+func (a *Atom) Coords() [][3]float64 {
+	return a.coords
+}
 
 /* type */
 
@@ -294,4 +315,14 @@ func (a *Atom) SetFragment(v *Fragment) {
 
 func (a *Atom) Fragment() *Fragment {
 	return a.fragment
+}
+
+/* bond */
+
+func (a *Atom) AddBond(b *Bond) {
+	a.bonds = append(a.bonds, b)
+}
+
+func (a *Atom) Bonds() []*Bond {
+	return a.bonds
 }

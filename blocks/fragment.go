@@ -25,8 +25,10 @@ type Fragment struct {
 
 /* new fragment */
 
-func NewFragment() *Fragment {
-	frag := &Fragment{}
+func NewFragment(name string) *Fragment {
+	frag := &Fragment{
+		name: name,
+	}
 	frag.id = fragmentHash.Add(frag)
 	return frag
 }
@@ -38,10 +40,6 @@ func (f *Fragment) Id() int64 {
 }
 
 /* name */
-
-func (f *Fragment) SetName(n string) {
-	f.name = n
-}
 
 func (f *Fragment) Name() string {
 	return f.name
