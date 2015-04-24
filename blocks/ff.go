@@ -51,9 +51,9 @@ func (g *GMXSetup) FudgeQQ() float64 {
 type FFSetting int64
 
 const (
-	FF_CHM FFSetting = 1 << iota
-	FF_GMX
-	FF_AMB
+	FF_TYPE_CHM FFSetting = 1 << iota
+	FF_TYPE_GMX
+	FF_TYPE_AMB
 )
 
 type ForceField struct {
@@ -94,6 +94,16 @@ func (ff *ForceField) AddAtomType(v *AtomType) {
 
 func (ff *ForceField) AtomTypes() []*AtomType {
 	return ff.atomTypes
+}
+
+/* bond types */
+
+func (ff *ForceField) AddBondType(v *BondType) {
+	ff.bondTypes = append(ff.bondTypes, v)
+}
+
+func (ff *ForceField) BondTypes() []*BondType {
+	return ff.bondTypes
 }
 
 /* angle types */
@@ -167,3 +177,7 @@ func (ff *ForceField) Fragments() []*Fragment {
 }
 
 /* setting */
+
+func (ff *ForceField) Setting() FFSetting {
+	return ff.setting
+}

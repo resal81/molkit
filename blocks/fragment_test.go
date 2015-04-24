@@ -30,16 +30,16 @@ func TestFragment(t *testing.T) {
 		t.Errorf("# of atoms is not zero => %q", v)
 	}
 	if v := len(f.Bonds()); v != 0 {
-		t.Errorf("# of atoms is not zero => %q", v)
+		t.Errorf("# of bonds is not zero => %q", v)
 	}
 	if v := len(f.Angles()); v != 0 {
-		t.Errorf("# of atoms is not zero => %q", v)
+		t.Errorf("# of angles is not zero => %q", v)
 	}
 	if v := len(f.Dihedrals()); v != 0 {
-		t.Errorf("# of atoms is not zero => %q", v)
+		t.Errorf("# of dihedrals is not zero => %q", v)
 	}
 	if v := len(f.Impropers()); v != 0 {
-		t.Errorf("# of atoms is not zero => %q", v)
+		t.Errorf("# of impropers is not zero => %q", v)
 	}
 
 	a1 := NewAtom("CA")
@@ -72,16 +72,23 @@ func TestFragment(t *testing.T) {
 		t.Errorf("# of atoms is not 4 => %q", v)
 	}
 	if v := len(f.Bonds()); v != 3 {
-		t.Errorf("# of atoms is not 3 => %q", v)
+		t.Errorf("# of bonds is not 3 => %q", v)
 	}
 	if v := len(f.Angles()); v != 2 {
-		t.Errorf("# of atoms is not 2 => %q", v)
+		t.Errorf("# of angles is not 2 => %q", v)
 	}
 	if v := len(f.Dihedrals()); v != 1 {
-		t.Errorf("# of atoms is not 1 => %q", v)
+		t.Errorf("# of dihedrals is not 1 => %q", v)
 	}
 	if v := len(f.Impropers()); v != 1 {
-		t.Errorf("# of atoms is not 1 => %q", v)
+		t.Errorf("# of impropers is not 1 => %q", v)
+	}
+
+	// id
+	f1 := NewFragment("ALA")
+	f2 := NewFragment("LYS")
+	if f1.Id() == f2.Id() {
+		t.Errorf("fragment ids are identical => %q", f1.Id())
 	}
 
 }
