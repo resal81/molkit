@@ -7,7 +7,8 @@ package blocks
 type CMSetting int64
 
 const (
-	CT_TYPE_CHM_1 CMSetting = 1 << iota
+	CT_NULL CMSetting = 1 << iota
+	CT_TYPE_CHM_1
 	CT_TYPE_GMX_1
 )
 

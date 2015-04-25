@@ -6,7 +6,6 @@ import (
 	"github.com/resal81/molkit/blocks"
 )
 
-/*
 func TestPRMRead(t *testing.T) {
 	fnames := []string{
 		"../../testdata/chm_prm/par_all22_prot.prm",
@@ -23,7 +22,41 @@ func TestPRMRead(t *testing.T) {
 		t.Fatalf("could not read prm file -> %s", err)
 	}
 }
-*/
+
+func tempAtomTypeKey(at string) blocks.HashKey {
+	atype := blocks.NewAtomType(at, blocks.AT_NULL)
+	return blocks.GenerateHashKey(atype, blocks.HK_MODE_NORMAL)
+}
+
+func tempBondTypeKey(at1, at2 string) blocks.HashKey {
+	btype := blocks.NewBondType(at1, at2, blocks.BT_NULL)
+	return blocks.GenerateHashKey(btype, blocks.HK_MODE_NORMAL)
+}
+
+func tempAngleTypeKey(at1, at2, at3 string) blocks.HashKey {
+	ntype := blocks.NewAngleType(at1, at2, at3, blocks.NT_NULL)
+	return blocks.GenerateHashKey(ntype, blocks.HK_MODE_NORMAL)
+}
+
+func tempDihedralTypeKey(at1, at2, at3, at4 string) blocks.HashKey {
+	dtype := blocks.NewDihedralType(at1, at2, at3, at4, blocks.DT_NULL)
+	return blocks.GenerateHashKey(dtype, blocks.HK_MODE_NORMAL)
+}
+
+func tempImproperTypeKey(at1, at2, at3, at4 string) blocks.HashKey {
+	dtype := blocks.NewImproperType(at1, at2, at3, at4, blocks.IT_NULL)
+	return blocks.GenerateHashKey(dtype, blocks.HK_MODE_NORMAL)
+}
+
+func tempPairTypeKey(at1, at2 string) blocks.HashKey {
+	ptype := blocks.NewPairType(at1, at2, blocks.PT_NULL)
+	return blocks.GenerateHashKey(ptype, blocks.HK_MODE_NORMAL)
+}
+
+func tempCMapTypeKey(at1, at2, at3, at4, at5, at6, at7, at8 string) blocks.HashKey {
+	ctype := blocks.NewCMapType(at1, at2, at3, at4, at5, at6, at7, at8, blocks.CT_NULL)
+	return blocks.GenerateHashKey(ctype, blocks.HK_MODE_NORMAL)
+}
 
 func TestAtomTypes(t *testing.T) {
 	s := `
@@ -54,7 +87,7 @@ func TestAtomTypes(t *testing.T) {
 	}
 
 	for _, el := range vals {
-		at := frc.AtomType(el.label)
+		at := frc.AtomType(tempAtomTypeKey(el.label))
 		if at == nil {
 			t.Fatalf("atom type was not found for => %q", el.label)
 		}
@@ -92,29 +125,37 @@ func TestBondTypes(t *testing.T) {
 		kb, b0   float64
 	}{
 		{"NH2", "CT1", 240, 1.455},
-		{"NH2", "CT1", 305, 1.375},
+		{"CA", "CA", 305, 1.375},
 	}
 
 	frc, err := ReadPRMString(s)
 	if err != nil {
-		t.Fatal("could not read atom prm string => ", err)
+		t.Fatal("could not read bond prm string => ", err)
 	}
 
 	bts := frc.BondTypes()
 	if v := len(bts); v != 2 {
-		t.Errorf("# of atomtypes is wrong => %d, expected %d", v, 2)
+		t.Errorf("# of bondtypes is wrong => %d, expected %d", v, 2)
 	}
 
 	for _, el := range vals {
-		bt := frc.BondType(el.at1 + blocks.HASH_KEY_SEP + el.at2)
+		bt := frc.BondType(tempBondTypeKey(el.at1, el.at2))
 		if bt == nil {
 			t.Errorf("bond was not found for => %s_%s", el.at1, el.at2)
 		}
+
+		if v := bt.HarmonicConstant(); v != el.kb {
+			t.Errorf("wrong kb => %f, expected %f", v, el.kb)
+		}
+
+		if v := bt.HarmonicDistance(); v != el.b0 {
+			t.Errorf("wrong b0 => %f, expected %f", v, el.b0)
+		}
+
 	}
 
 }
 
-/*
 func TestAngleTyeps(t *testing.T) {
 	s := `
     ANGLES
@@ -122,27 +163,45 @@ func TestAngleTyeps(t *testing.T) {
     CT3  CT1  CD    52.000    108.00              ! Ala cter
     NH2  CT1  HB    38.000    109.50   50.00   2.1400 ! From LSN NH2-CT2-HA
     `
+	var vals = []struct {
+		at1, at2, at3       string
+		kt, theta, kub, r13 float64
+	}{
+		{"CT3", "CT1", "CD", 52, 108, 0, 0},
+		{"NH2", "CT1", "HB", 38, 109.5, 50, 2.14},
+	}
+
 	frc, err := ReadPRMString(s)
-	utils.AssertNil(t, err, "could not read prm string")
+	if err != nil {
+		t.Fatal("could not read angle prm string => ", err)
+	}
 
-	ats := frc.AngleTypes()
-	utils.CheckEqInt(t, len(ats), 2, "the length of AngleTypes is not right")
+	angs := frc.AngleTypes()
+	if v := len(angs); v != 2 {
+		t.Errorf("# of angletypes is wrong => %d, expected %d", v, 2)
+	}
 
-	utils.CheckEqFloat64(t, ats[0].ThetaConstant(ff.FF_CHARMM), 52.0, "ats[0] kt is not right")
-	utils.CheckEqFloat64(t, ats[0].Theta(ff.FF_CHARMM), 108.0, "ats[0] theta is not right")
+	for _, el := range vals {
+		at := frc.AngleType(tempAngleTypeKey(el.at1, el.at2, el.at3))
+		if at == nil {
+			t.Errorf("angle was not found for => %s_%s_%s", el.at1, el.at2, el.at3)
+		}
 
-	utils.CheckTrue(t, ats[0].HasThetaConstantSet(), "kt should be set")
-	utils.CheckTrue(t, ats[0].HasThetaSet(), "theta should be set")
-	utils.CheckTrue(t, ats[0].HasUBConstantSet(), "kub should be set")
-	utils.CheckTrue(t, ats[0].HasR13Set(), "r13 should be set")
-
-	utils.CheckEqFloat64(t, ats[1].UBConstant(ff.FF_CHARMM), 50.0, "ats[1] kub is not right")
-	utils.CheckEqFloat64(t, ats[1].R13(ff.FF_CHARMM), 2.14, "ats[1] r13 is not right")
-
-	utils.CheckEqString(t, ats[1].AType1(), "NH2", "ats[1] atomtype1 is not right")
-	utils.CheckEqString(t, ats[1].AType2(), "CT1", "ats[1] atomtype2 is not right")
-	utils.CheckEqString(t, ats[1].AType3(), "HB", "ats[1] atomtype3 is not right")
-
+		if v := at.Theta(); v != el.theta {
+			t.Errorf("wrong theta => %f, expected %f", v, el.theta)
+		}
+		if v := at.ThetaConstant(); v != el.kt {
+			t.Errorf("wrong kt => %f, expected %f", v, el.kt)
+		}
+		if at.HasR13Set() {
+			if v := at.R13(); v != el.r13 {
+				t.Errorf("wrong r13 => %f, expected %f", v, el.r13)
+			}
+			if v := at.UBConstant(); v != el.kub {
+				t.Errorf("wrong kub => %f, expected %f", v, el.kub)
+			}
+		}
+	}
 }
 
 func TestDihedralTyeps(t *testing.T) {
@@ -151,103 +210,169 @@ func TestDihedralTyeps(t *testing.T) {
     !atom types             Kchi    n   delta
     !Neutral N terminus
     NH2  CT1  C    O        0.0000  1     0.00
-    NH2  CT1  C    NH1      0.0000  1     0.00
+    NH2  CT1  C    NH1      5.0000  2     9.00
     X    CT3  OS   X       -0.1000  3     5.00 ! ALLOW   PEP POL
     `
+	var vals = []struct {
+		at1, at2, at3, at4 string
+		kp, phi            float64
+		mult               int
+	}{
+		{"NH2", "CT1", "C", "O", 0, 0, 1},
+		{"NH2", "CT1", "C", "NH1", 5, 9, 2},
+		{"X", "CT3", "OS", "X", -0.1, 5, 3},
+	}
 
 	frc, err := ReadPRMString(s)
-	utils.AssertNil(t, err, "could not read prm string")
+	if err != nil {
+		t.Fatal("could not read dihedral prm string => ", err)
+	}
 
 	dhs := frc.DihedralTypes()
-	utils.CheckEqInt(t, len(dhs), 3, "the length of DihedralTypes is not right")
+	if v := len(dhs); v != 3 {
+		t.Errorf("# of dihedraltypes is wrong => %d, expected %d", v, 3)
+	}
 
-	utils.CheckEqFloat64(t, dhs[2].Phi(ff.FF_CHARMM), 5.0, "dhs[0] phi is not right")
-	utils.CheckEqFloat64(t, dhs[2].PhiConstant(ff.FF_CHARMM), -0.1, "dhs[2] kphi is not right")
-	utils.CheckEqInt8(t, dhs[2].Mult(ff.FF_CHARMM), 3, "dhs[2] mult is not right")
+	for _, el := range vals {
+		dt := frc.DihedralType(tempDihedralTypeKey(el.at1, el.at2, el.at3, el.at4))
+		if dt == nil {
+			t.Errorf("dihedral was not found for => %s_%s_%s_%s", el.at1, el.at2, el.at3, el.at4)
+		}
 
-	utils.CheckTrue(t, dhs[0].HasPhiConstantSet(), "dhs[0] should have kphi set")
-	utils.CheckTrue(t, dhs[1].HasPhiSet(), "dhs[0] should have phi set")
-	utils.CheckTrue(t, dhs[2].HasMultSet(), "dhs[0] should have mult set")
-
-	utils.CheckEqString(t, dhs[0].AType1(), "NH2", "dhs[0] has wrong atom type1")
-	utils.CheckEqString(t, dhs[0].AType2(), "CT1", "dhs[0] has wrong atom type2")
-	utils.CheckEqString(t, dhs[0].AType3(), "C", "dhs[0] has wrong atom type3")
-	utils.CheckEqString(t, dhs[0].AType4(), "O", "dhs[0] has wrong atom type4")
-
+		if v := dt.Phi(); v != el.phi {
+			t.Errorf("wrong phi => %f, expected %f", v, el.phi)
+		}
+		if v := dt.PhiConstant(); v != el.kp {
+			t.Errorf("wrong kp => %f, expected %f", v, el.kp)
+		}
+		if v := dt.Multiplicity(); v != el.mult {
+			t.Errorf("wrong mult => %f, expected %f", v, el.mult)
+		}
+	}
 }
 
 func TestImproperTyeps(t *testing.T) {
 	s := `
     IMPROPER
     !atom types           Kpsi                   psi0
-    HE2  HE2  CE2  CE2     3.0            0      0.00   !
-    HR3  CPH1 NR2  CPH1    0.5000         0      0.0000 ! ALLOW ARO
-    N    C    CP1  CP3     0.0000         0      0.0000 ! ALLOW PRO
+    HE2  HE2  CE2  CE2     3.0            0      5.00   !
+    HR3  CPH1 NR2  CPH1    0.5000         0      1.0000 ! ALLOW ARO
     NC2  X    X    C      40.0000         0      0.0000 ! ALLOW   PEP POL ARO
-    NH1  X    X    H      20.0000         0      0.0000 ! ALLOW   PEP POL ARO
     `
 
+	var vals = []struct {
+		at1, at2, at3, at4 string
+		kp, psi            float64
+	}{
+		{"HE2", "HE2", "CE2", "CE2", 3, 5},
+		{"HR3", "CPH1", "NR2", "CPH1", 0.5, 1},
+		{"NC2", "X", "X", "C", 40, 0},
+	}
+
 	frc, err := ReadPRMString(s)
-	utils.AssertNil(t, err, "could not read prm string")
+	if err != nil {
+		t.Fatal("could not read improper prm string => ", err)
+	}
 
 	imps := frc.ImproperTypes()
-	utils.CheckEqInt(t, len(imps), 5, "the length of ImproperTypes is not right")
+	if v := len(imps); v != 3 {
+		t.Errorf("# of impropertypes is wrong => %d, expected %d", v, 3)
+	}
 
-	utils.CheckEqFloat64(t, imps[0].PsiConstant(ff.FF_CHARMM), 3.0, "imps[0] kpsi is not right")
-	utils.CheckEqFloat64(t, imps[0].Psi(ff.FF_CHARMM), 0.0, "imps[0] kpsi is not right")
+	for _, el := range vals {
+		it := frc.ImproperType(tempImproperTypeKey(el.at1, el.at2, el.at3, el.at4))
+		if it == nil {
+			t.Errorf("improper was not found for => %s_%s_%s_%s", el.at1, el.at2, el.at3, el.at4)
+		}
 
-	utils.CheckTrue(t, imps[0].HasPsiConstantSet(), "imps[0] should have kpsi set")
-	utils.CheckTrue(t, imps[0].HasPsiSet(), "imps[0] should have psi set")
-
-	utils.CheckEqString(t, imps[0].AType1(), "HE2", "imps[0] has wrong atom type1")
-	utils.CheckEqString(t, imps[0].AType2(), "HE2", "imps[0] has wrong atom type2")
-	utils.CheckEqString(t, imps[0].AType3(), "CE2", "imps[0] has wrong atom type3")
-	utils.CheckEqString(t, imps[0].AType4(), "CE2", "imps[0] has wrong atom type4")
+		if v := it.Psi(); v != el.psi {
+			t.Errorf("wrong psi => %f, expected %f", v, el.psi)
+		}
+		if v := it.PsiConstant(); v != el.kp {
+			t.Errorf("wrong kpsi => %f, expected %f", v, el.kp)
+		}
+	}
 
 }
 
 func TestNonBondedTyeps(t *testing.T) {
 	s := `
     NBFIX
-    SOD    OC       -0.075020   3.190 ! For prot carboxylate groups
-    SOD    OCL      -0.075020   3.190 ! For lipid carboxylate groups
-    SOD    OC2D2    -0.075020   3.190 ! For carb carboxylate groups
+    SOD    OC       -0.075020   3.190 ! For prot
+    LIT    OC2D2    -0.375020   5.190 ! For carb 
     `
 
+	var vals = []struct {
+		at1, at2 string
+		ljd, lje float64
+	}{
+		{"SOD", "OC", 3.190, -0.075020},
+		{"LIT", "OC2D2", 5.190, -0.375020},
+	}
+
 	frc, err := ReadPRMString(s)
-	utils.AssertNil(t, err, "could not read prm string")
+	if err != nil {
+		t.Fatal("could not read nonbonded prm string => ", err)
+	}
 
-	nbs := frc.NonBondedTypes()
-	utils.CheckEqInt(t, len(nbs), 3, "the length of NonBondedType is not right")
+	pts := frc.NonBondedTypes()
+	if v := len(pts); v != 2 {
+		t.Errorf("# of nonbondedtypes is wrong => %d, expected %d", v, 2)
+	}
 
-	utils.CheckEqFloat64(t, nbs[0].LJDist(ff.FF_CHARMM), 3.190, "nbs[0] has wrong LJDist")
-	utils.CheckEqFloat64(t, nbs[0].LJEnergy(ff.FF_CHARMM), -0.075020, "nbs[0] has wrong LJEnergy")
+	for _, el := range vals {
+		pt := frc.NonBondedType(tempPairTypeKey(el.at1, el.at2))
+		if pt == nil {
+			t.Errorf("pair was not found for => %s_%s", el.at1, el.at2)
+		}
 
-	utils.CheckTrue(t, nbs[1].HasLJDistSet(), "nbs[1] should have LJDist set")
-	utils.CheckTrue(t, nbs[1].HasLJEnergySet(), "nbs[1] should have LJEnergy set")
-
-	utils.CheckEqString(t, nbs[0].AType1(), "SOD", "nbs[0] has wrong atom type1")
-	utils.CheckEqString(t, nbs[0].AType2(), "OC", "nbs[0] has wrong atom type2")
+		if v := pt.LJDist(); v != el.ljd {
+			t.Errorf("wrong ljd => %f, expected %f", v, el.ljd)
+		}
+		if v := pt.LJEnergy(); v != el.lje {
+			t.Errorf("wrong lje => %f, expected %f", v, el.lje)
+		}
+	}
 
 }
 
 func TestCMapTyeps(t *testing.T) {
+	var vals = []struct {
+		at1, at2, at3, at4, at5, at6, at7, at8 string
+		vf, vl                                 float64
+	}{
+		{"C", "NH1", "CT1", "C", "NH1", "CT1", "C", "NH1", 0.126790, -2.231020},
+		{"C", "NH1", "CT1", "C", "NH1", "CT1", "C", "N", 0.136790, -2.331020},
+	}
 
 	frc, err := ReadPRMString(cmap_string)
-	utils.AssertNil(t, err, "could not read prm string")
+	if err != nil {
+		t.Fatal("could not read cmpa prm string => ", err)
+	}
 
-	cms := frc.CMapTypes()
-	utils.CheckEqInt(t, len(cms), 2, "the length of CMapTypes is not right")
-	utils.CheckEqInt(t, len(cms[0].Values()), 24*24, "cms[0] doesn't have right # of values")
+	cmaps := frc.CMapTypes()
+	if v := len(cmaps); v != 2 {
+		t.Errorf("# of cmaptypes is wrong => %d, expected %d", v, 2)
+	}
 
-	utils.CheckEqString(t, cms[0].AtomType1(), "C", "cms[0] atomtype1 is not right")
-	utils.CheckEqString(t, cms[0].AtomType2(), "NH1", "cms[0] atomtype2 is not right")
-	utils.CheckEqString(t, cms[0].AtomType3(), "CT1", "cms[0] atomtype3 is not right")
-	utils.CheckEqString(t, cms[0].AtomType4(), "C", "cms[0] atomtype4 is not right")
-	utils.CheckEqString(t, cms[0].AtomType5(), "NH1", "cms[0] atomtype5 is not right")
-	utils.CheckEqString(t, cms[0].AtomType6(), "CT1", "cms[0] atomtype6 is not right")
-	utils.CheckEqString(t, cms[0].AtomType7(), "C", "cms[0] atomtype7 is not right")
-	utils.CheckEqString(t, cms[0].AtomType8(), "NH1", "cms[0] atomtype8 is not right")
+	for _, el := range vals {
+		k := tempCMapTypeKey(el.at1, el.at2, el.at3, el.at4, el.at5, el.at6, el.at7, el.at8)
+		c := frc.CMapType(k)
+		if c == nil {
+			t.Error("cmap was not found")
+		}
+
+		if v := len(c.Values()); v != 24*24 {
+			t.Errorf("# of values in cmap is not right => %d, expected %d", v, 24*24)
+		}
+		if v := c.Values()[0]; v != el.vf {
+			t.Errorf("cmpa[0] is wrong => %f, expected %f", v, el.vf)
+		}
+		if v := c.Values()[24*24-1]; v != el.vl {
+			t.Errorf("cmpa[-1] is wrong => %f, expected %f", v, el.vl)
+		}
+	}
+
 }
 
 var cmap_string string = `
@@ -426,7 +551,7 @@ C    NH1  CT1  C    NH1  CT1  C    NH1   24
 C    NH1  CT1  C    NH1  CT1  C    N     24
 
 !-180
-0.126790 0.768700 0.971260 1.250970 2.121010
+0.136790 0.768700 0.971260 1.250970 2.121010
 2.695430 2.064440 1.764790 0.755870 -0.713470
 0.976130 -2.475520 -5.455650 -5.096450 -5.305850
 -3.975630 -3.088580 -2.784200 -2.677120 -2.646060
@@ -591,7 +716,6 @@ C    NH1  CT1  C    NH1  CT1  C    N     24
 1.641310 1.698840 1.519950 0.631950 -1.088670
 -2.736530 -0.735240 -4.563830 -6.408350 -5.889450
 -5.141750 -4.194970 -3.666490 -3.843450 -3.818830
--3.826180 -3.596820 -2.994790 -2.231020
+-3.826180 -3.596820 -2.994790 -2.331020
 
 `
-*/

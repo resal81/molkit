@@ -7,7 +7,8 @@ package blocks
 type PTSetting int64
 
 const (
-	PT_TYPE_CHM_1 PTSetting = 1 << iota
+	PT_NULL PTSetting = 1 << iota
+	PT_TYPE_CHM_1
 	PT_TYPE_GMX_1
 	PT_HAS_LJ_DISTANCE_SET
 	PT_HAS_LJ_ENERGY_SET

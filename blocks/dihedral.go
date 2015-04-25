@@ -15,9 +15,10 @@ var (
 type DTSetting int64
 
 const (
-	DT_TYPE_CHM_1 DTSetting = 1 << iota // proper
-	DT_TYPE_GMX_1                       // proper
-	DT_TYPE_GMX_9                       // prper muliple
+	DT_NULL       DTSetting = 1 << iota
+	DT_TYPE_CHM_1           // proper
+	DT_TYPE_GMX_1           // proper
+	DT_TYPE_GMX_9           // prper muliple
 	DT_HAS_PHI_SET
 	DT_HAS_PHI_CONSTANT_SET
 	DT_HAS_MULTIPLICITY_SET

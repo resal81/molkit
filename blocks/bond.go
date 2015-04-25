@@ -15,7 +15,8 @@ var (
 type BTSetting int64
 
 const (
-	BT_ORDER_SINGLE BTSetting = 1 << iota
+	BT_NULL BTSetting = 1 << iota
+	BT_ORDER_SINGLE
 	BT_ORDER_DOUBLE
 	BT_ORDER_TRIPLE
 	BT_TYPE_GMX_1

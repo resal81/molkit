@@ -15,7 +15,8 @@ var (
 type ITSetting int64
 
 const (
-	IT_TYPE_CHM_1 ITSetting = 1 << iota
+	IT_NULL ITSetting = 1 << iota
+	IT_TYPE_CHM_1
 	IT_TYPE_GMX_1
 	IT_HAS_PSI_SET
 	IT_HAS_PSI_CONSTANT_SET

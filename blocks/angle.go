@@ -15,10 +15,11 @@ var (
 type NTSetting int64
 
 const (
-	NT_TYPE_CHM_1 NTSetting = 1 << iota // Harmonic
-	NT_TYPE_CHM_2                       // UB
-	NT_TYPE_GMX_1                       // Harmonic
-	NT_TYPE_GMX_5                       // UB
+	NT_NULL       NTSetting = 1 << iota
+	NT_TYPE_CHM_1           // Harmonic
+	NT_TYPE_CHM_2           // UB
+	NT_TYPE_GMX_1           // Harmonic
+	NT_TYPE_GMX_5           // UB
 	NT_HAS_THETA_CONSTANT_SET
 	NT_HAS_THETA_SET
 	NT_HAS_UB_CONSTANT_SET
