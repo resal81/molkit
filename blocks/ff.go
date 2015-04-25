@@ -1,6 +1,7 @@
 package blocks
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -171,6 +172,12 @@ func NewForceField(ft FFSetting) *ForceField {
 	}
 }
 
+/* errors */
+
+func (ff *ForceField) Errors() []error {
+	return ff.errors
+}
+
 /* ff setups */
 
 func (ff *ForceField) SetGMXSetup(g *GMXSetup) {
@@ -183,9 +190,16 @@ func (ff *ForceField) GMXSetup() *GMXSetup {
 
 /* atom types */
 
-func (ff *ForceField) AddAtomType(v *AtomType) {
-	el := GenerateHashKey(v, HK_MODE_NORMAL)
-	ff.atomTypes[el] = v
+func (ff *ForceField) AddAtomType(at *AtomType) {
+	key := GenerateHashKey(at, HK_MODE_NORMAL)
+
+	// check if already exist
+	if _, ok := ff.atomTypes[key]; ok {
+		err := fmt.Errorf("Overwriting atomtype => %v", at)
+		ff.errors = append(ff.errors, err)
+	}
+
+	ff.atomTypes[key] = at
 }
 
 func (ff *ForceField) AtomTypes() map[HashKey]*AtomType {
@@ -198,9 +212,16 @@ func (ff *ForceField) AtomType(key HashKey) *AtomType {
 
 /* bond types */
 
-func (ff *ForceField) AddBondType(v *BondType) {
-	el := GenerateHashKey(v, HK_MODE_NORMAL)
-	ff.bondTypes[el] = v
+func (ff *ForceField) AddBondType(bt *BondType) {
+	key := GenerateHashKey(bt, HK_MODE_NORMAL)
+
+	// check if already exist
+	if _, ok := ff.bondTypes[key]; ok {
+		err := fmt.Errorf("Overwriting bondtype => %v", bt)
+		ff.errors = append(ff.errors, err)
+	}
+
+	ff.bondTypes[key] = bt
 }
 
 func (ff *ForceField) BondTypes() map[HashKey]*BondType {
@@ -213,9 +234,16 @@ func (ff *ForceField) BondType(key HashKey) *BondType {
 
 /* angle types */
 
-func (ff *ForceField) AddAngleType(v *AngleType) {
-	el := GenerateHashKey(v, HK_MODE_NORMAL)
-	ff.angleTypes[el] = v
+func (ff *ForceField) AddAngleType(at *AngleType) {
+	key := GenerateHashKey(at, HK_MODE_NORMAL)
+
+	// check if already exist
+	if _, ok := ff.angleTypes[key]; ok {
+		err := fmt.Errorf("Overwriting angletype => %v", at)
+		ff.errors = append(ff.errors, err)
+	}
+
+	ff.angleTypes[key] = at
 }
 
 func (ff *ForceField) AngleTypes() map[HashKey]*AngleType {
@@ -228,9 +256,16 @@ func (ff *ForceField) AngleType(key HashKey) *AngleType {
 
 /* dihedral types */
 
-func (ff *ForceField) AddDihedralType(v *DihedralType) {
-	el := GenerateHashKey(v, HK_MODE_NORMAL)
-	ff.dihedralTypes[el] = v
+func (ff *ForceField) AddDihedralType(dt *DihedralType) {
+	key := GenerateHashKey(dt, HK_MODE_NORMAL)
+
+	// check if already exist
+	if _, ok := ff.dihedralTypes[key]; ok {
+		err := fmt.Errorf("Overwriting dihedraltype => %v", dt)
+		ff.errors = append(ff.errors, err)
+	}
+
+	ff.dihedralTypes[key] = dt
 }
 
 func (ff *ForceField) DihedralTypes() map[HashKey]*DihedralType {
@@ -243,9 +278,16 @@ func (ff *ForceField) DihedralType(key HashKey) *DihedralType {
 
 /* improper types */
 
-func (ff *ForceField) AddImproperType(v *ImproperType) {
-	el := GenerateHashKey(v, HK_MODE_NORMAL)
-	ff.improperTypes[el] = v
+func (ff *ForceField) AddImproperType(it *ImproperType) {
+	key := GenerateHashKey(it, HK_MODE_NORMAL)
+
+	// check if already exist
+	if _, ok := ff.improperTypes[key]; ok {
+		err := fmt.Errorf("Overwriting impropertype => %v", it)
+		ff.errors = append(ff.errors, err)
+	}
+
+	ff.improperTypes[key] = it
 }
 
 func (ff *ForceField) ImproperTypes() map[HashKey]*ImproperType {
@@ -258,9 +300,16 @@ func (ff *ForceField) ImproperType(key HashKey) *ImproperType {
 
 /* nonbonded types */
 
-func (ff *ForceField) AddNonBondedType(v *PairType) {
-	el := GenerateHashKey(v, HK_MODE_NORMAL)
-	ff.nonBondedTypes[el] = v
+func (ff *ForceField) AddNonBondedType(nb *PairType) {
+	key := GenerateHashKey(nb, HK_MODE_NORMAL)
+
+	// check if already exist
+	if _, ok := ff.nonBondedTypes[key]; ok {
+		err := fmt.Errorf("Overwriting nonbondedtype => %v", nb)
+		ff.errors = append(ff.errors, err)
+	}
+
+	ff.nonBondedTypes[key] = nb
 }
 
 func (ff *ForceField) NonBondedTypes() map[HashKey]*PairType {
@@ -273,9 +322,16 @@ func (ff *ForceField) NonBondedType(key HashKey) *PairType {
 
 /* one four types */
 
-func (ff *ForceField) AddOneFourType(v *PairType) {
-	el := GenerateHashKey(v, HK_MODE_NORMAL)
-	ff.oneFourTypes[el] = v
+func (ff *ForceField) AddOneFourType(nb *PairType) {
+	key := GenerateHashKey(nb, HK_MODE_NORMAL)
+
+	// check if already exist
+	if _, ok := ff.oneFourTypes[key]; ok {
+		err := fmt.Errorf("Overwriting onefourtype => %v", nb)
+		ff.errors = append(ff.errors, err)
+	}
+
+	ff.oneFourTypes[key] = nb
 }
 
 func (ff *ForceField) OneFourTypes() map[HashKey]*PairType {
@@ -289,8 +345,15 @@ func (ff *ForceField) OneFourType(key HashKey) *PairType {
 /* cmap types */
 
 func (ff *ForceField) AddCMapType(v *CMapType) {
-	el := GenerateHashKey(v, HK_MODE_NORMAL)
-	ff.cMapTypes[el] = v
+	key := GenerateHashKey(v, HK_MODE_NORMAL)
+
+	// check if already exist
+	if _, ok := ff.cMapTypes[key]; ok {
+		err := fmt.Errorf("Overwriting cmaptype => %v", v)
+		ff.errors = append(ff.errors, err)
+	}
+
+	ff.cMapTypes[key] = v
 }
 
 func (ff *ForceField) CMapTypes() map[HashKey]*CMapType {
@@ -304,8 +367,15 @@ func (ff *ForceField) CMapType(key HashKey) *CMapType {
 /* fragments */
 
 func (ff *ForceField) AddFragment(v *Fragment) {
-	el := GenerateHashKey(v, HK_MODE_NORMAL)
-	ff.fragments[el] = v
+	key := GenerateHashKey(v, HK_MODE_NORMAL)
+
+	// check if already exist
+	if _, ok := ff.fragments[key]; ok {
+		err := fmt.Errorf("Overwriting fragment => %v", v)
+		ff.errors = append(ff.errors, err)
+	}
+
+	ff.fragments[key] = v
 }
 
 func (ff *ForceField) Fragments() map[HashKey]*Fragment {
