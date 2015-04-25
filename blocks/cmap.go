@@ -7,8 +7,8 @@ package blocks
 type CMSetting int64
 
 const (
-	CM_TYPE_CHM_1 CMSetting = 1 << iota
-	CM_TYPE_GMX_1
+	CT_TYPE_CHM_1 CMSetting = 1 << iota
+	CT_TYPE_GMX_1
 )
 
 type CMapType struct {
@@ -20,7 +20,7 @@ type CMapType struct {
 	aType6  string
 	aType7  string
 	aType8  string
-	values  []string
+	values  []float64
 	setting CMSetting
 }
 
@@ -72,6 +72,14 @@ func (ct *CMapType) AType8() string {
 
 func (ct *CMapType) Setting() CMSetting {
 	return ct.setting
+}
+
+func (ct *CMapType) SetValues(vs []float64) {
+	ct.values = vs
+}
+
+func (ct *CMapType) Values() []float64 {
+	return ct.values
 }
 
 /*

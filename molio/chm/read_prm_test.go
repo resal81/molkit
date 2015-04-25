@@ -3,10 +3,10 @@ package chm
 import (
 	"testing"
 
-	"github.com/resal81/molkit/blocks"
-	"github.com/resal81/molkit/utils"
+	//"github.com/resal81/molkit/blocks"
 )
 
+/*
 func TestPRMRead(t *testing.T) {
 	fnames := []string{
 		"../../testdata/chm_prm/par_all22_prot.prm",
@@ -23,49 +23,42 @@ func TestPRMRead(t *testing.T) {
 		t.Fatalf("could not read prm file -> %s", err)
 	}
 }
+*/
 
 func TestAtomTypes(t *testing.T) {
 	s := `
     ATOMS
     MASS    52 C     12.01100 ! carbonyl C, peptide backbone
-    MASS    57 CPH1  12.01100 ! his CG and CD2 carbons
-    MASS    66 CS    12.01100 ! thiolate carbon
-    MASS    67 CE1   12.01100 ! for alkene; RHC=CR
     MASS    81 OB    15.99900 ! carbonyl oxygen in acetic acid
 
     NONBONDED nbxmod  5 atom cdiel fshift vatom vdistance vfswitch -
     C      0.000000  -0.110000     2.000000 ! ALLOW   PEP POL ARO
-    CE1    0.000000  -0.068000     2.090000 ! 
-    CPH1   0.000000  -0.050000     1.800000 ! ALLOW ARO
-    CS     0.000000  -0.110000     2.200000 ! ALLOW SUL
     OB     0.000000  -0.120000     1.700000   0.000000  -0.120000     1.400000 ! ALLOW   PEP POL ARO
     `
+	var vals = []struct {
+		label                        string
+		mass, lje, ljd, lje14, ljd14 float64
+	}{
+		{"C", 12.011, -0.11, 2.0, 0.0, 0.0},
+		{"OB", 15.999, -0.12, 1.7, -0.12, 1.4},
+	}
 
 	frc, err := ReadPRMString(s)
-	utils.AssertNil(t, err, "could not read prm string")
+	if err != nil {
+		t.Fatal("could not read atom prm string => ", err)
+	}
 
-	ats := frc.AtomTypes
-	utils.CheckEqInt(t, len(ats), 5, "AtomTypes()")
-	utils.CheckEqFloat64(t, ats[0].Mass, 12.01100, "mass is not right")
-	utils.CheckEqFloat64(t, ats[1].LJDist, 2.09, "rmin/2 is not right")
-	utils.CheckEqFloat64(t, ats[2].LJEnergy, -0.05, "epsilon is not right")
-	utils.CheckEqFloat64(t, ats[4].LJDist14, 1.4, "rmin/2 for 1-4 interaction is not right")
-	utils.CheckEqFloat64(t, ats[4].LJEnergy14, -0.12, "epsilon for 1-4 interaction is not right")
-	utils.CheckEqString(t, ats[4].Label, "OB", "atom type is not right")
+	ats := frc.AtomTypes()
+	if v := len(ats); v != 2 {
+		t.Errorf("# of atomtypes is wrong => %d, expected %d", v, 2)
+	}
 
-	utils.CheckTrue(t, ats[0].Setting&blocks.AT_HAS_LJ_DIST_SET != 0, "ats[0] should have LJDist")
-	utils.CheckTrue(t, ats[0].Setting&blocks.AT_HAS_LJ_ENERGY_SET != 0, "ats[0] should have LJEnergy")
-	utils.CheckTrue(t, ats[0].Setting&blocks.AT_HAS_MASS_SET != 0, "ats[0] should have Mass")
-	utils.CheckTrue(t, ats[0].Setting&blocks.AT_HAS_LJ_DIST14_SET == 0, "ats[0] should not have LJDist14")
-	utils.CheckTrue(t, ats[0].Setting&blocks.AT_HAS_LJ_ENERGY14_SET == 0, "ats[0] should not have LJEnergy14")
-	utils.CheckTrue(t, ats[0].Setting&blocks.AT_HAS_PAR_CHARGE_SET == 0, "ats[0] should not have Charge")
-	utils.CheckTrue(t, ats[0].Setting&blocks.AT_HAS_PROTONS_SET == 0, "ats[0] should not have Protons")
+	for _, el := range vals {
+		if v := frc.AtomType(el.label); v == nil {
+			t.Errorf("atom type was not found for => %q", el.label)
+		}
 
-	utils.CheckTrue(t, ats[4].Setting&blocks.AT_HAS_LJ_DIST_SET != 0, "ats[4] should have LJDist")
-	utils.CheckTrue(t, ats[4].Setting&blocks.AT_HAS_LJ_ENERGY_SET != 0, "ats[4] should have LJEnergy")
-	utils.CheckTrue(t, ats[4].Setting&blocks.AT_HAS_LJ_DIST14_SET != 0, "ats[4] should have LJDist14")
-	utils.CheckTrue(t, ats[4].Setting&blocks.AT_HAS_LJ_ENERGY14_SET != 0, "ats[4] should have LJEnergy14")
-
+	}
 }
 
 /*

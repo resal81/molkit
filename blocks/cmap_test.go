@@ -9,7 +9,7 @@ func TestCMapType(t *testing.T) {
 		at1, at2, at3, at4, at5, at6, at7, at8 string
 		ct                                     CMSetting
 	}{
-		{"C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", CM_TYPE_CHM_1},
+		{"C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", CT_TYPE_CHM_1},
 	}
 
 	for _, el := range cmts {

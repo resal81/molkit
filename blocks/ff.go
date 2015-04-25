@@ -179,6 +179,10 @@ func (ff *ForceField) AtomTypes() map[string]*AtomType {
 	return ff.atomTypes
 }
 
+func (ff *ForceField) AtomType(key string) *AtomType {
+	return ff.AtomTypes()[key]
+}
+
 /* bond types */
 
 func (ff *ForceField) AddBondType(v *BondType) {

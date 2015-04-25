@@ -75,7 +75,7 @@ func TestForceField(t *testing.T) {
 		}
 
 		ff.AddDihedralType(NewDihedralType(el.at1, el.at2, el.at3, el.at4, DT_TYPE_GMX_1))
-		ff.AddImproperType(NewImproprtType(el.at1, el.at2, el.at3, el.at4, IT_TYPE_GMX_1))
+		ff.AddImproperType(NewImproperType(el.at1, el.at2, el.at3, el.at4, IT_TYPE_GMX_1))
 
 		if v := len(ff.DihedralTypes()); v != 1 {
 			t.Errorf("wrong # of dihedral types => %d, expected %d", v, 1)
@@ -95,7 +95,7 @@ func TestForceField(t *testing.T) {
 		}
 
 		// two entries per cmap
-		ff.AddCMapType(NewCMapType(el.at1, el.at2, el.at3, el.at4, el.at1, el.at2, el.at3, el.at4, CM_TYPE_GMX_1))
+		ff.AddCMapType(NewCMapType(el.at1, el.at2, el.at3, el.at4, el.at1, el.at2, el.at3, el.at4, CT_TYPE_GMX_1))
 		if v := len(ff.CMapTypes()); v != 2 {
 			t.Errorf("wrong # of cmap types => %d, expected %d", v, 1)
 		}

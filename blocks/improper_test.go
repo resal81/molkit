@@ -13,7 +13,7 @@ func TestImproperType(t *testing.T) {
 	}
 
 	for _, el := range impts {
-		dt := NewImproprtType(el.at1, el.at2, el.at3, el.at4, IT_TYPE_CHM_1)
+		dt := NewImproperType(el.at1, el.at2, el.at3, el.at4, IT_TYPE_CHM_1)
 		if v := dt.Setting(); v&IT_TYPE_CHM_1 == 0 {
 			t.Errorf("DT_TYPE is wrong => %q, expected %q", v, IT_TYPE_CHM_1)
 		}
@@ -81,7 +81,7 @@ func TestImproper(t *testing.T) {
 			t.Errorf("an4 is wrong => %q, expected %q", v, el.an4)
 		}
 
-		dt := NewImproprtType(el.at1, el.at2, el.at3, el.at4, IT_TYPE_CHM_1)
+		dt := NewImproperType(el.at1, el.at2, el.at3, el.at4, IT_TYPE_CHM_1)
 		d.SetType(dt)
 		if v := d.Type().AType1(); v != el.at1 {
 			t.Errorf("dihtype atype1 is not right => %q, expected %q", v, el.at1)

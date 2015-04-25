@@ -18,7 +18,7 @@ import (
 // Parses one or multiple CHARMM prm files.
 func ReadPRMFiles(fnames ...string) (*blocks.ForceField, error) {
 
-	ff := blocks.NewForceField(blocks.FF_CHM)
+	ff := blocks.NewForceField(blocks.FF_TYPE_CHM)
 
 	for _, fname := range fnames {
 		file, err := os.Open(fname)
@@ -43,7 +43,7 @@ func ReadPRMFiles(fnames ...string) (*blocks.ForceField, error) {
 
 // Parses a prm string (e.g. contents of a file).
 func ReadPRMString(s string) (*blocks.ForceField, error) {
-	frc := blocks.NewForceField(blocks.FF_CHM)
+	frc := blocks.NewForceField(blocks.FF_TYPE_CHM)
 	reader := strings.NewReader(s)
 	err := readprm(reader, frc)
 	return frc, err
@@ -142,28 +142,28 @@ func readprm(reader io.Reader, frc *blocks.ForceField) error {
 			if err != nil {
 				return fmt.Errorf("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
-			frc.BondTypes = append(frc.BondTypes, bt)
+			frc.AddBondType(bt)
 
 		case L_ANGLES:
 			at, err := prmParseAngleType(line)
 			if err != nil {
 				return fmt.Errorf("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
-			frc.AngleTypes = append(frc.AngleTypes, at)
+			frc.AddAngleType(at)
 
 		case L_DIHEDRALS:
 			dh, err := prmParseDihedralType(line)
 			if err != nil {
 				return fmt.Errorf("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
-			frc.DihedralTypes = append(frc.DihedralTypes, dh)
+			frc.AddDihedralType(dh)
 
 		case L_IMPROPERS:
 			im, err := prmParseImproperType(line)
 			if err != nil {
 				return fmt.Errorf("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
-			frc.ImproperTypes = append(frc.ImproperTypes, im)
+			frc.AddImproperType(im)
 
 		case L_CMAP:
 			if cmap_header == "" {
@@ -177,7 +177,7 @@ func readprm(reader io.Reader, frc *blocks.ForceField) error {
 					if err != nil {
 						return fmt.Errorf("in line: {'%s'} - reason: {'%s'}", line, err)
 					}
-					frc.CMapTypes = append(frc.CMapTypes, cm)
+					frc.AddCMapType(cm)
 					cmap_header = ""
 				}
 			}
@@ -187,10 +187,9 @@ func readprm(reader io.Reader, frc *blocks.ForceField) error {
 			if err != nil {
 				return fmt.Errorf("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
-			if m, ok := massDB[at.Label]; ok {
-				at.Mass = m
-				at.Setting |= blocks.AT_HAS_MASS_SET
-				frc.AtomTypes = append(frc.AtomTypes, at)
+			if m, ok := massDB[at.Label()]; ok {
+				at.SetMass(m)
+				frc.AddAtomType(at)
 			} else {
 				return fmt.Errorf("could not find mass for atom type: %s", at.Label)
 			}
@@ -200,7 +199,7 @@ func readprm(reader io.Reader, frc *blocks.ForceField) error {
 			if err != nil {
 				return fmt.Errorf("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
-			frc.NonBondedTypes = append(frc.NonBondedTypes, nb)
+			frc.AddNonBondedType(nb)
 
 		case L_IGNORE:
 			continue
@@ -299,17 +298,11 @@ func prmParseBondType(s string) (*blocks.BondType, error) {
 		return nil, fmt.Errorf("error paring BONDS line")
 	}
 
-	bt := blocks.BondType{
-		AType1:    at1,
-		AType2:    at2,
-		HarmConst: kb,
-		HarmDist:  b0,
-	}
-	bt.Setting |= blocks.BT_TYPE_CHM_1
-	bt.Setting |= blocks.BT_HAS_HARM_CONST_SET
-	bt.Setting |= blocks.BT_HAS_HARM_DIST_SET
+	bt := blocks.NewBondType(at1, at2, blocks.BT_TYPE_CHM_1)
+	bt.SetHarmonicDistance(b0)
+	bt.SetHarmonicConstant(kb)
 
-	return &bt, nil
+	return bt, nil
 
 }
 
@@ -339,38 +332,30 @@ func prmParseAngleType(s string) (*blocks.AngleType, error) {
 	var at1, at2, at3 string
 	var kt, theta, kub, r13 float64
 
+	var angt *blocks.AngleType
+
 	switch nfields {
 	case 5:
 		n, err := fmt.Sscanf(s, "%s %s %s %f %f", &at1, &at2, &at3, &kt, &theta)
 		if n != 5 || err != nil {
 			return nil, fmt.Errorf("could not parse angletype - 5")
 		}
+		angt = blocks.NewAngleType(at1, at2, at3, blocks.NT_TYPE_CHM_1)
+		angt.SetTheta(theta)
+		angt.SetThetaConstant(kt)
 	case 7:
 		n, err := fmt.Sscanf(s, "%s %s %s %f %f %f %f", &at1, &at2, &at3, &kt, &theta, &kub, &r13)
 		if n != 7 || err != nil {
 			return nil, fmt.Errorf("could not parse angletype - 7")
 		}
+		angt = blocks.NewAngleType(at1, at2, at3, blocks.NT_TYPE_CHM_2)
+		angt.SetTheta(theta)
+		angt.SetThetaConstant(kt)
+		angt.SetR13(r13)
+		angt.SetUBConstant(kub)
 	}
 
-	angt := blocks.AngleType{
-		AType1:     at1,
-		AType2:     at2,
-		AType3:     at3,
-		Theta:      theta,
-		ThetaConst: kt,
-	}
-	angt.Setting |= blocks.NT_TYPE_CHM_1
-	angt.Setting |= blocks.NT_HAS_THETA_CONST_SET
-
-	if nfields == 7 {
-		angt.R13 = r13
-		angt.UBConst = kub
-		angt.Setting |= blocks.NT_HAS_R13_SET
-		angt.Setting |= blocks.NT_HAS_UB_CONST_SET
-
-	}
-
-	return &angt, nil
+	return angt, nil
 }
 
 //
@@ -402,21 +387,13 @@ func prmParseDihedralType(s string) (*blocks.DihedralType, error) {
 		return nil, fmt.Errorf("could not parse dihedraltype")
 	}
 
-	dh := blocks.DihedralType{
-		AType1:   at1,
-		AType2:   at2,
-		AType3:   at3,
-		AType4:   at4,
-		PhiAngle: phi,
-		PhiConst: kphi,
-		Mult:     mult,
-	}
-	dh.Setting |= blocks.DT_TYPE_CHM_1
-	dh.Setting |= blocks.DT_HAS_PHI_ANGLE_SET
-	dh.Setting |= blocks.DT_HAS_PHI_CONST_SET
-	dh.Setting |= blocks.DT_HAS_MULT_SET
+	dh := blocks.NewDihedralType(at1, at2, at3, at4, blocks.DT_TYPE_CHM_1)
 
-	return &dh, nil
+	dh.SetPhi(phi)
+	dh.SetPhiConstant(kphi)
+	dh.SetMultiplicity(mult)
+
+	return dh, nil
 }
 
 //
@@ -446,19 +423,11 @@ func prmParseImproperType(s string) (*blocks.ImproperType, error) {
 		return nil, fmt.Errorf("could not parse dihedraltype")
 	}
 
-	it := blocks.ImproperType{
-		AType1:   at1,
-		AType2:   at2,
-		AType3:   at3,
-		AType4:   at4,
-		PsiAngle: psi,
-		PsiConst: kpsi,
-	}
-	it.Setting |= blocks.IT_TYPE_CHM_1
-	it.Setting |= blocks.IT_HAS_PSI_ANGLE_SET
-	it.Setting |= blocks.IT_HAS_PSI_CONST_SET
+	it := blocks.NewImproperType(at1, at2, at3, at4, blocks.IT_TYPE_CHM_1)
+	it.SetPsi(psi)
+	it.SetPsiConstant(kpsi)
 
-	return &it, nil
+	return it, nil
 }
 
 //
@@ -504,23 +473,16 @@ func prmParseNonBonded(s string) (*blocks.AtomType, error) {
 		}
 	}
 
-	atmt := blocks.AtomType{
-		Label:    at1,
-		LJDist:   dist,
-		LJEnergy: en,
-	}
-	atmt.Setting |= blocks.AT_TYPE_CHM_1
-	atmt.Setting |= blocks.AT_HAS_LJ_DIST_SET
-	atmt.Setting |= blocks.AT_HAS_LJ_ENERGY_SET
+	atm := blocks.NewAtomType(at1, blocks.AT_TYPE_CHM_1)
+	atm.SetLJDistance(dist)
+	atm.SetLJEnergy(en)
 
 	if nfields == 7 {
-		atmt.LJDist14 = dist14
-		atmt.LJEnergy14 = en14
-		atmt.Setting |= blocks.AT_HAS_LJ_DIST14_SET
-		atmt.Setting |= blocks.AT_HAS_LJ_ENERGY14_SET
+		atm.SetLJDistance14(dist14)
+		atm.SetLJEnergy14(en14)
 	}
 
-	return &atmt, nil
+	return atm, nil
 
 }
 
@@ -543,17 +505,11 @@ func prmParseNBFixType(s string) (*blocks.PairType, error) {
 		return nil, fmt.Errorf("could not parse nbfix")
 	}
 
-	nb := blocks.PairType{
-		AType1:   at1,
-		AType2:   at2,
-		LJDist:   dist,
-		LJEnergy: en,
-	}
-	nb.Setting |= blocks.PT_TYPE_CHM_1
-	nb.Setting |= blocks.PT_HAS_LJ_DIST_SET
-	nb.Setting |= blocks.PT_HAS_LJ_ENERGY_SET
+	nb := blocks.NewPairType(at1, at2, blocks.PT_TYPE_CHM_1)
+	nb.SetLJDist(dist)
+	nb.SetLJEnergy(en)
 
-	return &nb, nil
+	return nb, nil
 }
 
 //
@@ -598,19 +554,18 @@ func prmParseCMapType(nx, ny int, atypes []string, vals []string) (*blocks.CMapT
 
 		vals_f[i] = fv
 	}
-	cm := blocks.CMapType{
-		NX:     nx,
-		NY:     ny,
-		Values: vals,
-		AType1: atypes[0],
-		AType2: atypes[1],
-		AType3: atypes[2],
-		AType4: atypes[3],
-		AType5: atypes[4],
-		AType6: atypes[5],
-		AType7: atypes[6],
-		AType8: atypes[7],
-	}
+	cm := blocks.NewCMapType(
+		atypes[0],
+		atypes[1],
+		atypes[2],
+		atypes[3],
+		atypes[4],
+		atypes[5],
+		atypes[6],
+		atypes[7],
+		blocks.CT_TYPE_CHM_1,
+	)
+	cm.SetValues(vals_f)
 
-	return &cm, nil
+	return cm, nil
 }

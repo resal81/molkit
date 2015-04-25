@@ -33,7 +33,7 @@ type ImproperType struct {
 
 /* new dihedraltype */
 
-func NewImproprtType(at1, at2, at3, at4 string, t ITSetting) *ImproperType {
+func NewImproperType(at1, at2, at3, at4 string, t ITSetting) *ImproperType {
 	return &ImproperType{
 		aType1:  at1,
 		aType2:  at2,
