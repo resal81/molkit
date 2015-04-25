@@ -13,16 +13,17 @@ var (
 */
 
 type Fragment struct {
-	id        int64
-	name      string
-	serial    int64
-	atoms     []*Atom
-	bonds     []*Bond
-	angles    []*Angle
-	dihedrals []*Dihedral
-	impropers []*Improper
-	cmaps     []*CMap
-	links     []*Link
+	id         int64
+	name       string
+	serial     int64
+	atoms      []*Atom
+	bonds      []*Bond
+	angles     []*Angle
+	dihedrals  []*Dihedral
+	impropers  []*Improper
+	cmaps      []*CMap
+	nextLinker *Linker
+	prevLinker *Linker
 }
 
 /* new fragment */
@@ -117,12 +118,28 @@ func (f *Fragment) CMaps() []*CMap {
 	return f.cmaps
 }
 
-/* links */
+/* linkers */
 
-func (f *Fragment) AddLink(l *Link) {
-	f.links = append(f.links, l)
+func (f *Fragment) SetLinkerNext(l *Linker) {
+	f.nextLinker = l
 }
 
-func (f *Fragment) Links() []*Link {
-	return f.links
+func (f *Fragment) LinkerNext() *Linker {
+	return f.nextLinker
+}
+
+func (f *Fragment) HasLinkerNext() bool {
+	return f.nextLinker != nil
+}
+
+func (f *Fragment) SetLinkerPrev(l *Linker) {
+	f.prevLinker = l
+}
+
+func (f *Fragment) LinkerPrev() *Linker {
+	return f.prevLinker
+}
+
+func (f *Fragment) HasLinkerPrev() bool {
+	return f.prevLinker != nil
 }

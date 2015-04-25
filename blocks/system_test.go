@@ -30,9 +30,6 @@ func TestSystem(t *testing.T) {
 	if v := len(f.Impropers()); v != 0 {
 		t.Errorf("# of impropers is not zero => %q", v)
 	}
-	if v := len(f.Links()); v != 0 {
-		t.Errorf("# of links is not zero => %q", v)
-	}
 
 	a1 := NewAtom("CA")
 	a2 := NewAtom("N")
@@ -60,11 +57,6 @@ func TestSystem(t *testing.T) {
 	f.AddDihedral(d1)
 	f.AddImproper(i1)
 
-	l1 := NewLink()
-	l1.AddConnection(NewConnection(a1, a2))
-	l1.AddConnection(NewConnection(a2, a3))
-	f.AddLink(l1)
-
 	if v := len(f.Atoms()); v != 4 {
 		t.Errorf("# of atoms is not 4 => %q", v)
 	}
@@ -79,8 +71,5 @@ func TestSystem(t *testing.T) {
 	}
 	if v := len(f.Impropers()); v != 1 {
 		t.Errorf("# of impropers is not 1 => %q", v)
-	}
-	if v := len(f.Links()); v != 1 {
-		t.Errorf("# of links is not 1 => %q", v)
 	}
 }

@@ -57,3 +57,50 @@ func (ln *Link) AddConnection(c *Connection) {
 func (ln *Link) Connections() []*Connection {
 	return ln.conns
 }
+
+/**********************************************************
+* Linker
+**********************************************************/
+
+type Linker struct {
+	frag1    *Fragment
+	frag2    *Fragment
+	bond     *Bond
+	improper *Improper
+}
+
+func NewLinker() *Linker {
+	return &Linker{}
+}
+
+func (l *Linker) SetFragment1(frag1 *Fragment) {
+	l.frag1 = frag1
+}
+
+func (l *Linker) SetFragment2(frag2 *Fragment) {
+	l.frag2 = frag2
+}
+
+func (l *Linker) Fragment1() *Fragment {
+	return l.frag1
+}
+
+func (l *Linker) Fragment2() *Fragment {
+	return l.frag2
+}
+
+func (l *Linker) SetBond(b *Bond) {
+	l.bond = b
+}
+
+func (l *Linker) Bond() *Bond {
+	return l.bond
+}
+
+func (l *Linker) SetImproper(m *Improper) {
+	l.improper = m
+}
+
+func (l *Linker) Improper() *Improper {
+	return l.improper
+}

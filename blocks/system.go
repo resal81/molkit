@@ -20,7 +20,7 @@ type System struct {
 	angles    []*Angle
 	dihedrals []*Dihedral
 	impropers []*Improper
-	links     []*Link
+	fragments []*Fragment
 }
 
 /* new system */
@@ -93,12 +93,12 @@ func (s *System) Impropers() []*Improper {
 	return s.impropers
 }
 
-/* links */
+/* fragments */
 
-func (s *System) AddLink(l *Link) {
-	s.links = append(s.links, l)
+func (s *System) AddFragment(f *Fragment) {
+	s.fragments = append(s.fragments, f)
 }
 
-func (s *System) Links() []*Link {
-	return s.links
+func (s *System) Fragments() []*Fragment {
+	return s.fragments
 }
