@@ -10,35 +10,61 @@ const HASH_KEY_SEP = "_"
 * Hash Keys
 **********************************************************/
 
-func GenerateHashKey(v interface{}) []string {
+type HashKeySetting int64
+
+const (
+	HK_MODE_NORMAL HashKeySetting = 1 << iota
+	HK_MODE_REVERSE_BOND
+	HK_MODE_REVERSE_ANGLE
+	HK_MODE_REVERSE_DIHEDRAL
+	HK_MODE_SHORT_CMAP // 5 element cmap
+)
+
+type HashKey string
+
+func GenerateHashKey(v interface{}, hks HashKeySetting) HashKey {
 
 	switch v := v.(type) {
 
 	case *AtomType:
-		return []string{
-			v.Label(),
-		}
+		return HashKey(v.Label())
+
 	case *BondType:
-		return []string{
-			v.AType1() + HASH_KEY_SEP + v.AType2(),
+		if hks&HK_MODE_REVERSE_BOND != 0 {
+			return HashKey(v.AType2() + HASH_KEY_SEP + v.AType1())
 		}
+		return HashKey(v.AType1() + HASH_KEY_SEP + v.AType2())
+
 	case *AngleType:
-		return []string{
-			v.AType1() + HASH_KEY_SEP + v.AType2() + HASH_KEY_SEP + v.AType3(),
+		if hks&HK_MODE_REVERSE_ANGLE != 0 {
+			return HashKey(v.AType3() + HASH_KEY_SEP + v.AType2() + HASH_KEY_SEP + v.AType1())
 		}
+		return HashKey(v.AType1() + HASH_KEY_SEP + v.AType2() + HASH_KEY_SEP + v.AType3())
+
 	case *DihedralType:
-		return []string{
-			v.AType1() + HASH_KEY_SEP + v.AType2() + HASH_KEY_SEP + v.AType3() + HASH_KEY_SEP + v.AType4(),
+		if hks&HK_MODE_REVERSE_DIHEDRAL != 0 {
+			return HashKey(v.AType4() + HASH_KEY_SEP + v.AType3() + HASH_KEY_SEP + v.AType2() + HASH_KEY_SEP + v.AType1())
 		}
+		return HashKey(v.AType1() + HASH_KEY_SEP + v.AType2() + HASH_KEY_SEP + v.AType3() + HASH_KEY_SEP + v.AType4())
+
 	case *ImproperType:
-		return []string{
-			v.AType1() + HASH_KEY_SEP + v.AType2() + HASH_KEY_SEP + v.AType3() + HASH_KEY_SEP + v.AType4(),
-		}
+		return HashKey(v.AType1() + HASH_KEY_SEP + v.AType2() + HASH_KEY_SEP + v.AType3() + HASH_KEY_SEP + v.AType4())
+
 	case *PairType:
-		return []string{
-			v.AType1() + HASH_KEY_SEP + v.AType2(),
-		}
+		return HashKey(v.AType1() + HASH_KEY_SEP + v.AType2())
+
 	case *CMapType:
+		if hks&HK_MODE_SHORT_CMAP != 0 {
+			types1 := []string{
+				v.AType1(),
+				v.AType2(),
+				v.AType3(),
+				v.AType4(),
+				v.AType8(),
+			}
+			return HashKey(strings.Join(types1, HASH_KEY_SEP))
+
+		}
 		types1 := []string{
 			v.AType1(),
 			v.AType2(),
@@ -49,26 +75,14 @@ func GenerateHashKey(v interface{}) []string {
 			v.AType7(),
 			v.AType8(),
 		}
-		types2 := []string{
-			v.AType1(),
-			v.AType2(),
-			v.AType3(),
-			v.AType4(),
-			v.AType8(),
-		}
+		return HashKey(strings.Join(types1, HASH_KEY_SEP))
 
-		return []string{
-			strings.Join(types1, HASH_KEY_SEP),
-			strings.Join(types2, HASH_KEY_SEP),
-		}
 	case *Fragment:
-		return []string{
-			v.Name(),
-		}
+		return HashKey(v.Name())
 
 	}
 
-	return []string{}
+	return ""
 }
 
 /**********************************************************
@@ -128,15 +142,15 @@ const (
 )
 
 type ForceField struct {
-	atomTypes      map[string]*AtomType
-	bondTypes      map[string]*BondType
-	angleTypes     map[string]*AngleType
-	dihedralTypes  map[string]*DihedralType
-	improperTypes  map[string]*ImproperType
-	nonBondedTypes map[string]*PairType
-	oneFourTypes   map[string]*PairType
-	cMapTypes      map[string]*CMapType
-	fragments      map[string]*Fragment
+	atomTypes      map[HashKey]*AtomType
+	bondTypes      map[HashKey]*BondType
+	angleTypes     map[HashKey]*AngleType
+	dihedralTypes  map[HashKey]*DihedralType
+	improperTypes  map[HashKey]*ImproperType
+	nonBondedTypes map[HashKey]*PairType
+	oneFourTypes   map[HashKey]*PairType
+	cMapTypes      map[HashKey]*CMapType
+	fragments      map[HashKey]*Fragment
 	gmxSetup       *GMXSetup
 	setting        FFSetting
 	errors         []error
@@ -144,15 +158,15 @@ type ForceField struct {
 
 func NewForceField(ft FFSetting) *ForceField {
 	return &ForceField{
-		atomTypes:      make(map[string]*AtomType),
-		bondTypes:      make(map[string]*BondType),
-		angleTypes:     make(map[string]*AngleType),
-		dihedralTypes:  make(map[string]*DihedralType),
-		improperTypes:  make(map[string]*ImproperType),
-		nonBondedTypes: make(map[string]*PairType),
-		oneFourTypes:   make(map[string]*PairType),
-		cMapTypes:      make(map[string]*CMapType),
-		fragments:      make(map[string]*Fragment),
+		atomTypes:      make(map[HashKey]*AtomType),
+		bondTypes:      make(map[HashKey]*BondType),
+		angleTypes:     make(map[HashKey]*AngleType),
+		dihedralTypes:  make(map[HashKey]*DihedralType),
+		improperTypes:  make(map[HashKey]*ImproperType),
+		nonBondedTypes: make(map[HashKey]*PairType),
+		oneFourTypes:   make(map[HashKey]*PairType),
+		cMapTypes:      make(map[HashKey]*CMapType),
+		fragments:      make(map[HashKey]*Fragment),
 		setting:        ft,
 	}
 }
@@ -170,113 +184,136 @@ func (ff *ForceField) GMXSetup() *GMXSetup {
 /* atom types */
 
 func (ff *ForceField) AddAtomType(v *AtomType) {
-	for _, el := range GenerateHashKey(v) {
-		ff.atomTypes[el] = v
-	}
+	el := GenerateHashKey(v, HK_MODE_NORMAL)
+	ff.atomTypes[el] = v
 }
 
-func (ff *ForceField) AtomTypes() map[string]*AtomType {
+func (ff *ForceField) AtomTypes() map[HashKey]*AtomType {
 	return ff.atomTypes
 }
 
-func (ff *ForceField) AtomType(key string) *AtomType {
+func (ff *ForceField) AtomType(key HashKey) *AtomType {
 	return ff.AtomTypes()[key]
 }
 
 /* bond types */
 
 func (ff *ForceField) AddBondType(v *BondType) {
-	for _, el := range GenerateHashKey(v) {
-		ff.bondTypes[el] = v
-	}
+	el := GenerateHashKey(v, HK_MODE_NORMAL)
+	ff.bondTypes[el] = v
 }
 
-func (ff *ForceField) BondTypes() map[string]*BondType {
+func (ff *ForceField) BondTypes() map[HashKey]*BondType {
 	return ff.bondTypes
+}
+
+func (ff *ForceField) BondType(key HashKey) *BondType {
+	return ff.bondTypes[key]
 }
 
 /* angle types */
 
 func (ff *ForceField) AddAngleType(v *AngleType) {
-	for _, el := range GenerateHashKey(v) {
-		ff.angleTypes[el] = v
-	}
+	el := GenerateHashKey(v, HK_MODE_NORMAL)
+	ff.angleTypes[el] = v
 }
 
-func (ff *ForceField) AngleTypes() map[string]*AngleType {
+func (ff *ForceField) AngleTypes() map[HashKey]*AngleType {
 	return ff.angleTypes
+}
+
+func (ff *ForceField) AngleType(key HashKey) *AngleType {
+	return ff.angleTypes[key]
 }
 
 /* dihedral types */
 
 func (ff *ForceField) AddDihedralType(v *DihedralType) {
-	for _, el := range GenerateHashKey(v) {
-		ff.dihedralTypes[el] = v
-	}
+	el := GenerateHashKey(v, HK_MODE_NORMAL)
+	ff.dihedralTypes[el] = v
 }
 
-func (ff *ForceField) DihedralTypes() map[string]*DihedralType {
+func (ff *ForceField) DihedralTypes() map[HashKey]*DihedralType {
 	return ff.dihedralTypes
+}
+
+func (ff *ForceField) DihedralType(key HashKey) *DihedralType {
+	return ff.dihedralTypes[key]
 }
 
 /* improper types */
 
 func (ff *ForceField) AddImproperType(v *ImproperType) {
-	for _, el := range GenerateHashKey(v) {
-		ff.improperTypes[el] = v
-	}
+	el := GenerateHashKey(v, HK_MODE_NORMAL)
+	ff.improperTypes[el] = v
 }
 
-func (ff *ForceField) ImproperTypes() map[string]*ImproperType {
+func (ff *ForceField) ImproperTypes() map[HashKey]*ImproperType {
 	return ff.improperTypes
+}
+
+func (ff *ForceField) ImproperType(key HashKey) *ImproperType {
+	return ff.improperTypes[key]
 }
 
 /* nonbonded types */
 
 func (ff *ForceField) AddNonBondedType(v *PairType) {
-	for _, el := range GenerateHashKey(v) {
-		ff.nonBondedTypes[el] = v
-	}
+	el := GenerateHashKey(v, HK_MODE_NORMAL)
+	ff.nonBondedTypes[el] = v
 }
 
-func (ff *ForceField) NonBondedTypes() map[string]*PairType {
+func (ff *ForceField) NonBondedTypes() map[HashKey]*PairType {
 	return ff.nonBondedTypes
+}
+
+func (ff *ForceField) NonBondedType(key HashKey) *PairType {
+	return ff.nonBondedTypes[key]
 }
 
 /* one four types */
 
 func (ff *ForceField) AddOneFourType(v *PairType) {
-	for _, el := range GenerateHashKey(v) {
-		ff.oneFourTypes[el] = v
-	}
+	el := GenerateHashKey(v, HK_MODE_NORMAL)
+	ff.oneFourTypes[el] = v
 }
 
-func (ff *ForceField) OneFourTypes() map[string]*PairType {
+func (ff *ForceField) OneFourTypes() map[HashKey]*PairType {
 	return ff.oneFourTypes
+}
+
+func (ff *ForceField) OneFourType(key HashKey) *PairType {
+	return ff.oneFourTypes[key]
 }
 
 /* cmap types */
 
 func (ff *ForceField) AddCMapType(v *CMapType) {
-	for _, el := range GenerateHashKey(v) {
-		ff.cMapTypes[el] = v
-	}
+	el := GenerateHashKey(v, HK_MODE_NORMAL)
+	ff.cMapTypes[el] = v
 }
 
-func (ff *ForceField) CMapTypes() map[string]*CMapType {
+func (ff *ForceField) CMapTypes() map[HashKey]*CMapType {
 	return ff.cMapTypes
+}
+
+func (ff *ForceField) CMapType(key HashKey) *CMapType {
+	return ff.cMapTypes[key]
 }
 
 /* fragments */
 
 func (ff *ForceField) AddFragment(v *Fragment) {
-	for _, el := range GenerateHashKey(v) {
-		ff.fragments[el] = v
-	}
+	el := GenerateHashKey(v, HK_MODE_NORMAL)
+	ff.fragments[el] = v
 }
 
-func (ff *ForceField) Fragments() map[string]*Fragment {
+func (ff *ForceField) Fragments() map[HashKey]*Fragment {
 	return ff.fragments
+}
+
+func (ff *ForceField) Fragment(key HashKey) *Fragment {
+	return ff.fragments[key]
 }
 
 /* setting */

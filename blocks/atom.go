@@ -15,7 +15,8 @@ var (
 type ATSetting int64
 
 const (
-	AT_TYPE_CHM_1 ATSetting = 1 << iota // Normal CHARMM ATOM
+	AT_NULL       ATSetting = 1 << iota //
+	AT_TYPE_CHM_1                       // Normal CHARMM ATOM
 	AT_TYPE_GMX_1                       // Normal GROMACS ATOM
 	AT_HAS_PROTONS_SET
 	AT_HAS_MASS_SET

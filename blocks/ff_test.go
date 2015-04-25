@@ -96,7 +96,7 @@ func TestForceField(t *testing.T) {
 
 		// two entries per cmap
 		ff.AddCMapType(NewCMapType(el.at1, el.at2, el.at3, el.at4, el.at1, el.at2, el.at3, el.at4, CT_TYPE_GMX_1))
-		if v := len(ff.CMapTypes()); v != 2 {
+		if v := len(ff.CMapTypes()); v != 1 {
 			t.Errorf("wrong # of cmap types => %d, expected %d", v, 1)
 		}
 

@@ -3,7 +3,7 @@ package chm
 import (
 	"testing"
 
-	//"github.com/resal81/molkit/blocks"
+	"github.com/resal81/molkit/blocks"
 )
 
 /*
@@ -54,33 +54,67 @@ func TestAtomTypes(t *testing.T) {
 	}
 
 	for _, el := range vals {
-		if v := frc.AtomType(el.label); v == nil {
-			t.Errorf("atom type was not found for => %q", el.label)
+		at := frc.AtomType(el.label)
+		if at == nil {
+			t.Fatalf("atom type was not found for => %q", el.label)
+		}
+
+		if v := at.Mass(); v != el.mass {
+			t.Errorf("mass is not right => %f, expected %f", v, el.mass)
+		}
+		if v := at.LJEnergy(); v != el.lje {
+			t.Errorf("lje is not right => %f, expected %f", v, el.lje)
+		}
+		if v := at.LJDistance(); v != el.ljd {
+			t.Errorf("ljd is not right => %f, expected %f", v, el.ljd)
+		}
+
+		if at.HasLJEnergy14Set() {
+			if v := at.LJEnergy14(); v != el.lje14 {
+				t.Errorf("lje14 is not right => %f, expected %f", v, el.lje14)
+			}
+			if v := at.LJDistance14(); v != el.ljd14 {
+				t.Errorf("ljd14 is not right => %f, expected %f", v, el.ljd14)
+			}
 		}
 
 	}
 }
 
-/*
 func TestBondTypes(t *testing.T) {
 	s := `
     BONDS
     NH2   CT1   240.00      1.455  ! From LSN NH2-CT2
     CA   CA    305.000     1.3750 ! ALLOW   ARO
     `
+	var vals = []struct {
+		at1, at2 string
+		kb, b0   float64
+	}{
+		{"NH2", "CT1", 240, 1.455},
+		{"NH2", "CT1", 305, 1.375},
+	}
+
 	frc, err := ReadPRMString(s)
-	utils.AssertNil(t, err, "could not read prm string")
+	if err != nil {
+		t.Fatal("could not read atom prm string => ", err)
+	}
 
 	bts := frc.BondTypes()
-	utils.CheckEqInt(t, len(bts), 2, "the length of BondTypes is not right")
-	utils.CheckEqFloat64(t, bts[0].HarmonicConstant(ff.FF_CHARMM), 240.0, "bts[0] kb is not right")
-	utils.CheckEqFloat64(t, bts[1].HarmonicDistance(ff.FF_CHARMM), 1.375, "bts[0] b0 is not right")
+	if v := len(bts); v != 2 {
+		t.Errorf("# of atomtypes is wrong => %d, expected %d", v, 2)
+	}
 
-	utils.CheckTrue(t, bts[0].HasHarmonicConstantSet(), "ats[0] should have kb set")
-	utils.CheckTrue(t, bts[0].HasHarmonicDistanceSet(), "ats[0] should have b0 set")
+	for _, el := range vals {
+		bt := frc.BondType(el.at1 + blocks.HASH_KEY_SEP + el.at2)
+		if bt == nil {
+			t.Errorf("bond was not found for => %s_%s", el.at1, el.at2)
+		}
+	}
 
 }
 
+/*
 func TestAngleTyeps(t *testing.T) {
 	s := `
     ANGLES
