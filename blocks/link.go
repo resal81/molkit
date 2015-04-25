@@ -4,6 +4,7 @@ package blocks
 * Connection
 **********************************************************/
 
+// A Connection is made of two atoms.
 type Connection struct {
 	frag1 *Fragment
 	frag2 *Fragment
@@ -40,6 +41,7 @@ func (c *Connection) Atom2() *Atom {
 * Link
 **********************************************************/
 
+// A Link can have one or more Connection.
 type Link struct {
 	conns []*Connection
 }

@@ -21,6 +21,8 @@ type Fragment struct {
 	angles    []*Angle
 	dihedrals []*Dihedral
 	impropers []*Improper
+	cmaps     []*CMap
+	links     []*Link
 }
 
 /* new fragment */
@@ -57,50 +59,70 @@ func (f *Fragment) Serial() int64 {
 
 /* atoms */
 
-func (s *Fragment) AddAtom(a *Atom) {
-	s.atoms = append(s.atoms, a)
+func (f *Fragment) AddAtom(a *Atom) {
+	f.atoms = append(f.atoms, a)
 }
 
-func (s *Fragment) Atoms() []*Atom {
-	return s.atoms
+func (f *Fragment) Atoms() []*Atom {
+	return f.atoms
 }
 
 /* bonds */
 
-func (s *Fragment) AddBond(b *Bond) {
-	s.bonds = append(s.bonds, b)
+func (f *Fragment) AddBond(b *Bond) {
+	f.bonds = append(f.bonds, b)
 }
 
-func (s *Fragment) Bonds() []*Bond {
-	return s.bonds
+func (f *Fragment) Bonds() []*Bond {
+	return f.bonds
 }
 
 /* angles */
 
-func (s *Fragment) AddAngle(a *Angle) {
-	s.angles = append(s.angles, a)
+func (f *Fragment) AddAngle(a *Angle) {
+	f.angles = append(f.angles, a)
 }
 
-func (s *Fragment) Angles() []*Angle {
-	return s.angles
+func (f *Fragment) Angles() []*Angle {
+	return f.angles
 }
 
 /* dihedrals */
 
-func (s *Fragment) AddDihedral(d *Dihedral) {
-	s.dihedrals = append(s.dihedrals, d)
+func (f *Fragment) AddDihedral(d *Dihedral) {
+	f.dihedrals = append(f.dihedrals, d)
 }
 
-func (s *Fragment) Dihedrals() []*Dihedral {
-	return s.dihedrals
+func (f *Fragment) Dihedrals() []*Dihedral {
+	return f.dihedrals
 }
 
 /* impropers */
 
-func (s *Fragment) AddImproper(b *Improper) {
-	s.impropers = append(s.impropers, b)
+func (f *Fragment) AddImproper(b *Improper) {
+	f.impropers = append(f.impropers, b)
 }
 
-func (s *Fragment) Impropers() []*Improper {
-	return s.impropers
+func (f *Fragment) Impropers() []*Improper {
+	return f.impropers
+}
+
+/* cmaps */
+
+func (f *Fragment) AddCMap(c *CMap) {
+	f.cmaps = append(f.cmaps, c)
+}
+
+func (f *Fragment) CMaps() []*CMap {
+	return f.cmaps
+}
+
+/* links */
+
+func (f *Fragment) AddLink(l *Link) {
+	f.links = append(f.links, l)
+}
+
+func (f *Fragment) Links() []*Link {
+	return f.links
 }
