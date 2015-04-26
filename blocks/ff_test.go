@@ -75,7 +75,7 @@ func TestForceField(t *testing.T) {
 		}
 
 		ff.AddDihedralType(NewDihedralType(el.at1, el.at2, el.at3, el.at4, DT_TYPE_GMX_1))
-		ff.AddImproperType(NewImproperType(el.at1, el.at2, el.at3, el.at4, IT_TYPE_GMX_1))
+		ff.AddImproperType(NewImproperType(el.at1, el.at2, el.at3, el.at4, IT_TYPE_GMX_2))
 
 		if v := len(ff.DihedralTypes()); v != 1 {
 			t.Errorf("wrong # of dihedral types => %d, expected %d", v, 1)

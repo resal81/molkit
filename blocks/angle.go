@@ -154,11 +154,11 @@ func (at *AngleType) ConvertTo(to NTSetting) (*AngleType, error) {
 			}
 
 			if at.HasR13Set() {
-				at.SetR13(at.R13() * 0.1)
+				nat.SetR13(at.R13() * 0.1)
 			}
 
 			if at.HasUBConstantSet() {
-				at.SetUBConstant(at.UBConstant() * 2 * 4.184 * 100)
+				nat.SetUBConstant(at.UBConstant() * 2 * 4.184 * 100)
 			}
 
 			return nat, nil

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-const DELTA = 1e-20
+const DELTA = 1e-12
 
 func TestAtomTypeConversion(t *testing.T) {
 
@@ -144,10 +144,10 @@ func TestAngleTypeConversion(t *testing.T) {
 		{
 			"A", "B", "C",
 			NT_TYPE_CHM_1, NT_TYPE_GMX_5,
-			1, 1,
-			2, 2 * 2 * 4.184,
-			3, 3 * 0.1,
-			4, 4 * 2 * 4.184 * 100,
+			1.0, 1.0,
+			2.0, 2.0 * 2 * 4.184,
+			3.0, 3.0 * 0.1,
+			4.0, 4.0 * 2 * 4.184 * 100,
 		},
 	}
 
@@ -180,10 +180,10 @@ func TestAngleTypeConversion(t *testing.T) {
 			t.Errorf("wrong kt => %f, expected %f", v, el.a2_kt)
 		}
 		if v := at2.R13(); v-el.a2_r13 > DELTA {
-			t.Errorf("wrong r13 => %f, expected %f", v, el.a2_r13)
+			t.Errorf("wrong r13 => %f, expected %f, diff %v", v, el.a2_r13, v-el.a2_r13)
 		}
 		if v := at2.UBConstant(); v-el.a2_kub > DELTA {
-			t.Errorf("wrong kub => %f, expected %f", v, el.a2_kub)
+			t.Errorf("wrong kub => %f, expected %f, diff %v", v, el.a2_kub, v-el.a2_kub)
 		}
 
 	}
@@ -253,7 +253,7 @@ func TestImproperTypeConversion(t *testing.T) {
 	}{
 		{
 			"A", "B", "C", "D",
-			IT_TYPE_CHM_1, IT_TYPE_GMX_1,
+			IT_TYPE_CHM_1, IT_TYPE_GMX_2,
 			1, 1,
 			2, 2 * 2 * 4.184,
 		},

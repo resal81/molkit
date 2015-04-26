@@ -18,7 +18,7 @@ type ITSetting int64
 const (
 	IT_NULL ITSetting = 1 << iota
 	IT_TYPE_CHM_1
-	IT_TYPE_GMX_1
+	IT_TYPE_GMX_2
 	IT_HAS_PSI_SET
 	IT_HAS_PSI_CONSTANT_SET
 )
@@ -103,7 +103,7 @@ func (dt *ImproperType) Setting() ITSetting {
 
 func (dt *ImproperType) ConvertTo(to ITSetting) (*ImproperType, error) {
 
-	if to&IT_TYPE_CHM_1 == 0 && to&IT_TYPE_GMX_1 == 0 {
+	if to&IT_TYPE_CHM_1 == 0 && to&IT_TYPE_GMX_2 == 0 {
 		return nil, fmt.Errorf("'to' parameter is not known")
 	}
 
@@ -113,8 +113,8 @@ func (dt *ImproperType) ConvertTo(to ITSetting) (*ImproperType, error) {
 
 	if dt.setting&IT_TYPE_CHM_1 != 0 {
 		switch {
-		case to&IT_TYPE_GMX_1 != 0:
-			nit := NewImproperType(dt.AType1(), dt.AType2(), dt.AType3(), dt.AType4(), IT_TYPE_GMX_1)
+		case to&IT_TYPE_GMX_2 != 0:
+			nit := NewImproperType(dt.AType1(), dt.AType2(), dt.AType3(), dt.AType4(), IT_TYPE_GMX_2)
 
 			if dt.HasPsiSet() {
 				nit.SetPsi(dt.Psi())
