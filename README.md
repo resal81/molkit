@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/resal81/molkit.svg?branch=master)](https://travis-ci.org/resal81/molkit)
 [![Coverage Status](https://coveralls.io/repos/resal81/molkit/badge.svg)](https://coveralls.io/r/resal81/molkit)
 
 # Molkit: A molecular manipulation toolkit written in Go
