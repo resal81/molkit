@@ -146,7 +146,7 @@ func (pt *PairType) ConvertTo(to PTSetting) (*PairType, error) {
 
 			if pt.HasLJDistance14Set() {
 				// TODO double check this coversion
-				npt.SetLJDistance14(pt.LJDistance14() * 2 * 0.1 / math.Pow(2.0, 1.0/6.0))
+				npt.SetLJDistance14(pt.LJDistance14() * 0.1 / math.Pow(2.0, 1.0/6.0))
 			}
 			return npt, nil
 		}
