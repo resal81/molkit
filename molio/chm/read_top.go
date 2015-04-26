@@ -389,6 +389,23 @@ func readtop(reader io.Reader, frc *blocks.ForceField) error {
 			}
 
 		case strings.HasPrefix(line, "MASS"):
+			fields := strings.Fields(line)
+
+			// MASS line can be 4 or 5 fields
+			if len(fields) < 4 {
+				return fmt.Errorf("bad MASS line => %s", line)
+			}
+
+			lb := fields[2]
+			ms, err := strconv.ParseFloat(fields[3], 64)
+			if err != nil {
+				return fmt.Errorf("could not parse mass => %s (%s)", err, line)
+			}
+
+			at := blocks.NewAtomType(lb, blocks.AT_TYPE_CHM_1)
+			at.SetMass(ms)
+			frc.AddAtomType(at)
+
 		case strings.HasPrefix(line, "DECL"):
 		case strings.HasPrefix(line, "DEFA"):
 		case strings.HasPrefix(line, "AUTO"):
@@ -399,7 +416,7 @@ func readtop(reader io.Reader, frc *blocks.ForceField) error {
 		case strings.HasPrefix(line, "PATC"):
 		case strings.HasPrefix(line, "BILD"):
 
-		case strings.HasPrefix(line, "3") && len(strings.Fields(line)) <= 2:
+		case (strings.HasPrefix(line, "3") || strings.HasPrefix(line, "2")) && len(strings.Fields(line)) <= 2:
 			// assuming version number - improve it TODO
 
 		default:

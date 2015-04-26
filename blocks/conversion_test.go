@@ -122,10 +122,10 @@ func TestBondTypeConversion(t *testing.T) {
 		if v := bt2.AType2(); v != el.at2 {
 			t.Errorf("wrong at2 => %s, expected %s", v, el.at2)
 		}
-		if v := bt2.HarmonicConstant(); v-el.b2_kb > DELTA {
+		if v := bt2.HarmonicConstant(); math.Abs(v-el.b2_kb) > DELTA {
 			t.Errorf("wrong kb => %f, expected %f", v, el.b2_kb)
 		}
-		if v := bt2.HarmonicDistance(); v-el.b2_b0 > DELTA {
+		if v := bt2.HarmonicDistance(); math.Abs(v-el.b2_b0) > DELTA {
 			t.Errorf("wrong b0 => %f, expected %f", v, el.b2_b0)
 		}
 	}
@@ -173,16 +173,16 @@ func TestAngleTypeConversion(t *testing.T) {
 			t.Errorf("wrong at3 => %s, expected %s", v, el.at3)
 		}
 
-		if v := at2.Theta(); v-el.a2_theta > DELTA {
+		if v := at2.Theta(); math.Abs(v-el.a2_theta) > DELTA {
 			t.Errorf("wrong theta => %f, expected %f", v, el.a2_theta)
 		}
-		if v := at2.ThetaConstant(); v-el.a2_kt > DELTA {
+		if v := at2.ThetaConstant(); math.Abs(v-el.a2_kt) > DELTA {
 			t.Errorf("wrong kt => %f, expected %f", v, el.a2_kt)
 		}
-		if v := at2.R13(); v-el.a2_r13 > DELTA {
+		if v := at2.R13(); math.Abs(v-el.a2_r13) > DELTA {
 			t.Errorf("wrong r13 => %f, expected %f, diff %v", v, el.a2_r13, v-el.a2_r13)
 		}
-		if v := at2.UBConstant(); v-el.a2_kub > DELTA {
+		if v := at2.UBConstant(); math.Abs(v-el.a2_kub) > DELTA {
 			t.Errorf("wrong kub => %f, expected %f, diff %v", v, el.a2_kub, v-el.a2_kub)
 		}
 
@@ -231,10 +231,10 @@ func TestDihedralTypeConversion(t *testing.T) {
 			t.Errorf("wrong at4 => %s, expected %s", v, el.at4)
 		}
 
-		if v := dt2.Phi(); v-el.d2_phi > DELTA {
+		if v := dt2.Phi(); math.Abs(v-el.d2_phi) > DELTA {
 			t.Errorf("wrong phi => %f, expected %f", v, el.d2_phi)
 		}
-		if v := dt2.PhiConstant(); v-el.d2_kp > DELTA {
+		if v := dt2.PhiConstant(); math.Abs(v-el.d2_kp) > DELTA {
 			t.Errorf("wrong kp => %f, expected %f", v, el.d2_kp)
 		}
 		if v := dt2.Multiplicity(); v != el.d2_m {
@@ -282,10 +282,10 @@ func TestImproperTypeConversion(t *testing.T) {
 			t.Errorf("wrong at4 => %s, expected %s", v, el.at4)
 		}
 
-		if v := dt2.Psi(); v-el.d2_psi > DELTA {
+		if v := dt2.Psi(); math.Abs(v-el.d2_psi) > DELTA {
 			t.Errorf("wrong psi => %f, expected %f", v, el.d2_psi)
 		}
-		if v := dt2.PsiConstant(); v-el.d2_ks > DELTA {
+		if v := dt2.PsiConstant(); math.Abs(v-el.d2_ks) > DELTA {
 			t.Errorf("wrong ks => %f, expected %f", v, el.d2_ks)
 		}
 	}
@@ -306,8 +306,8 @@ func TestPairTypeConversion(t *testing.T) {
 			PT_TYPE_CHM_1, PT_TYPE_GMX_1,
 			-1, 1 * 4.184,
 			-2, 2 * 4.184,
-			3, 3 * 0.1 * math.Pow(2, 1.0/6.0),
-			4, 4 * 0.1 * math.Pow(2, 1.0/6.0),
+			3, 3 * 0.1 / math.Pow(2, 1.0/6.0),
+			4, 4 * 0.1 / math.Pow(2, 1.0/6.0),
 		},
 	}
 
@@ -330,16 +330,16 @@ func TestPairTypeConversion(t *testing.T) {
 			t.Errorf("wrong at2 => %s, expected %s", v, el.at2)
 		}
 
-		if v := pt2.LJEnergy(); v-el.p2_lje > DELTA {
+		if v := pt2.LJEnergy(); math.Abs(v-el.p2_lje) > DELTA {
 			t.Errorf("wrong lje => %f, expected %f", v, el.p2_lje)
 		}
-		if v := pt2.LJEnergy14(); v-el.p2_lje14 > DELTA {
+		if v := pt2.LJEnergy14(); math.Abs(v-el.p2_lje14) > DELTA {
 			t.Errorf("wrong lje14 => %f, expected %f", v, el.p2_lje14)
 		}
-		if v := pt2.LJDistance(); v-el.p2_ljd > DELTA {
+		if v := pt2.LJDistance(); math.Abs(v-el.p2_ljd) > DELTA {
 			t.Errorf("wrong ljd => %f, expected %f", v, el.p2_ljd)
 		}
-		if v := pt2.LJDistance14(); v-el.p2_ljd14 > DELTA {
+		if v := pt2.LJDistance14(); math.Abs(v-el.p2_ljd14) > DELTA {
 			t.Errorf("wrong ljd14 => %f, expected %f", v, el.p2_ljd14)
 		}
 	}
@@ -395,7 +395,7 @@ func TestCMapTypeConversion(t *testing.T) {
 		}
 
 		for i, v := range ct2.Values() {
-			if v-el.c2_values[i] > DELTA {
+			if math.Abs(v-el.c2_values[i]) > DELTA {
 				t.Errorf("wrong value for cmap => %f, expected %f", v, el.c2_values[i])
 			}
 		}

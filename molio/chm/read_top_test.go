@@ -1,10 +1,13 @@
 package chm
 
 import (
+	"math"
 	"testing"
 
 	"github.com/resal81/molkit/blocks"
 )
+
+const DELTA float64 = 1e-12
 
 func TestReadTOPFiles(t *testing.T) {
 	fnames := []string{
@@ -70,9 +73,42 @@ func TestReadTOP(t *testing.T) {
 			t.Errorf("mismatch linker_prev => %v, expected %v", v, el.hasln_prev)
 		}
 	}
+
+	// mass
+	if v := len(ff.AtomTypes()); v != 7 {
+		t.Errorf("wrong number of mass enteries => %d, expected %d", v, 7)
+	}
+
+	var masses = []struct {
+		at   string
+		mass float64
+	}{
+		{"IC1", 12.01100},
+		{"IH1", 1.00800},
+	}
+
+	for _, el := range masses {
+		at := ff.AtomType(blocks.HashKey(el.at))
+		if at == nil {
+			t.Errorf("could not find atomtype => %s", el.at)
+			continue
+		}
+
+		if v := at.Mass(); math.Abs(v-el.mass) > DELTA {
+			t.Errorf("wrong mass => %f, expected %f", v, el.mass)
+		}
+	}
 }
 
 var top_string = `
+MASS  203  IC1    12.01100 C
+MASS  204  IC2    12.01100 C
+MASS  205  IF     19.0000  F
+MASS  206  ICL    35.4500  Cl
+MASS  207  IO     15.99900 O
+MASS  208  IC3    12.01100 C
+MASS  209  IH1    1.00800  H
+
 RESI ASN          0.00
 GROUP   
 ATOM N    NH1    -0.47  !     |       

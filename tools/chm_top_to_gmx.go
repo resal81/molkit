@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"strings"
 
 	"bytes"
@@ -112,6 +113,24 @@ func CMapTypeToString(ct *blocks.CMapType) string {
 	return s
 }
 
+func AtomTypeToString(at *blocks.AtomType) string {
+	s := fmt.Sprintf("")
+
+	return s
+}
+
+func OneFourTypeToString(at *blocks.PairType) string {
+	s := fmt.Sprintf("")
+
+	return s
+}
+
+func NonBondedTypeToString(at *blocks.PairType) string {
+	s := fmt.Sprintf("")
+
+	return s
+}
+
 func ConvertCHMParToGMX(ff *blocks.ForceField) (string, error) {
 	str := `
 [ bondtypes ]
@@ -133,6 +152,15 @@ func ConvertCHMParToGMX(ff *blocks.ForceField) (string, error) {
 
 [ cmaptypes ]
 {{ range $ct := .CMapTypes}}{{ CMapTypeToString $ct}}{{ end }}
+
+[ atomtypes ]
+{{ range $at := .AtomTypes}}{{ AtomTypeToString $at}}{{ end }}
+
+[ pairtypes ]
+{{ range ot := .OneFourTypes}}{{ OneFourTypeToString $ot}}{{ end }}
+
+[ nonbond_params ]
+{{ range nt := .NonBondedType}}{{ NonBondedTypeToString $nt}}{{ end }}
 
 `
 	funcMap := template.FuncMap{
@@ -212,67 +240,59 @@ func main() {
 
 	var topFile string
 	var parFile string
-	var resName string
+	//var resName string
 
 	flag.StringVar(&topFile, "top", "", "CHARMM topology file. Separate multiple by ','.")
 	flag.StringVar(&parFile, "par", "", "CHARMM parameter file. Separate multiple by ','.")
-	flag.StringVar(&resName, "res", "", "Target RESI name")
+	//flag.StringVar(&resName, "res", "", "Target RESI name")
 	flag.Parse()
 
-	if topFile == "" {
-		fmt.Println("Please provide at least one topology file. See -h for more info.")
-		return
+	//if resName == "" {
+	//fmt.Println("Please provide a residue name. See -h for more info.")
+	//return
+	//}
+
+	if topFile != "" {
+
+		topFiles := strings.Split(topFile, ",")
+
+		top, err := chm.ReadTOPFiles(topFiles...)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		for _, v := range top.Fragments() {
+			rtp, err := ConvertCHMFragmentToGMX(v)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			log.Println(rtp)
+		}
+
+		//residue
+		//res := top.Fragment(blocks.HashKey(resName))
+		//if res == nil {
+		//fmt.Printf("residue not found => %s\n", resName)
+		//return
+		//}
 	}
 
-	if parFile == "" {
-		fmt.Println("Please provide at least one parameter file. See -h for more info.")
-		return
+	if parFile != "" {
+		parFiles := strings.Split(parFile, ",")
+
+		// prm files
+		ff, err := chm.ReadPRMFiles(parFiles...)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		// bonding
+		bonding, err := ConvertCHMParToGMX(ff)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		fmt.Println(bonding)
+
 	}
-
-	if resName == "" {
-		fmt.Println("Please provide a residue name. See -h for more info.")
-		return
-	}
-
-	parFiles := strings.Split(parFile, ",")
-	topFiles := strings.Split(topFile, ",")
-
-	// prm files
-	ff, err := chm.ReadPRMFiles(parFiles...)
-	if err != nil {
-		fmt.Println("%s", err)
-		return
-
-		ff.AtomTypes()
-	}
-
-	// top files
-	top, err := chm.ReadTOPFiles(topFiles...)
-	if err != nil {
-		fmt.Println("%s", err)
-		return
-	}
-
-	// residue
-	res := top.Fragment(blocks.HashKey(resName))
-	if res == nil {
-		fmt.Printf("residue not found => %s\n", resName)
-		return
-	}
-
-	rtp, err := ConvertCHMFragmentToGMX(res)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(rtp)
-
-	// bonding
-	bonding, err := ConvertCHMParToGMX(ff)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(bonding)
 
 }
