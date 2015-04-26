@@ -1,3 +1,4 @@
+[![Coverage Status](https://coveralls.io/repos/resal81/molkit/badge.svg)](https://coveralls.io/r/resal81/molkit)
 
 # Molkit: A molecular manipulation toolkit written in Go
 
