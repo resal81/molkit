@@ -67,8 +67,8 @@ func TestForceField(t *testing.T) {
 			t.Errorf("wrong # of bond types => %d, expected %d", v, 3)
 		}
 
-		ff.AddAngleType(NewAngleType(el.at1, el.at2, el.at3, NT_TYPE_CHM_2))
-		ff.AddAngleType(NewAngleType(el.at2, el.at3, el.at4, NT_TYPE_CHM_2))
+		ff.AddAngleType(NewAngleType(el.at1, el.at2, el.at3, NT_TYPE_CHM_1))
+		ff.AddAngleType(NewAngleType(el.at2, el.at3, el.at4, NT_TYPE_CHM_1))
 
 		if v := len(ff.AngleTypes()); v != 2 {
 			t.Errorf("wrong # of angle types => %d, expected %d", v, 2)

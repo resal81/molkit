@@ -7,7 +7,7 @@ import (
 func TestCMapType(t *testing.T) {
 	var cmts = []struct {
 		at1, at2, at3, at4, at5, at6, at7, at8 string
-		ct                                     CMSetting
+		ct                                     CTSetting
 	}{
 		{"C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", CT_TYPE_CHM_1},
 	}

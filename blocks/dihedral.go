@@ -1,6 +1,7 @@
 package blocks
 
 import (
+	"fmt"
 	"github.com/resal81/molkit/utils"
 )
 
@@ -16,7 +17,7 @@ type DTSetting int64
 
 const (
 	DT_NULL       DTSetting = 1 << iota
-	DT_TYPE_CHM_1           // proper
+	DT_TYPE_CHM_1           //
 	DT_TYPE_GMX_1           // proper
 	DT_TYPE_GMX_9           // prper muliple
 	DT_HAS_PHI_SET
@@ -114,6 +115,42 @@ func (dt *DihedralType) Multiplicity() int {
 
 func (dt *DihedralType) Setting() DTSetting {
 	return dt.setting
+}
+
+/* convert */
+
+func (dt *DihedralType) ConvertTo(to DTSetting) (*DihedralType, error) {
+
+	if to&DT_TYPE_CHM_1 == 0 && to&DT_TYPE_GMX_1 == 0 && to&DT_TYPE_GMX_9 == 0 {
+		return nil, fmt.Errorf("'to' parameter is not known")
+	}
+
+	if to&dt.setting != 0 {
+		return dt, nil
+	}
+
+	if dt.setting&DT_TYPE_CHM_1 != 0 {
+		switch {
+		case to&DT_TYPE_GMX_9 != 0:
+			ndt := NewDihedralType(dt.AType1(), dt.AType2(), dt.AType3(), dt.AType4(), DT_TYPE_GMX_9)
+
+			if dt.HasPhiSet() {
+				ndt.SetPhi(dt.Phi())
+			}
+
+			if dt.HasPhiConstantSet() {
+				ndt.SetPhiConstant(dt.PhiConstant() * 4.184)
+			}
+
+			if dt.HasMultiplicitySet() {
+				ndt.SetMultiplicity(dt.Multiplicity())
+			}
+
+			return ndt, nil
+		}
+	}
+
+	return nil, nil
 }
 
 /**********************************************************

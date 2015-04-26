@@ -27,7 +27,7 @@ func TestReadTOP(t *testing.T) {
 		natoms, nbonds, nimpropers, ncmaps int
 		hasln_next, hasln_prev             bool
 	}{
-		{"ASN", 14, 13, 4, 0, true, true},
+		{"ASN", 14, 13, 4, 1, true, true},
 		{"OTH", 17, 16, 4, 1, false, false},
 	}
 

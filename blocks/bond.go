@@ -1,6 +1,7 @@
 package blocks
 
 import (
+	"fmt"
 	"github.com/resal81/molkit/utils"
 )
 
@@ -89,12 +90,45 @@ func (bt *BondType) Setting() BTSetting {
 }
 
 /* order */
+
 func (bt *BondType) SetOrderSingle() {
 	bt.setting |= BT_ORDER_SINGLE
 }
 
 func (bt *BondType) IsSingle() bool {
 	return bt.setting&BT_ORDER_SINGLE != 0
+}
+
+/* convert */
+
+func (bt *BondType) ConvertTo(to BTSetting) (*BondType, error) {
+
+	if to&BT_TYPE_CHM_1 == 0 && to&BT_TYPE_GMX_1 == 0 {
+		return nil, fmt.Errorf("'to' parameter is not known")
+	}
+
+	if to&bt.setting != 0 {
+		return bt, nil
+	}
+
+	if bt.setting&BT_TYPE_CHM_1 != 0 {
+		switch {
+		case to&BT_TYPE_GMX_1 != 0:
+			nbt := NewBondType(bt.AType1(), bt.AType2(), BT_TYPE_GMX_1)
+
+			if bt.HasHarmonicConstantSet() {
+				nbt.SetHarmonicConstant(bt.HarmonicConstant() * 2 * 4.184 * 100)
+			}
+
+			if bt.HasHarmonicDistanceSet() {
+				nbt.SetHarmonicDistance(bt.HarmonicDistance() * 0.1)
+			}
+
+			return nbt, nil
+		}
+	}
+
+	return nil, nil
 }
 
 /**********************************************************

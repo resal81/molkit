@@ -167,7 +167,12 @@ func readtop(reader io.Reader, frc *blocks.ForceField) error {
 					}
 
 					a1 := name_atom[n1]
-					a2 := blocks.NewAtom(n2[1:])
+					a2 := blocks.NewAtom(n2)
+
+					if a1 == nil || a2 == nil {
+						return fmt.Errorf("BOND line, one or both atoms were not found => fragment: %s, line: %s", fg.Name(), line)
+					}
+
 					b := blocks.NewBond(a1, a2)
 					ln := fg.LinkerNext()
 					ln.SetBond(b)
@@ -183,7 +188,12 @@ func readtop(reader io.Reader, frc *blocks.ForceField) error {
 					}
 
 					a1 := name_atom[n1]
-					a2 := blocks.NewAtom(n2[1:])
+					a2 := blocks.NewAtom(n2)
+
+					if a1 == nil || a2 == nil {
+						return fmt.Errorf("BOND line, one or both atoms were not found => fragment: %s, line: %s", fg.Name(), line)
+					}
+
 					b := blocks.NewBond(a1, a2)
 					ln := fg.LinkerPrev()
 					ln.SetBond(b)
@@ -247,9 +257,13 @@ func readtop(reader io.Reader, frc *blocks.ForceField) error {
 					}
 
 					a1 := name_atom[n1]
-					a2 := blocks.NewAtom(n2[1:])
+					a2 := blocks.NewAtom(n2)
 					a3 := name_atom[n3]
 					a4 := name_atom[n4]
+
+					if a1 == nil || a2 == nil || a3 == nil || a4 == nil {
+						return fmt.Errorf("not all atoms for the improper were found => %s (%s)", fg.Name(), line)
+					}
 
 					im := blocks.NewImproper(a1, a2, a3, a4)
 					ln := fg.LinkerPrev()
@@ -275,8 +289,12 @@ func readtop(reader io.Reader, frc *blocks.ForceField) error {
 
 					a1 := name_atom[n1]
 					a2 := name_atom[n2]
-					a3 := blocks.NewAtom(n3[1:])
+					a3 := blocks.NewAtom(n3)
 					a4 := name_atom[n4]
+
+					if a1 == nil || a2 == nil || a3 == nil || a4 == nil {
+						return fmt.Errorf("not all atoms for the improper were found => %s (%s)", fg.Name(), line)
+					}
 
 					im := blocks.NewImproper(a1, a2, a3, a4)
 					ln := fg.LinkerNext()
@@ -329,7 +347,27 @@ func readtop(reader io.Reader, frc *blocks.ForceField) error {
 						return fmt.Errorf(msg)
 					}
 
-					// TODO read CMAP for connections
+					if !strings.HasPrefix(n1, "-") || !strings.HasPrefix(n8, "+") {
+						msg := fmt.Sprintf("bad location for '+' and '-' specifiers in the cmap => %s (%s)", fg.Name(), line)
+						return fmt.Errorf(msg)
+					}
+
+					a1 := blocks.NewAtom(n1)
+					a2 := name_atom[n2]
+					a3 := name_atom[n3]
+					a4 := name_atom[n4]
+					a5 := name_atom[n5]
+					a6 := name_atom[n6]
+					a7 := name_atom[n7]
+					a8 := blocks.NewAtom(n8)
+
+					if a1 == nil || a2 == nil || a3 == nil || a4 == nil || a5 == nil || a6 == nil || a7 == nil || a8 == nil {
+						return fmt.Errorf("not all atoms for the cmap were found => %s (%s)", fg.Name(), line)
+					}
+
+					// add it to the residue itself
+					cm := blocks.NewCMap(a1, a2, a3, a4, a5, a6, a7, a8)
+					fg.AddCMap(cm)
 
 					continue
 				}

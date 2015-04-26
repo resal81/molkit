@@ -1,13 +1,17 @@
 package blocks
 
+import (
+	"fmt"
+)
+
 /*
 	CMapType
 */
 
-type CMSetting int64
+type CTSetting int64
 
 const (
-	CT_NULL CMSetting = 1 << iota
+	CT_NULL CTSetting = 1 << iota
 	CT_TYPE_CHM_1
 	CT_TYPE_GMX_1
 )
@@ -22,10 +26,10 @@ type CMapType struct {
 	aType7  string
 	aType8  string
 	values  []float64
-	setting CMSetting
+	setting CTSetting
 }
 
-func NewCMapType(at1, at2, at3, at4, at5, at6, at7, at8 string, t CMSetting) *CMapType {
+func NewCMapType(at1, at2, at3, at4, at5, at6, at7, at8 string, t CTSetting) *CMapType {
 	return &CMapType{
 		aType1:  at1,
 		aType2:  at2,
@@ -71,7 +75,7 @@ func (ct *CMapType) AType8() string {
 	return ct.aType8
 }
 
-func (ct *CMapType) Setting() CMSetting {
+func (ct *CMapType) Setting() CTSetting {
 	return ct.setting
 }
 
@@ -81,6 +85,35 @@ func (ct *CMapType) SetValues(vs []float64) {
 
 func (ct *CMapType) Values() []float64 {
 	return ct.values
+}
+
+func (ct *CMapType) ConvertTo(to CTSetting) (*CMapType, error) {
+
+	if to&CT_TYPE_CHM_1 == 0 && to&CT_TYPE_GMX_1 == 0 {
+		return nil, fmt.Errorf("'to' parameter is not known")
+	}
+
+	if to&ct.setting != 0 {
+		return ct, nil
+	}
+
+	if ct.setting&CT_TYPE_CHM_1 != 0 {
+		switch {
+		case to&CT_TYPE_GMX_1 != 0:
+			nct := NewCMapType(ct.AType1(), ct.AType2(), ct.AType3(), ct.AType4(), ct.AType5(), ct.AType6(), ct.AType7(), ct.AType8(), CT_TYPE_GMX_1)
+
+			newvals := []float64{}
+			for _, v := range ct.Values() {
+				newvals = append(newvals, v*4.184)
+			}
+
+			nct.SetValues(newvals)
+
+			return nct, nil
+		}
+	}
+
+	return nil, nil
 }
 
 /*

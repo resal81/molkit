@@ -343,12 +343,14 @@ func prmParseAngleType(s string) (*blocks.AngleType, error) {
 		angt = blocks.NewAngleType(at1, at2, at3, blocks.NT_TYPE_CHM_1)
 		angt.SetTheta(theta)
 		angt.SetThetaConstant(kt)
+		angt.SetR13(0)
+		angt.SetUBConstant(0)
 	case 7:
 		n, err := fmt.Sscanf(s, "%s %s %s %f %f %f %f", &at1, &at2, &at3, &kt, &theta, &kub, &r13)
 		if n != 7 || err != nil {
 			return nil, fmt.Errorf("could not parse angletype - 7")
 		}
-		angt = blocks.NewAngleType(at1, at2, at3, blocks.NT_TYPE_CHM_2)
+		angt = blocks.NewAngleType(at1, at2, at3, blocks.NT_TYPE_CHM_1)
 		angt.SetTheta(theta)
 		angt.SetThetaConstant(kt)
 		angt.SetR13(r13)
@@ -506,7 +508,7 @@ func prmParseNBFixType(s string) (*blocks.PairType, error) {
 	}
 
 	nb := blocks.NewPairType(at1, at2, blocks.PT_TYPE_CHM_1)
-	nb.SetLJDist(dist)
+	nb.SetLJDistance(dist)
 	nb.SetLJEnergy(en)
 
 	return nb, nil

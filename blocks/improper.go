@@ -1,6 +1,7 @@
 package blocks
 
 import (
+	"fmt"
 	"github.com/resal81/molkit/utils"
 )
 
@@ -96,6 +97,38 @@ func (dt *ImproperType) PsiConstant() float64 {
 
 func (dt *ImproperType) Setting() ITSetting {
 	return dt.setting
+}
+
+/* convert */
+
+func (dt *ImproperType) ConvertTo(to ITSetting) (*ImproperType, error) {
+
+	if to&IT_TYPE_CHM_1 == 0 && to&IT_TYPE_GMX_1 == 0 {
+		return nil, fmt.Errorf("'to' parameter is not known")
+	}
+
+	if to&dt.setting != 0 {
+		return dt, nil
+	}
+
+	if dt.setting&IT_TYPE_CHM_1 != 0 {
+		switch {
+		case to&IT_TYPE_GMX_1 != 0:
+			nit := NewImproperType(dt.AType1(), dt.AType2(), dt.AType3(), dt.AType4(), IT_TYPE_GMX_1)
+
+			if dt.HasPsiSet() {
+				nit.SetPsi(dt.Psi())
+			}
+
+			if dt.HasPsiConstantSet() {
+				nit.SetPsiConstant(dt.PsiConstant() * 2 * 4.184)
+			}
+
+			return nit, nil
+		}
+	}
+
+	return nil, nil
 }
 
 /**********************************************************

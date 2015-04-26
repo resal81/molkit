@@ -1,6 +1,7 @@
 package blocks
 
 import (
+	"fmt"
 	"github.com/resal81/molkit/utils"
 )
 
@@ -16,8 +17,7 @@ type NTSetting int64
 
 const (
 	NT_NULL       NTSetting = 1 << iota
-	NT_TYPE_CHM_1           // Harmonic
-	NT_TYPE_CHM_2           // UB
+	NT_TYPE_CHM_1           // UB
 	NT_TYPE_GMX_1           // Harmonic
 	NT_TYPE_GMX_5           // UB
 	NT_HAS_THETA_CONSTANT_SET
@@ -126,6 +126,46 @@ func (at *AngleType) R13() float64 {
 
 func (at *AngleType) Setting() NTSetting {
 	return at.setting
+}
+
+/* convert */
+
+func (at *AngleType) ConvertTo(to NTSetting) (*AngleType, error) {
+
+	if to&NT_TYPE_CHM_1 == 0 && to&NT_TYPE_GMX_1 == 0 && to&NT_TYPE_GMX_5 == 0 {
+		return nil, fmt.Errorf("'to' parameter is not known")
+	}
+
+	if to&at.setting != 0 {
+		return at, nil
+	}
+
+	if at.setting&NT_TYPE_CHM_1 != 0 {
+		switch {
+		case to&NT_TYPE_GMX_5 != 0:
+			nat := NewAngleType(at.AType1(), at.AType2(), at.AType3(), NT_TYPE_GMX_5)
+
+			if at.HasThetaSet() {
+				nat.SetTheta(at.Theta())
+			}
+
+			if at.HasThetaConstantSet() {
+				nat.SetThetaConstant(at.ThetaConstant() * 2 * 4.184)
+			}
+
+			if at.HasR13Set() {
+				at.SetR13(at.R13() * 0.1)
+			}
+
+			if at.HasUBConstantSet() {
+				at.SetUBConstant(at.UBConstant() * 2 * 4.184 * 100)
+			}
+
+			return nat, nil
+		}
+	}
+
+	return nil, nil
 }
 
 /**********************************************************

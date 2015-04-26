@@ -1,7 +1,9 @@
 package blocks
 
 import (
+	"fmt"
 	"github.com/resal81/molkit/utils"
+	"math"
 )
 
 var (
@@ -197,6 +199,73 @@ func (at *AtomType) Radius() float64 {
 
 func (at *AtomType) Setting() ATSetting {
 	return at.setting
+}
+
+/* convert */
+
+func (at *AtomType) ConvertTo(to ATSetting) (*AtomType, error) {
+	// check to is valid
+	if to&AT_TYPE_CHM_1 == 0 && to&AT_TYPE_GMX_1 == 0 {
+		return nil, fmt.Errorf("'to' parameter is not known")
+	}
+
+	// check if both types are the same
+	if to&at.setting != 0 {
+		return at, nil
+	}
+
+	// if we are CHM type
+	if at.setting&AT_TYPE_CHM_1 != 0 {
+
+		switch {
+		case to&AT_TYPE_GMX_1 != 0:
+
+			nat := NewAtomType(at.Label(), AT_TYPE_GMX_1)
+
+			if at.HasLJEnergySet() {
+				nat.SetLJEnergy(math.Abs(at.LJEnergy()) * 4.184)
+			}
+
+			if at.HasLJDistanceSet() {
+				nat.SetLJDistance(at.LJDistance() * 2 * 0.1 / math.Pow(2.0, 1.0/6.0))
+			}
+
+			if at.HasLJEnergy14Set() {
+				nat.SetLJEnergy14(math.Abs(at.LJEnergy14()) * 4.184)
+			}
+
+			if at.HasLJDistance14Set() {
+				nat.SetLJDistance14(at.LJDistance14() * 2 * 0.1 / math.Pow(2.0, 1.0/6.0))
+			}
+
+			if at.HasMassSet() {
+				nat.SetMass(at.Mass())
+			}
+
+			if at.HasProtonsSet() {
+				nat.SetProtons(at.Protons())
+			}
+
+			if at.HasChargeSet() {
+				nat.SetCharge(at.Charge())
+			}
+
+			if at.HasPartialChargeSet() {
+				nat.SetPartialCharge(at.PartialCharge())
+			}
+
+			if at.HasRadiusSet() {
+				nat.SetRadius(at.Radius())
+			}
+
+			return nat, nil
+		}
+
+	}
+
+	// TODO conversion for other types
+
+	return nil, nil
 }
 
 /**********************************************************

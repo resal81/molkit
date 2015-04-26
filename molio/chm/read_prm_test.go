@@ -326,7 +326,7 @@ func TestNonBondedTyeps(t *testing.T) {
 			t.Errorf("pair was not found for => %s_%s", el.at1, el.at2)
 		}
 
-		if v := pt.LJDist(); v != el.ljd {
+		if v := pt.LJDistance(); v != el.ljd {
 			t.Errorf("wrong ljd => %f, expected %f", v, el.ljd)
 		}
 		if v := pt.LJEnergy(); v != el.lje {

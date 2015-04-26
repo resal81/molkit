@@ -38,20 +38,20 @@ func TestPairType(t *testing.T) {
 		}
 
 		// ljd
-		pt.SetLJDist(el.ljd)
-		if v := pt.LJDist(); v != el.ljd {
+		pt.SetLJDistance(el.ljd)
+		if v := pt.LJDistance(); v != el.ljd {
 			t.Errorf("wrong ljd => %q, expected %q", v, el.ljd)
 		}
-		if !pt.HasLJDistSet() {
+		if !pt.HasLJDistanceSet() {
 			t.Errorf("ljd is not set")
 		}
 
 		// ljd14
-		pt.SetLJDist14(el.ljd14)
-		if v := pt.LJDist14(); v != el.ljd14 {
+		pt.SetLJDistance14(el.ljd14)
+		if v := pt.LJDistance14(); v != el.ljd14 {
 			t.Errorf("wrong ljd14 => %q, expected %q", v, el.ljd14)
 		}
-		if !pt.HasLJDist14Set() {
+		if !pt.HasLJDistance14Set() {
 			t.Errorf("ljd14 is not set")
 		}
 	}
