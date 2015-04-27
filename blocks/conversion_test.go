@@ -307,7 +307,7 @@ func TestPairTypeConversion(t *testing.T) {
 			-1, 1 * 4.184,
 			-2, 2 * 4.184,
 			3, 3 * 0.1 / math.Pow(2, 1.0/6.0),
-			4, 4 * 0.1 / math.Pow(2, 1.0/6.0),
+			4, 4 * 2 * 0.1 / math.Pow(2, 1.0/6.0),
 		},
 	}
 

@@ -122,7 +122,6 @@ func readprm(reader io.Reader, frc *blocks.ForceField) error {
 			lvl = L_NBFIX
 			continue
 		case "CUTN":
-			lvl = L_IGNORE
 			continue
 		case "HBON":
 			lvl = L_IGNORE
@@ -189,6 +188,21 @@ func readprm(reader io.Reader, frc *blocks.ForceField) error {
 			}
 			if m, ok := massDB[at.Label()]; ok {
 				at.SetMass(m)
+
+				if at.Label() != "CA" {
+					pr, err := blocks.AtomNameToProtons(at.Label())
+					if err != nil {
+						return err
+					}
+					at.SetProtons(pr)
+				} else {
+					if at.Mass() < 15.0 {
+						at.SetProtons(6)
+					} else {
+						at.SetProtons(20)
+					}
+				}
+
 				frc.AddAtomType(at)
 			} else {
 				return fmt.Errorf("could not find mass for atom type: %s", at.Label)

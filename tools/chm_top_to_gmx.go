@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math"
 	"strings"
 
 	"bytes"
@@ -114,20 +115,30 @@ func CMapTypeToString(ct *blocks.CMapType) string {
 }
 
 func AtomTypeToString(at *blocks.AtomType) string {
-	s := fmt.Sprintf("")
+	// ;type atnum         mass   charge ptype           sigma  epsilon
+	//  ALG1    13    26.981540    0.000  A  0.356359487256  2.71960
+
+	s := fmt.Sprintf("%8s %3d %12.6f %6.3f %3s %14.12f %12.9f\n",
+		at.Label(), at.Protons(), at.Mass(), at.PartialCharge(), "A", at.LJDistance(), at.LJEnergy())
 
 	return s
 }
 
-func OneFourTypeToString(at *blocks.PairType) string {
-	s := fmt.Sprintf("")
+func OneFourTypeToString(pt *blocks.PairType) string {
+	// [ pairtypes ]
+	// CP1     C  1  0.347450500075  0.138767581228
 
+	s := fmt.Sprintf("%8s %8s %2d %14.12f %14.12f\n", pt.AType1(), pt.AType2(), 1, pt.LJDistance14(), pt.LJEnergy14())
 	return s
 }
 
-func NonBondedTypeToString(at *blocks.PairType) string {
-	s := fmt.Sprintf("")
+func NonBondedTypeToString(nt *blocks.PairType) string {
+	// ; NBFIX  rmin=<charmm_rmin>/2^(1/6), eps=4.184*<charmm_eps>
+	//;name   type1  type2  1  sigma   epsilon
+	//[ nonbond_params ]
+	//SOD   CLA  1  0.332394311738  0.350933000000
 
+	s := fmt.Sprintf("%8s %8s %2d %14.12f %14.12f\n", nt.AType1(), nt.AType2(), 1, nt.LJDistance(), nt.LJEnergy())
 	return s
 }
 
@@ -157,18 +168,21 @@ func ConvertCHMParToGMX(ff *blocks.ForceField) (string, error) {
 {{ range $at := .AtomTypes}}{{ AtomTypeToString $at}}{{ end }}
 
 [ pairtypes ]
-{{ range ot := .OneFourTypes}}{{ OneFourTypeToString $ot}}{{ end }}
+{{ range $ot := .OneFourTypes}}{{ OneFourTypeToString $ot}}{{ end }}
 
 [ nonbond_params ]
-{{ range nt := .NonBondedType}}{{ NonBondedTypeToString $nt}}{{ end }}
+{{ range $nt := .NonBondedTypes}}{{ NonBondedTypeToString $nt}}{{ end }}
 
 `
 	funcMap := template.FuncMap{
-		"BondTypeToString":     BondTypeToString,
-		"AngleTypeToString":    AngleTypeToString,
-		"DihedralTypeToString": DihedralTypeToString,
-		"ImproperTypeToString": ImproperTypeToString,
-		"CMapTypeToString":     CMapTypeToString,
+		"BondTypeToString":      BondTypeToString,
+		"AngleTypeToString":     AngleTypeToString,
+		"DihedralTypeToString":  DihedralTypeToString,
+		"ImproperTypeToString":  ImproperTypeToString,
+		"CMapTypeToString":      CMapTypeToString,
+		"AtomTypeToString":      AtomTypeToString,
+		"OneFourTypeToString":   OneFourTypeToString,
+		"NonBondedTypeToString": NonBondedTypeToString,
 	}
 
 	tmpl, err := template.New("bonding").Funcs(funcMap).Parse(str)
@@ -177,14 +191,19 @@ func ConvertCHMParToGMX(ff *blocks.ForceField) (string, error) {
 	}
 
 	type ffSum struct {
-		BondTypes     []*blocks.BondType
-		AngleTypes    []*blocks.AngleType
-		DihedralTypes []*blocks.DihedralType
-		ImproperTypes []*blocks.ImproperType
-		CMapTypes     []*blocks.CMapType
+		BondTypes      []*blocks.BondType
+		AngleTypes     []*blocks.AngleType
+		DihedralTypes  []*blocks.DihedralType
+		ImproperTypes  []*blocks.ImproperType
+		CMapTypes      []*blocks.CMapType
+		OneFourTypes   []*blocks.PairType
+		NonBondedTypes []*blocks.PairType
+		AtomTypes      []*blocks.AtomType
 	}
 
 	convFF := ffSum{}
+
+	// Bond
 	for _, bt1 := range ff.BondTypes() {
 		bt2, err := bt1.ConvertTo(blocks.BT_TYPE_GMX_1)
 		if err != nil {
@@ -193,6 +212,7 @@ func ConvertCHMParToGMX(ff *blocks.ForceField) (string, error) {
 		convFF.BondTypes = append(convFF.BondTypes, bt2)
 	}
 
+	// Angle
 	for _, at1 := range ff.AngleTypes() {
 		at2, err := at1.ConvertTo(blocks.NT_TYPE_GMX_5)
 		if err != nil {
@@ -201,6 +221,7 @@ func ConvertCHMParToGMX(ff *blocks.ForceField) (string, error) {
 		convFF.AngleTypes = append(convFF.AngleTypes, at2)
 	}
 
+	// Dihedral
 	for _, dt1 := range ff.DihedralTypes() {
 		dt2, err := dt1.ConvertTo(blocks.DT_TYPE_GMX_9)
 		if err != nil {
@@ -209,6 +230,7 @@ func ConvertCHMParToGMX(ff *blocks.ForceField) (string, error) {
 		convFF.DihedralTypes = append(convFF.DihedralTypes, dt2)
 	}
 
+	// Improper
 	for _, it1 := range ff.ImproperTypes() {
 		it2, err := it1.ConvertTo(blocks.IT_TYPE_GMX_2)
 		if err != nil {
@@ -217,12 +239,92 @@ func ConvertCHMParToGMX(ff *blocks.ForceField) (string, error) {
 		convFF.ImproperTypes = append(convFF.ImproperTypes, it2)
 	}
 
+	// CMap
 	for _, ct1 := range ff.CMapTypes() {
 		ct2, err := ct1.ConvertTo(blocks.CT_TYPE_GMX_1)
 		if err != nil {
 			return "", err
 		}
 		convFF.CMapTypes = append(convFF.CMapTypes, ct2)
+	}
+
+	// Atom
+	for _, at1 := range ff.AtomTypes() {
+		at2, err := at1.ConvertTo(blocks.AT_TYPE_GMX_1)
+		if err != nil {
+			return "", err
+		}
+		convFF.AtomTypes = append(convFF.AtomTypes, at2)
+	}
+
+	// NonBonded
+	for _, nt1 := range ff.NonBondedTypes() {
+		nt2, err := nt1.ConvertTo(blocks.PT_TYPE_GMX_1)
+		if err != nil {
+			return "", err
+		}
+		convFF.NonBondedTypes = append(convFF.NonBondedTypes, nt2)
+	}
+
+	// OneFour
+	ats := []*blocks.AtomType{}
+	for _, at := range ff.AtomTypes() {
+		ats = append(ats, at)
+	}
+
+	mix_e := func(x, y float64) float64 {
+		return math.Pow(x*y, 0.5)
+	}
+
+	mix_d := func(x, y float64) float64 {
+		return (x + y) / 2.0
+	}
+
+	for i, a1 := range ats {
+		for _, a2 := range ats[i:] {
+			np1 := blocks.NewPairType(a1.Label(), a2.Label(), blocks.PT_TYPE_CHM_1)
+
+			var e, d float64
+
+			switch {
+
+			case a1.HasLJEnergy14Set() && a1.HasLJDistance14Set():
+
+				switch {
+
+				case a2.HasLJEnergy14Set() && a2.HasLJDistance14Set():
+					// both have lj14 set
+
+					e = mix_e(a1.LJEnergy14(), a2.LJEnergy14())
+					d = mix_d(a1.LJDistance14(), a2.LJDistance14())
+
+				default:
+					// only a1 has lj14 set
+					e = mix_e(a1.LJEnergy14(), a2.LJEnergy())
+					d = mix_d(a1.LJDistance14(), a2.LJDistance())
+
+				}
+
+			case a2.HasLJEnergy14Set() && a2.HasLJDistance14Set():
+				// only a2 has lj14 set
+				e = mix_e(a1.LJEnergy(), a2.LJEnergy14())
+				d = mix_d(a1.LJDistance(), a2.LJDistance14())
+
+			default:
+				// neither a1 or a2 have lj14 set
+				// don't generate by default
+				continue
+			}
+
+			np1.SetLJEnergy14(e)
+			np1.SetLJDistance14(d)
+
+			np2, err := np1.ConvertTo(blocks.PT_TYPE_GMX_1)
+			if err != nil {
+				return "", err
+			}
+			convFF.OneFourTypes = append(convFF.OneFourTypes, np2)
+		}
 	}
 
 	var b bytes.Buffer
@@ -266,7 +368,8 @@ func main() {
 			if err != nil {
 				log.Fatalln(err)
 			}
-			log.Println(rtp)
+			_ = rtp
+			//fmt.Println(rtp)
 		}
 
 		//residue
@@ -278,6 +381,7 @@ func main() {
 	}
 
 	if parFile != "" {
+
 		parFiles := strings.Split(parFile, ",")
 
 		// prm files
@@ -286,11 +390,14 @@ func main() {
 			log.Fatalln(err)
 		}
 
+		log.Println(len(ff.AtomTypes()))
+
 		// bonding
 		bonding, err := ConvertCHMParToGMX(ff)
 		if err != nil {
 			log.Fatalln(err)
 		}
+
 		fmt.Println(bonding)
 
 	}
