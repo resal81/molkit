@@ -71,6 +71,7 @@ func readprm(reader io.Reader, frc *blocks.ForceField) error {
 
 	var lvl prmLevel
 	massDB := map[string]float64{}
+	protonsDB := map[string]int{}
 
 	cmap_header := ""                       // first line in a cmap block; has 8 atomtypes followed by a number
 	var cmap_str_vals []string = []string{} // the numerical values for the cmap, in string format
@@ -130,11 +131,14 @@ func readprm(reader io.Reader, frc *blocks.ForceField) error {
 
 		switch lvl {
 		case L_MASS:
-			name, mass, err := prmParseMassLine(line)
+			name, protons, mass, err := prmParseMassLine(line)
 			if err != nil {
 				return fmt.Errorf("in line: {'%s'} - reason: {'%s'}", line, err)
 			}
 			massDB[name] = mass
+			if protons != -1 {
+				protonsDB[name] = protons
+			}
 
 		case L_BONDS:
 			bt, err := prmParseBondType(line)
@@ -188,22 +192,27 @@ func readprm(reader io.Reader, frc *blocks.ForceField) error {
 			}
 			if m, ok := massDB[at.Label()]; ok {
 				at.SetMass(m)
+				frc.AddAtomType(at)
 
-				if at.Label() != "CA" {
-					pr, err := blocks.AtomNameToProtons(at.Label())
-					if err != nil {
-						return err
-					}
-					at.SetProtons(pr)
+				if v, ok := protonsDB[at.Label()]; ok {
+					at.SetProtons(v)
 				} else {
-					if at.Mass() < 15.0 {
-						at.SetProtons(6)
+
+					if at.Label() != "CA" {
+						pr, err := blocks.AtomNameToProtons(at.Label())
+						if err != nil {
+							return err
+						}
+						at.SetProtons(pr)
 					} else {
-						at.SetProtons(20)
+						if at.Mass() < 15.0 {
+							at.SetProtons(6)
+						} else {
+							at.SetProtons(20)
+						}
 					}
 				}
 
-				frc.AddAtomType(at)
 			} else {
 				return fmt.Errorf("could not find mass for atom type: %s", at.Label)
 			}
@@ -262,7 +271,7 @@ func prmCheckLineFields(s string, exp_lens []int, header string) (nfields int, e
 **********************************************************/
 
 //
-func prmParseMassLine(s string) (string, float64, error) {
+func prmParseMassLine(s string) (string, int, float64, error) {
 	/*
 		ATOMS
 		MASS    41 H      1.00800 ! polar H
@@ -271,18 +280,29 @@ func prmParseMassLine(s string) (string, float64, error) {
 
 	if strings.HasPrefix(s, "MASS") {
 		fields := strings.Fields(s)
-		if len(fields) != 4 {
-			return "", 0, fmt.Errorf("bad length in MASS line")
+
+		// MASS line could be 4 or 5 fields
+		if len(fields) != 4 && len(fields) != 5 {
+			return "", -1, 0, fmt.Errorf("bad length in MASS line")
 		}
+
 		name := fields[2]
 		m, err := strconv.ParseFloat(fields[3], 64)
 		if err != nil {
-			return "", 0, err
+			return "", -1, 0, err
 		}
 
-		return name, m, nil
+		if len(fields) == 5 {
+			element := fields[4]
+			if v, ok := blocks.PROTONS_LIB[strings.ToUpper(element)]; ok {
+				return name, v.Protons, m, nil
+			}
+		}
+
+		return name, -1, m, nil
+
 	} else {
-		return "", 0, fmt.Errorf("bad length in MASS line")
+		return "", -1, 0, fmt.Errorf("bad MASS line")
 	}
 }
 

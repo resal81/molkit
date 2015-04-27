@@ -7,7 +7,7 @@ import (
 )
 
 type atomInfo struct {
-	protons int
+	Protons int
 	reg     *regexp.Regexp
 }
 
@@ -44,27 +44,27 @@ func AtomNameToProtons(name1 string) (int, error) {
 	}
 
 	if name2 == "CL" || name2 == "NA" || name2 == "FE" {
-		return PROTONS_LIB[name2].protons, nil
+		return PROTONS_LIB[name2].Protons, nil
 	}
 
 	if name2 == "RUB" {
-		return PROTONS_LIB["RB"].protons, nil
+		return PROTONS_LIB["RB"].Protons, nil
 	}
 
 	if name2 == "BAR" {
-		return PROTONS_LIB["BA"].protons, nil
+		return PROTONS_LIB["BA"].Protons, nil
 	}
 
 	if len(name2) == 1 {
 		if _, ok := PROTONS_LIB[name2]; !ok {
 			return 0, fmt.Errorf("protons for atom name not found => %s", name1)
 		}
-		return PROTONS_LIB[name2].protons, nil
+		return PROTONS_LIB[name2].Protons, nil
 	}
 
 	for _, v := range PROTONS_LIB {
 		if v.reg.Match([]byte(name2)) {
-			return v.protons, nil
+			return v.Protons, nil
 		}
 	}
 

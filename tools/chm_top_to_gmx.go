@@ -368,8 +368,7 @@ func main() {
 			if err != nil {
 				log.Fatalln(err)
 			}
-			_ = rtp
-			//fmt.Println(rtp)
+			fmt.Println(rtp)
 		}
 
 		//residue
