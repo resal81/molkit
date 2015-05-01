@@ -13,3 +13,6 @@ notifications:
 script:
     - go test github.com/resal81/molkit/blocks
     - go test github.com/resal81/molkit/molio/chm
+
+after_success:
+      - bash <(curl -s https://codecov.io/bash)
