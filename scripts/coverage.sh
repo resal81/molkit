@@ -4,8 +4,6 @@ set -e
 
 # http://stackoverflow.com/a/21142256/2055281
 
-cd ..
-
 echo "mode: atomic" > coverage.txt
 
 for d in $(find ./* -maxdepth 10 -type d); do
