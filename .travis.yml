@@ -11,8 +11,7 @@ notifications:
   email: false
 
 script:
-    - go test  -coverprofile=coverage.txt -covermode=atomic github.com/resal81/molkit/blocks
-    - go test  -coverprofile=coverage.txt -covermode=atomic github.com/resal81/molkit/molio/chm
+    - ./scripts/coverage.sh
 
 after_success:
       - bash <(curl -s https://codecov.io/bash)

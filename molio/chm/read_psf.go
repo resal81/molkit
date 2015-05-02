@@ -26,6 +26,7 @@ func ReadPSFFile(fname string) (*blocks.System, error) {
 	if err != nil {
 		return nil, nil
 	}
+	defer file.Close()
 
 	return readpsf(file)
 }
