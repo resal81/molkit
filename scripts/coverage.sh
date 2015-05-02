@@ -17,5 +17,3 @@ for d in $(find ./* -maxdepth 10 -type d); do
     fi
 done
 
-ls -l
-head -n 20 coverage.txt
