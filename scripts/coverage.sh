@@ -15,5 +15,7 @@ for d in $(find ./* -maxdepth 10 -type d); do
             rm profile.out
         fi
     fi
-    head -n 20 coverage.txt
 done
+
+ls -l
+head -n 20 coverage.txt
