@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-const elementsData = `
+const elementsDatabase = `
 H   1   1
 C   6   12
 N   7   14
@@ -13,12 +13,12 @@ O   8   16
 `
 
 // Elements will be setup within init()
-var Elements map[string]*Element
+var ElementsHash = map[string]*Element{}
 
-func setupElements() {
-	for _, line := range strings.Split(elementsData, "\n") {
+func initElementsHash() {
+	for _, line := range strings.Split(elementsDatabase, "\n") {
 
-		if strings.TrimSpace([]byte(line)) == []byte("") {
+		if strings.TrimSpace(line) == "" {
 			continue
 		}
 
@@ -35,7 +35,7 @@ func setupElements() {
 			panic(err)
 		}
 
-		Elements[elname] = &Element{elname, unit8(elnumb), elmass}
+		ElementsHash[elname] = &Element{elname, unit8(elnumb), elmass}
 	}
 }
 

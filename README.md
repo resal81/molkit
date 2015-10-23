@@ -16,3 +16,12 @@ go get -U github.com/resal81/molkit
 ```
 
 
+## Hierarchy
+```
+AtomType    ->  Atom    -> Fragment -> Chain -> Complex
+Element     ->  Atom
+
+
+```
+
+
