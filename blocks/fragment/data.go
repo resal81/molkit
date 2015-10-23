@@ -1,7 +1,7 @@
 package fragment
 
 // from: https://raw.githubusercontent.com/gromacs/gromacs/master/share/top/amber99sb.ff/aminoacids.rtp
-const fragmentData = `
+const defaultFragmentData = `
 [ bondedtypes ]
 ; Column 1 : default bondtype
 ; Column 2 : default angletype

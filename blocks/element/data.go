@@ -1,6 +1,6 @@
 package element
 
-var elementData = `
+const elementData = `
 1   H   1.0079
 2   He  4.0026
 3   Li  6.9410

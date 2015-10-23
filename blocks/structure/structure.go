@@ -1,12 +1,14 @@
 package structure
 
 import (
+	"github.com/resal81/molkit/blocks/atom"
 	"github.com/resal81/molkit/blocks/chain"
 )
 
-/*
-An Structure is made of one or more chains.
-*/
+// ***********************************************************************//
+// Structure struct
+// ***********************************************************************//
+
 type Structure struct {
 	chains []*chain.Chain
 }
@@ -26,4 +28,12 @@ func (st *Structure) Chains() []*chain.Chain {
 // AddChain adds a chain to the structure
 func (st *Structure) AddChain(chain *chain.Chain) {
 	st.chains = append(st.chains, chain)
+}
+
+func (st *Structure) Atoms() []*atom.Atom {
+	var atoms = []*atom.Atom{}
+	for _, ch := range st.Chains() {
+		atoms = append(atoms, ch.Atoms()...)
+	}
+	return atoms
 }
