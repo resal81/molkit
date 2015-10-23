@@ -14,6 +14,7 @@ func TestReadPdb(t *testing.T) {
 	}{
 		{"./testdata/nmr.pdb", 1340, 87, 1, 3},
 		{"./testdata/dna.pdb", 1332, 380, 4, 1},
+		{"./testdata/vdac.pdb", 2207, 288, 1, 1},
 	}
 
 	for _, d := range data {

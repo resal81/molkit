@@ -50,7 +50,7 @@ func (a *Atom) Coords() [][3]float64 {
 	return a.coords
 }
 
-func (a *Atom) CoordsAtFrame(i int) [3]float64 {
+func (a *Atom) CoordAtFrame(i int) [3]float64 {
 	return a.coords[i]
 }
 
