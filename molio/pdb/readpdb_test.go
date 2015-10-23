@@ -32,6 +32,11 @@ func TestReadPdb(t *testing.T) {
 			t.Errorf("Wrong # of frames for '%s': got '%d', expected '%d'.", d.path, n, d.nframes)
 		}
 
+		residues := st.Residues()
+		if n := len(residues); n != d.nresidues {
+			t.Errorf("Wrong # of residues for '%s': got '%d', expected '%d'.", d.path, n, d.nresidues)
+		}
+
 		chains := st.Chains()
 		if n := len(chains); n != d.nchains {
 			t.Errorf("Wrong # of chains for '%s': got '%d', expected '%d'.", d.path, n, d.nchains)
