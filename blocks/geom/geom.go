@@ -29,6 +29,13 @@ func (gm *Geom) CurrentFrame() int {
 	return gm.currFrame
 }
 
+func (gm *Geom) NFrames() int {
+	if len(gm.Atoms()) > 0 {
+		return len(gm.Atoms()[0].Coords())
+	}
+	return 0
+}
+
 // CoG returns center of geometry
 func (gm *Geom) CoG() [3]float64 {
 	var cx, cy, cz float64
@@ -44,7 +51,8 @@ func (gm *Geom) CoG() [3]float64 {
 	return [3]float64{cx / n, cy / n, cz / n}
 }
 
-func (gm *Geom) MinMax() ([3]float64, [3]float64) {
+// MinMax returns the minimum and maximum corners of the bounding box
+func (gm *Geom) MinMaxDim() ([3]float64, [3]float64, [3]float64) {
 	var minx, miny, minz float64
 	var maxx, maxy, maxz float64
 
@@ -70,19 +78,46 @@ func (gm *Geom) MinMax() ([3]float64, [3]float64) {
 		}
 	}
 
-	return [3]float64{minx, miny, minz}, [3]float64{maxx, maxy, maxz}
-}
-
-func (gm *Geom) Info() string {
-	tmpl := template.Must(template.New("info").Parse(infoTemplate))
-
-	min, max := gm.MinMax()
+	min := [3]float64{minx, miny, minz}
+	max := [3]float64{maxx, maxy, maxz}
 	dim := [3]float64{
-		max[0] - min[0],
-		max[1] - min[1],
-		max[2] - min[2],
+		maxx - minx,
+		maxy - miny,
+		maxz - minz,
 	}
 
+	return min, max, dim
+}
+
+// CenterCoG centers the frame at origin
+func (gm *Geom) CenterCoG() {
+	i := gm.CurrentFrame()
+	cog := gm.CoG()
+	for _, at := range gm.Atoms() {
+		crd := at.CoordAtFrame(i)
+		crd = []float64{crd[0] - cog[0], crd[1] - cog[1], crd[2] - cog[2]}
+		at.SetCoordAtFrame(i, crd)
+	}
+
+}
+
+//
+func (gm *Geom) CenterCoGForAllFrames() {
+	for i := 0; i < gm.NFrames(); i++ {
+		gm.SetCurrentFrame(i)
+		gm.CenterCoG()
+	}
+}
+
+//
+func (gm *Geom) FindCavities() {
+}
+
+// Info returns some info about this geometry group
+func (gm *Geom) Info() string {
+	tmpl := template.Must(template.New("info").Parse(geomInfoTemplate))
+
+	min, max, dim := gm.MinMaxDim()
 	data := struct {
 		NAtoms    int
 		NFrames   int
@@ -93,7 +128,7 @@ func (gm *Geom) Info() string {
 		Dim       [3]float64
 	}{
 		len(gm.Atoms()),
-		len(gm.Atoms()[0].Coords()),
+		gm.NFrames(),
 		gm.CurrentFrame(),
 		gm.CoG(),
 		min,
@@ -102,23 +137,20 @@ func (gm *Geom) Info() string {
 	}
 
 	var b bytes.Buffer
-	err := tmpl.Execute(&b, data)
-	if err != nil {
-		return "Could not generate info: " + err.Error()
+	if err := tmpl.Execute(&b, data); err != nil {
+		return "Could not generate geom info: " + err.Error()
 	}
 
 	return b.String()
 }
 
-const infoTemplate = `
+const geomInfoTemplate = `
 ************** Geometry Group ***************
-{{.NAtoms}} atoms
-{{.NFrames}} frames (current frame: {{.CurrFrame}})
+{{.NAtoms}} atoms, {{.NFrames}} frames (current : {{.CurrFrame}})
 
 CoG: {{.CoG | printf "%6.1f"}}
 Min: {{.Min | printf "%6.1f"}}
 Max: {{.Max | printf "%6.1f"}}
 Dim: {{.Dim | printf "%6.1f"}}
 
-*********************************************
 `

@@ -90,7 +90,7 @@ func readPdb(reader io.Reader) (*structure.Structure, error) {
 				at.SetPdbAltLoc(altloc)
 				at.SetPdbOccupancy(occ)
 				at.SetPdbBeta(beta)
-				at.AddCoord([3]float64{x, y, z})
+				at.AddCoord([]float64{x, y, z})
 
 				if chname != prevChainName {
 					if ch, ok := chainMap[chname]; ok {
@@ -129,7 +129,7 @@ func readPdb(reader io.Reader) (*structure.Structure, error) {
 				}
 
 				at := atomsList[atomCounter]
-				at.AddCoord([3]float64{x, y, z})
+				at.AddCoord([]float64{x, y, z})
 			}
 
 			atomCounter += 1

@@ -14,6 +14,15 @@ func main() {
 
 	atoms := st.Atoms()
 	gm := geom.NewGeom(atoms)
+
+	fmt.Println("Before centring:")
 	fmt.Print(gm.Info())
+
+	gm.CenterCoG()
+	fmt.Println("After centring:")
+	fmt.Print(gm.Info())
+
+	gr := geom.NewGridInt8(gm, 2, 0.2)
+	fmt.Println(gr.Info())
 
 }
