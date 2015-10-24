@@ -1,156 +1,58 @@
 package geom
 
 import (
-	"bytes"
-	"github.com/resal81/molkit/blocks/atom"
-	"text/template"
+	"github.com/gonum/matrix/mat64"
 )
 
-type Geom struct {
-	atoms     []*atom.Atom
-	currFrame int
-}
+// MatrixColMean calculates the mean of each column.
+func MatrixColMean(mat *mat64.Dense) []float64 {
+	nrows, ncols := mat.Dims()
+	out := make([]float64, ncols)
 
-func NewGeom(atoms []*atom.Atom) *Geom {
-	return &Geom{
-		atoms: atoms,
-	}
-}
-
-func (gm *Geom) Atoms() []*atom.Atom {
-	return gm.atoms
-}
-
-func (gm *Geom) SetCurrentFrame(frame int) {
-	gm.currFrame = frame
-}
-
-func (gm *Geom) CurrentFrame() int {
-	return gm.currFrame
-}
-
-func (gm *Geom) NFrames() int {
-	if len(gm.Atoms()) > 0 {
-		return len(gm.Atoms()[0].Coords())
-	}
-	return 0
-}
-
-// CoG returns center of geometry
-func (gm *Geom) CoG() [3]float64 {
-	var cx, cy, cz float64
-
-	for _, at := range gm.Atoms() {
-		coord := at.CoordAtFrame(gm.currFrame)
-		cx += coord[0]
-		cy += coord[1]
-		cz += coord[2]
-	}
-
-	n := float64(len(gm.Atoms()))
-	return [3]float64{cx / n, cy / n, cz / n}
-}
-
-// MinMax returns the minimum and maximum corners of the bounding box
-func (gm *Geom) MinMaxDim() ([3]float64, [3]float64, [3]float64) {
-	var minx, miny, minz float64
-	var maxx, maxy, maxz float64
-
-	for _, at := range gm.Atoms() {
-		coord := at.CoordAtFrame(gm.currFrame)
-
-		if coord[0] < minx {
-			minx = coord[0]
-		} else if coord[0] > maxx {
-			maxx = coord[0]
-		}
-
-		if coord[1] < miny {
-			miny = coord[1]
-		} else if coord[1] > maxy {
-			maxy = coord[1]
-		}
-
-		if coord[2] < minz {
-			minz = coord[2]
-		} else if coord[2] > maxz {
-			maxz = coord[2]
+	for i := 0; i < nrows; i += 1 {
+		for j := 0; j < ncols; j += 1 {
+			out[j] += mat.At(i, j)
 		}
 	}
 
-	min := [3]float64{minx, miny, minz}
-	max := [3]float64{maxx, maxy, maxz}
-	dim := [3]float64{
-		maxx - minx,
-		maxy - miny,
-		maxz - minz,
+	for j := 0; j < ncols; j += 1 {
+		out[j] /= float64(nrows)
 	}
 
-	return min, max, dim
+	return out
 }
 
-// CenterCoG centers the frame at origin
-func (gm *Geom) CenterCoG() {
-	i := gm.CurrentFrame()
-	cog := gm.CoG()
-	for _, at := range gm.Atoms() {
-		crd := at.CoordAtFrame(i)
-		crd = []float64{crd[0] - cog[0], crd[1] - cog[1], crd[2] - cog[2]}
-		at.SetCoordAtFrame(i, crd)
+// MatrixColMinMax calculates the minimum and maximum of each column.
+func MatrixColMinMax(mat *mat64.Dense) ([]float64, []float64) {
+	nrows, ncols := mat.Dims()
+	min := make([]float64, ncols)
+	max := make([]float64, ncols)
+
+	for i := 0; i < nrows; i += 1 {
+		for j := 0; j < ncols; j += 1 {
+			el := mat.At(i, j)
+			if el < min[j] {
+				min[j] = el
+			}
+
+			if el > max[j] {
+				max[j] = el
+			}
+		}
 	}
 
+	return min, max
 }
 
 //
-func (gm *Geom) CenterCoGForAllFrames() {
-	for i := 0; i < gm.NFrames(); i++ {
-		gm.SetCurrentFrame(i)
-		gm.CenterCoG()
+func SliceSubtract(A, B []float64) []float64 {
+	if len(A) != len(B) {
+		panic("The length of slices are not the same")
 	}
-}
-
-//
-func (gm *Geom) FindCavities() {
-}
-
-// Info returns some info about this geometry group
-func (gm *Geom) Info() string {
-	tmpl := template.Must(template.New("info").Parse(geomInfoTemplate))
-
-	min, max, dim := gm.MinMaxDim()
-	data := struct {
-		NAtoms    int
-		NFrames   int
-		CurrFrame int
-		CoG       [3]float64
-		Min       [3]float64
-		Max       [3]float64
-		Dim       [3]float64
-	}{
-		len(gm.Atoms()),
-		gm.NFrames(),
-		gm.CurrentFrame(),
-		gm.CoG(),
-		min,
-		max,
-		dim,
+	out := make([]float64, len(A))
+	for i := range A {
+		out[i] = A[i] - B[i]
 	}
 
-	var b bytes.Buffer
-	if err := tmpl.Execute(&b, data); err != nil {
-		return "Could not generate geom info: " + err.Error()
-	}
-
-	return b.String()
+	return out
 }
-
-const geomInfoTemplate = `
-************** Geometry Group ***************
-{{.NAtoms}} atoms, {{.NFrames}} frames (current : {{.CurrFrame}})
-
-CoG: {{.CoG | printf "%6.1f"}}
-Min: {{.Min | printf "%6.1f"}}
-Max: {{.Max | printf "%6.1f"}}
-Dim: {{.Dim | printf "%6.1f"}}
-
-`

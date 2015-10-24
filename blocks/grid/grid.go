@@ -5,6 +5,40 @@ import (
 	"text/template"
 )
 
+type GridInt8 struct {
+	gpoints [3]int
+	gmin    [3]float64
+	gmax    [3]float64
+	spacing float64
+	grid    [][][]int8
+}
+
+// NewGridInt8 generates a 3d grid that cover the specified Geom.
+// `padding` is the additional pad at each direction, and `spacing` is the
+// distance between grid points.
+func NewGridInt8(gm *Geom, padding float64, spacing float64) *GridInt8 {
+	gr := GridInt8{
+		spacing: spacing,
+	}
+
+	gmin, gmax, gpoints := findGridSize(gm, padding, spacing)
+	gr.gmin = gmin
+	gr.gmax = gmax
+	gr.gpoints = gpoints
+
+	gr.grid = make([][][]int8, gr.gpoints[0])
+	for i := range gr.grid {
+		gr.grid[i] = make([][]int8, gr.gpoints[1])
+
+		for j := range gr.grid[i] {
+			gr.grid[i][j] = make([]int8, gr.gpoints[2])
+		}
+	}
+
+	return &gr
+}
+
+// findGridSize is a helper method that finds min, max and points of the grid.
 func findGridSize(gm *Geom, padding float64, spacing float64) ([3]float64, [3]float64, [3]int) {
 	min, max, _ := gm.MinMaxDim()
 
@@ -29,34 +63,8 @@ func findGridSize(gm *Geom, padding float64, spacing float64) ([3]float64, [3]fl
 	return gmin, gmax, gpoints
 }
 
-type GridInt8 struct {
-	gpoints [3]int
-	gmin    [3]float64
-	gmax    [3]float64
-	spacing float64
-	grid    [][][]int8
-}
-
-func NewGridInt8(gm *Geom, padding float64, spacing float64) *GridInt8 {
-	gr := GridInt8{
-		spacing: spacing,
-	}
-
-	gmin, gmax, gpoints := findGridSize(gm, padding, spacing)
-	gr.gmin = gmin
-	gr.gmax = gmax
-	gr.gpoints = gpoints
-
-	gr.grid = make([][][]int8, gr.gpoints[0])
-	for i := range gr.grid {
-		gr.grid[i] = make([][]int8, gr.gpoints[1])
-
-		for j := range gr.grid[i] {
-			gr.grid[i][j] = make([]int8, gr.gpoints[2])
-		}
-	}
-
-	return &gr
+func (gr *GridInt8) Grid() [][][]int8 {
+	return gr.grid
 }
 
 func (gr *GridInt8) Min() [3]float64 {
@@ -92,10 +100,6 @@ func (gr *GridInt8) SetValue(crd []float64, val int8) {
 	gr.Grid()[ind[0]][ind[1]][ind[2]] = val
 }
 
-func (gr *GridInt8) Grid() [][][]int8 {
-	return gr.grid
-}
-
 func (gr *GridInt8) Info() string {
 	tmpl := template.Must(template.New("info").Parse(gridInfoTemplate))
 
@@ -125,4 +129,6 @@ const gridInfoTemplate = `
 Grid (int8)  -> {{.Nx}} x {{.Ny}} x {{.Nz}} 
 Total points -> {{.Ntot}}
 Memory       -> {{.Mem}} MB
+-----------------------------------
+
 `
